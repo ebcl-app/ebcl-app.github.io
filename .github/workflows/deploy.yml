@@ -1,0 +1,82 @@
+name: Deploy React App to GitHub Pages
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: ./package-lock.json
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build the project
+      run: npm run build
+      env:
+        CI: false
+        GENERATE_SOURCEMAP: false
+
+    - name: Setup Pages
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/configure-pages@v4
+
+    - name: Upload artifact
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./build
+
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+  # Alternative deployment using gh-pages (commented out)
+  # deploy-gh-pages:
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+  #   steps:
+  #   - name: Checkout repository
+  #     uses: actions/checkout@v4
+  # 
+  #   - name: Setup Node.js
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: '18'
+  #       cache: 'npm'
+  # 
+  #   - name: Install dependencies
+  #     run: npm ci
+  # 
+  #   - name: Deploy to GitHub Pages
+  #     run: |
+  #       git config --global user.name 'github-actions[bot]'
+  #       git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+  #       npm run deploy
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
