@@ -14,9 +14,6 @@ import '../styles/common.css';
 import '../styles/cricket.css';
 import '../styles/scoring.css';
 import '../styles/scoring-new.css';
-import '../styles/scoring-mockup.css';
-import '../styles/scoring-enhanced.css';
-import '../styles/scoring-responsive.css';
 
 const Scoring = () => {
   const dispatch = useDispatch();
@@ -145,11 +142,11 @@ const Scoring = () => {
   return (
     <div className={`dashboard-container app-theme ${isDarkMode ? 'dark' : 'light'}`}>
       <div className="dashboard-content">
-        {/* Header with consistent styling matching Home page */}
+        {/* Header with Theme Toggle and Back Navigation */}
         <div className="dashboard-header">
           <div className="app-title-section">
             <div className="app-logo">
-              <Link to="/" className="logo-link">
+              <Link to="/" className="logo-button">
                 <span className="logo-icon">🏏</span>
               </Link>
             </div>
@@ -159,12 +156,9 @@ const Scoring = () => {
             </div>
           </div>
           <div className="theme-toggle-section">
-            <div className="live-status-badge">
-              <span className="live-dot"></span>
-              <span className="live-text">LIVE</span>
-            </div>
+            <div className="live-badge">Live</div>
             <button onClick={toggleDarkMode} className="theme-toggle-btn">
-              {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+              {isDarkMode ? '☀️' : '🌙'}
             </button>
           </div>
         </div>
@@ -251,80 +245,51 @@ const Scoring = () => {
             </div>
           </div>
 
-          {/* Enhanced Current Players Section */}
+          {/* Current Players Section */}
           <div className="players-section">
-            <div className="section-header">
-              <h2 className="section-title">CURRENT PLAYERS</h2>
-            </div>
+            <div className="section-title">CURRENT PLAYERS</div>
             
             <div className="players-row">
               {/* Current Batsmen */}
               <div className="players-group batsmen-group">
-                <div className="group-header">
-                  <span className="group-icon">🏏</span>
-                  <span className="group-title">BATSMEN</span>
-                </div>
+                <div className="group-header">NON'S PLAYERS</div>
                 <div className="player-cards">
                   {/* Striker */}
                   <div className="player-card striker-card">
-                    <div className="player-badges">
-                      <span className="player-role striker">STRIKER</span>
+                    <div className="player-role striker">Striker</div>
+                    <div className="player-avatar">
+                      <img src="/api/placeholder/48/48" alt="Player" className="player-photo" />
                     </div>
-                    <div className="player-main">
-                      <div className="player-avatar">
-                        <div className="avatar-placeholder">
-                          <span className="avatar-icon">👤</span>
-                        </div>
+                    <div className="player-info">
+                      <div className="player-name">{currentBatsmen?.striker?.name || 'Virat Kohli'}</div>
+                      <div className="player-stats-row">
+                        <span className="runs">{stats.striker.runs} ({stats.striker.balls} balls)</span>
                       </div>
-                      <div className="player-details">
-                        <div className="player-name">{currentBatsmen?.striker?.name || 'Virat Kohli'}</div>
-                        <div className="player-stats-main">
-                          <span className="runs-display">{stats.striker.runs}</span>
-                          <span className="balls-display">({stats.striker.balls} balls)</span>
-                        </div>
-                        <div className="player-stats-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">SR:</span>
-                            <span className="stat-value">{stats.striker.strikeRate}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Time:</span>
-                            <span className="stat-value">43:5</span>
-                          </div>
-                        </div>
+                      <div className="player-detailed-stats">
+                        <span className="stat">SR: {stats.striker.strikeRate}</span>
+                        <span className="stat">SR: 178.52</span>
+                        <span className="stat">43.5 | 65.6</span>
                       </div>
                     </div>
-                    <div className="player-actions">
-                      <button className="action-btn swap-btn" onClick={() => dispatch(swapBatsmen())}>
-                        <span className="btn-icon">🔄</span>
-                        <span className="btn-text">SWAP STRIKERS</span>
-                      </button>
-                    </div>
+                    <button className="swap-button" onClick={() => dispatch(swapBatsmen())}>
+                      Swap Strikers
+                    </button>
                   </div>
 
                   {/* Non-Striker */}
                   <div className="player-card non-striker-card">
-                    <div className="player-badges">
-                      <span className="player-role non-striker">PLAYER</span>
+                    <div className="player-role striker">Striker</div>
+                    <div className="player-avatar">
+                      <img src="/api/placeholder/48/48" alt="Player" className="player-photo" />
                     </div>
-                    <div className="player-main">
-                      <div className="player-avatar">
-                        <div className="avatar-placeholder">
-                          <span className="avatar-icon">👤</span>
-                        </div>
+                    <div className="player-info">
+                      <div className="player-name">{currentBatsmen?.nonStriker?.name || 'Rohit Sharma'}</div>
+                      <div className="player-stats-row">
+                        <span className="runs">{stats.nonStriker.runs} ({stats.nonStriker.balls} balls)</span>
                       </div>
-                      <div className="player-details">
-                        <div className="player-name">{currentBatsmen?.nonStriker?.name || 'Rohit Sharma'}</div>
-                        <div className="player-stats-main">
-                          <span className="runs-display">{stats.nonStriker.runs}</span>
-                          <span className="balls-display">({stats.nonStriker.balls} balls)</span>
-                        </div>
-                        <div className="player-stats-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">SR:</span>
-                            <span className="stat-value">{stats.nonStriker.strikeRate}</span>
-                          </div>
-                        </div>
+                      <div className="player-detailed-stats">
+                        <span className="stat">SR: {stats.nonStriker.strikeRate}</span>
+                        <span className="stat">SR: 122.22</span>
                       </div>
                     </div>
                   </div>
@@ -333,40 +298,22 @@ const Scoring = () => {
 
               {/* Current Bowler */}
               <div className="players-group bowler-group">
-                <div className="group-header">
-                  <span className="group-icon">⚾</span>
-                  <span className="group-title">BOWLER</span>
-                </div>
+                <div className="group-header">NON'S PLAYERS</div>
                 <div className="player-cards">
                   <div className="player-card bowler-card">
-                    <div className="player-badges">
-                      <span className="player-role bowler">BOWLER</span>
+                    <div className="player-role bowler">Bowler</div>
+                    <div className="player-avatar">
+                      <img src="/api/placeholder/48/48" alt="Player" className="player-photo" />
                     </div>
-                    <div className="player-main">
-                      <div className="player-avatar">
-                        <div className="avatar-placeholder">
-                          <span className="avatar-icon">👤</span>
-                        </div>
+                    <div className="player-info">
+                      <div className="player-name">{currentBowler?.name || 'Jasprit Bumrah'}</div>
+                      <div className="player-stats-row">
+                        <span className="bowling-figures">0.3 Overs</span>
                       </div>
-                      <div className="player-details">
-                        <div className="player-name">{currentBowler?.name || 'Jasprit Bumrah'}</div>
-                        <div className="player-stats-main">
-                          <span className="overs-display">0.3 Overs</span>
-                        </div>
-                        <div className="player-stats-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">W:</span>
-                            <span className="stat-value">7</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Econ:</span>
-                            <span className="stat-value">4.50</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">R:</span>
-                            <span className="stat-value">77</span>
-                          </div>
-                        </div>
+                      <div className="player-detailed-stats">
+                        <span className="stat">W: 7</span>
+                        <span className="stat">Econ: 4.50</span>
+                        <span className="stat">R: 77</span>
                       </div>
                     </div>
                   </div>
@@ -375,74 +322,59 @@ const Scoring = () => {
             </div>
           </div>
 
-          {/* Enhanced Scoring Controls Section */}
+          {/* Scoring Controls Section */}
           <div className="scoring-controls-section">
-            <div className="controls-container">
-              {/* Extras Controls */}
+            <div className="controls-row">
+              {/* Extras */}
               <div className="controls-group extras-group">
-                <div className="group-header">
-                  <span className="group-icon">⚡</span>
-                  <span className="group-title">EXTRAS</span>
-                </div>
-                <div className="extras-grid">
+                <div className="group-title">EXTRAS</div>
+                <div className="extras-buttons">
                   <button className="extra-btn wide-btn" onClick={() => handleExtra('wide', 1)}>
-                    <span className="btn-text">WIDE</span>
+                    Wide
                   </button>
                   <button className="extra-btn noball-btn" onClick={() => handleExtra('noBall', 1)}>
-                    <span className="btn-text">NO BALL</span>
+                    No Ball
                   </button>
                   <button className="extra-btn bye-btn" onClick={() => handleExtra('bye', 1)}>
-                    <span className="btn-text">BYE</span>
+                    Bye
                   </button>
                   <button className="extra-btn legbye-btn" onClick={() => handleExtra('legBye', 1)}>
-                    <span className="btn-text">LEG BYE</span>
+                    Leg Bye
                   </button>
                 </div>
-                <div className="extras-counter">
-                  <div className="counter-value">0</div>
-                  <div className="counter-label">Ball</div>
+                <div className="extras-counters">
+                  <div className="extra-count">0</div>
+                  <div className="extra-label">Ball</div>
                 </div>
               </div>
 
-              {/* Run Scoring Controls */}
+              {/* Run Scoring */}
               <div className="controls-group scoring-group">
-                <div className="group-header">
-                  <span className="group-icon">🏃</span>
-                  <span className="group-title">SCORING CONTROLS</span>
-                </div>
-                <div className="runs-grid">
+                <div className="group-title">SCORING CONTROLS</div>
+                <div className="run-buttons">
                   {[0, 4, 3, 5, 6].map(runs => (
                     <button
                       key={runs}
-                      className={`run-btn ${runs === 0 ? 'dot-btn' : runs >= 4 ? 'boundary-btn' : 'single-btn'}`}
+                      className={`run-btn ${runs === 0 ? 'dot-btn' : runs >= 4 ? 'boundary-btn' : 'run-btn'}`}
                       onClick={() => handleRunScored(runs)}
                     >
-                      <span className="run-number">{runs}</span>
+                      {runs}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Action Controls */}
+              {/* Action Buttons */}
               <div className="controls-group actions-group">
-                <div className="group-header">
-                  <span className="group-icon">⚙️</span>
-                  <span className="group-title">ACTIONS</span>
-                </div>
-                <div className="actions-grid">
-                  <button className="action-btn wicket-btn" onClick={handleWicketClick}>
-                    <span className="btn-icon">🎯</span>
-                    <span className="btn-text">WICKET</span>
-                  </button>
-                  <button className="action-btn undo-btn" onClick={() => dispatch(undoLastBall())}>
-                    <span className="btn-icon">↩️</span>
-                    <span className="btn-text">UNDO Last Ball</span>
-                  </button>
-                  <button className="action-btn end-over-btn">
-                    <span className="btn-icon">🏁</span>
-                    <span className="btn-text">End Over</span>
-                  </button>
-                </div>
+                <button className="action-btn wicket-btn" onClick={handleWicketClick}>
+                  WICKET
+                </button>
+                <button className="action-btn undo-btn" onClick={() => dispatch(undoLastBall())}>
+                  UNDO Last Ball
+                </button>
+                <button className="action-btn end-over-btn">
+                  End Over
+                </button>
               </div>
             </div>
           </div>

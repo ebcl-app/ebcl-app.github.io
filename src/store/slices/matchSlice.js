@@ -5,8 +5,8 @@ const initialState = {
   upcomingMatches: [
     {
       id: 1,
-      team1: { name: 'Team Soumyak (Black Jersey)', players: [], captain: null },
-      team2: { name: 'Team Sonal (White Jersey)', players: [], captain: null },
+      team1: { id: 1, name: 'Team Soumyak (Black Jersey)', players: [], captain: null },
+      team2: { id: 2, name: 'Team Sonal (White Jersey)', players: [], captain: null },
       date: '2025-09-20',
       time: '2:00 PM',
       venue: 'Ground A',
@@ -17,8 +17,8 @@ const initialState = {
     },
     {
       id: 2,
-      team1: { name: 'Team Soumyak (Black Jersey)', players: [], captain: null },
-      team2: { name: 'Team Sonal (White Jersey)', players: [], captain: null },
+      team1: { id: 1, name: 'Team Soumyak (Black Jersey)', players: [], captain: null },
+      team2: { id: 2, name: 'Team Sonal (White Jersey)', players: [], captain: null },
       date: '2025-09-20',
       time: '4:30 PM',
       venue: 'Ground B',
@@ -29,8 +29,8 @@ const initialState = {
     },
     {
       id: 3,
-      team1: { name: 'Team Soumyak (Black Jersey)', players: [], captain: null },
-      team2: { name: 'Team Sonal (White Jersey)', players: [], captain: null },
+      team1: { id: 1, name: 'Team Soumyak (Black Jersey)', players: [], captain: null },
+      team2: { id: 2, name: 'Team Sonal (White Jersey)', players: [], captain: null },
       date: '2025-09-21',
       time: '10:00 AM',
       venue: 'Ground A',

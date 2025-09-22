@@ -1,27 +1,59 @@
-﻿import React, { useState } from "react";
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 import { 
   addTeam, 
+  updateTeam,
   assignPlayerToTeam, 
   setCaptain, 
   removePlayerFromTeam, 
   deleteTeam 
 } from '../store/slices/clubSlice';
-import '../styles/cricket.css';
+import '../styles/common.css';
+import '../styles/team-management.css';
 
 function TeamManagement() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { isDarkMode, toggleDarkMode } = useTheme();
   
   // Component state
   const [isCreateTeamModalOpen, setIsCreateTeamModalOpen] = useState(false);
+  const [isEditTeamModalOpen, setIsEditTeamModalOpen] = useState(false);
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const [newTeamName, setNewTeamName] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [newTeamForm, setNewTeamForm] = useState({
+    name: '',
+    jerseyColor: '#3498db',
+    description: ''
+  });
+  const [editTeamForm, setEditTeamForm] = useState({
+    name: '',
+    jerseyColor: '',
+    description: ''
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterByReadiness, setFilterByReadiness] = useState('all');
   
   // Get club data from Redux store
-  const { teams, playerPool, clubInfo } = useSelector(state => state.club);
+  const { teams, playerPool } = useSelector(state => state.club);
+  
+  // Close FAB on escape key
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && isFabOpen) {
+        setIsFabOpen(false);
+      }
+    };
+
+    if (isFabOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isFabOpen]);
   
   // Get available players (not assigned to any team)
   const availablePlayers = playerPool?.filter(player => 
@@ -32,367 +64,449 @@ function TeamManagement() {
   const getPlayerDetails = (playerId) => {
     return playerPool?.find(player => player.id === playerId);
   };
+
+  // Get team performance stats (mock data)
+  const getTeamStats = (team) => {
+    const mockStats = {
+      totalMatches: Math.floor(Math.random() * 20) + 5,
+      wins: Math.floor(Math.random() * 15) + 2,
+      losses: Math.floor(Math.random() * 10) + 1,
+      draws: Math.floor(Math.random() * 3)
+    };
+    mockStats.winRate = mockStats.totalMatches > 0 
+      ? ((mockStats.wins / mockStats.totalMatches) * 100).toFixed(1)
+      : 0;
+    return mockStats;
+  };
+
+  // Get top performers for a team (mock data)
+  const getTopPerformers = (team) => {
+    if (!team.players || team.players.length === 0) return null;
+    const teamPlayers = team.players.map(playerId => getPlayerDetails(playerId)).filter(Boolean);
+    if (teamPlayers.length === 0) return null;
+    
+    const playersWithStats = teamPlayers.map(player => ({
+      ...player,
+      runs: Math.floor(Math.random() * 500) + 100,
+      strikeRate: (Math.random() * 50 + 100).toFixed(1),
+      wickets: Math.floor(Math.random() * 20) + 2,
+      economy: (Math.random() * 3 + 4).toFixed(1)
+    }));
+    
+    const topBatsman = playersWithStats.reduce((prev, current) => 
+      (prev.runs > current.runs) ? prev : current
+    );
+    const topBowler = playersWithStats.reduce((prev, current) => 
+      (prev.wickets > current.wickets) ? prev : current
+    );
+    
+    return { topBatsman, topBowler };
+  };
+
+  // Filter teams based on search and readiness
+  const filteredTeams = useMemo(() => {
+    if (!teams) return [];
+    return teams.filter(team => {
+      const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase());
+      if (filterByReadiness === 'ready') {
+        return matchesSearch && (team.players?.length >= 11);
+      } else if (filterByReadiness === 'incomplete') {
+        return matchesSearch && (team.players?.length < 11);
+      }
+      return matchesSearch;
+    });
+  }, [teams, searchTerm, filterByReadiness]);
+
+  // Get team statistics
+  const teamStats = useMemo(() => {
+    const totalTeams = teams?.length || 0;
+    const readyTeams = teams?.filter(team => team.players?.length >= 11).length || 0;
+    const totalWins = teams?.reduce((acc, team) => acc + getTeamStats(team).wins, 0) || 0;
+    
+    return {
+      total: totalTeams,
+      ready: readyTeams,
+      incomplete: totalTeams - readyTeams,
+      availablePlayers: availablePlayers.length,
+      totalWins
+    };
+  }, [teams, availablePlayers]);
   
-  // Create new team
+  // Event handlers
   const handleCreateTeam = () => {
-    if (newTeamName.trim()) {
+    if (newTeamForm.name.trim()) {
       const newTeam = {
-        id: Date.now().toString(),
-        name: newTeamName.trim(),
+        id: Date.now(),
+        name: newTeamForm.name.trim(),
         players: [],
         captainId: null,
+        jerseyColor: newTeamForm.jerseyColor,
+        description: newTeamForm.description,
         createdAt: new Date().toISOString()
       };
-      
       dispatch(addTeam(newTeam));
-      setNewTeamName('');
+      setNewTeamForm({ name: '', jerseyColor: '#3498db', description: '' });
       setIsCreateTeamModalOpen(false);
     }
   };
-
-  // Add player to team
-  const handleAddPlayer = (playerId) => {
-    if (selectedTeamId) {
-      dispatch(assignPlayerToTeam({
-        teamId: selectedTeamId,
-        playerId: playerId
-      }));
-      
-      // Close modal if team is full (11 players)
-      const team = teams?.find(t => t.id === selectedTeamId);
-      if (team && team.players && team.players.length >= 10) { // Will be 11 after adding
-        setIsPlayerModalOpen(false);
-        setSelectedTeamId(null);
-      }
+  
+  const handleEditTeam = (team) => {
+    setSelectedTeam(team);
+    setEditTeamForm({
+      name: team.name,
+      jerseyColor: team.jerseyColor || '#3498db',
+      description: team.description || ''
+    });
+    setIsEditTeamModalOpen(true);
+  };
+  
+  const handleUpdateTeam = () => {
+    if (selectedTeam && editTeamForm.name.trim()) {
+      const updatedTeam = {
+        ...selectedTeam,
+        name: editTeamForm.name.trim(),
+        jerseyColor: editTeamForm.jerseyColor,
+        description: editTeamForm.description
+      };
+      dispatch(updateTeam(updatedTeam));
+      setIsEditTeamModalOpen(false);
+      setSelectedTeam(null);
+      setEditTeamForm({ name: '', jerseyColor: '', description: '' });
     }
   };
-
-  // Open player selection modal
-  const openPlayerModal = (teamId) => {
-    const team = teams?.find(t => t.id === teamId);
-    if (team && team.players && team.players.length >= 11) {
-      alert('Team is full! Maximum 11 players allowed.');
-      return;
-    }
-    setSelectedTeamId(teamId);
-    setIsPlayerModalOpen(true);
-  };
-
-  // Remove player from team
-  const handleRemovePlayer = (teamId, playerId) => {
-    dispatch(removePlayerFromTeam({ teamId, playerId }));
-  };
-
-  // Set team captain
-  const handleSetCaptain = (teamId, playerId) => {
-    dispatch(setCaptain({ teamId, playerId }));
-  };
-
-  // Delete team
+  
   const handleDeleteTeam = (teamId) => {
-    if (window.confirm('Are you sure you want to delete this team? All players will be returned to the club pool.')) {
+    if (window.confirm('Are you sure you want to delete this team?')) {
       dispatch(deleteTeam(teamId));
     }
   };
   
-  console.log('Club data:', { teams, playerPool, clubInfo });
+  const handleAssignPlayer = (teamId, playerId) => {
+    dispatch(assignPlayerToTeam({ teamId, playerId }));
+  };
+  
+  const openPlayerModal = (teamId) => {
+    setSelectedTeamId(teamId);
+    setIsPlayerModalOpen(true);
+  };
+  
   return (
-    <div className="home-page-container">
-      <div className="home-container">
-        {/* Header */}
-        <div className="home-header">
-          <div className="header-left">
-            <button onClick={() => navigate('/')} className="back-btn">
-              🏏
-            </button>
-            <span className="brand-icon">👥</span>
-            <h1 className="app-title">Team Management</h1>
+    <div className={`dashboard-container app-theme ${isDarkMode ? 'dark' : 'light'}`}>
+      <div className="dashboard-content">
+        {/* Header Section */}
+        <div className="dashboard-header">
+                    <div className="app-title-section">
+            <div className="app-logo">
+              <span className="logo-icon">👥</span>
+            </div>
+            <div className="title-content">
+              <h1 className="dashboard-title">Team Management</h1>
+              <div className="title-subtitle">Create and manage your cricket teams</div>
+            </div>
           </div>
-          <div className="header-right">
-            <button 
-              onClick={() => setIsCreateTeamModalOpen(true)}
-              className="primary-btn blue"
+          <div className="theme-toggle-section">
+            <button onClick={toggleDarkMode} className="theme-toggle-btn">
+              {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+            </button>
+          </div>
+        </div>
+
+        {/* Floating Action Button */}
+        <div className={`fab-container ${isFabOpen ? 'fab-open' : ''}`}>
+          {/* Overlay to close FAB when clicking outside */}
+          {isFabOpen && (
+            <div 
+              className="fab-overlay" 
+              onClick={() => setIsFabOpen(false)}
+            />
+          )}
+          
+          {/* FAB Menu Items */}
+          <div className="fab-menu">
+            <Link 
+              to="/" 
+              className="fab-menu-item fab-item-1"
+              onClick={() => setIsFabOpen(false)}
             >
-              ⚡ New Team
+              <div className="fab-item-icon">🏠</div>
+              <span className="fab-item-label">Home Dashboard</span>
+            </Link>
+            
+            <button 
+              className="fab-menu-item fab-item-2"
+              onClick={() => {
+                setIsCreateTeamModalOpen(true);
+                setIsFabOpen(false);
+              }}
+            >
+              <div className="fab-item-icon">➕</div>
+              <span className="fab-item-label">Create New Team</span>
             </button>
+            
+            <Link 
+              to="/player-management" 
+              className="fab-menu-item fab-item-3"
+              onClick={() => setIsFabOpen(false)}
+            >
+              <div className="fab-item-icon">👤</div>
+              <span className="fab-item-label">Manage Players</span>
+            </Link>
+            
+            <Link 
+              to="/match-management" 
+              className="fab-menu-item fab-item-4"
+              onClick={() => setIsFabOpen(false)}
+            >
+              <div className="fab-item-icon">🏆</div>
+              <span className="fab-item-label">Match Management</span>
+            </Link>
           </div>
+          
+          {/* Main FAB Button */}
+          <button 
+            className="fab-button"
+            onClick={() => setIsFabOpen(!isFabOpen)}
+            aria-label="Quick Actions"
+          >
+            <span className={`fab-icon ${isFabOpen ? 'fab-icon-close' : ''}`}>
+              {isFabOpen ? '✕' : '⚙️'}
+            </span>
+          </button>
         </div>
 
-        {/* Main Title Section */}
-        <div className="main-title-section">
-          <h2 className="main-title">Cricket Club Teams</h2>
-          <p className="main-subtitle">
-            Manage your teams, assign players from the club pool, and organize your cricket club effectively.
-          </p>
-        </div>
+        {/* Teams Section */}
+        <div className="teams-section">
+          <div className="section-header">
+            <h2>Your Teams</h2>
+            <div className="section-controls">
+              <input
+                type="text"
+                placeholder="Search teams..."
+                className="search-input"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <select
+                className="filter-select"
+                value={filterByReadiness}
+                onChange={(e) => setFilterByReadiness(e.target.value)}
+              >
+                <option value="all">All Teams</option>
+                <option value="ready">Ready (11+ players)</option>
+                <option value="incomplete">Incomplete</option>
+              </select>
+            </div>
+      </div>
 
-        {/* Club Stats Section */}
-        <div className="club-stats-section">
-          <div className="club-info-header">
-            <h2 className="club-title">{clubInfo?.name || 'Cricket Club'}</h2>
-            <p className="club-subtitle">Team management overview</p>
+      {/* Teams Display */}
+      <div className="teams-container">
+        {filteredTeams.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">🏏</div>
+            <h3>No teams found</h3>
+            <p>
+              {searchTerm || filterByReadiness !== 'all' 
+                ? 'Try adjusting your search or filter criteria'
+                : 'Create your first team to get started'
+              }
+            </p>
+            {!searchTerm && filterByReadiness === 'all' && (
+              <button 
+                className="btn btn-primary"
+                onClick={() => setIsCreateTeamModalOpen(true)}
+              >
+                Create First Team
+              </button>
+            )}
           </div>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <div className="stat-icon">👥</div>
-              <div className="stat-content">
-                <div className="stat-number">{playerPool?.length || 0}</div>
-                <div className="stat-label">Total Players</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">🏏</div>
-              <div className="stat-content">
-                <div className="stat-number">{teams?.length || 0}</div>
-                <div className="stat-label">Active Teams</div>
-              </div>
-            </div>
-            <div className="stat-card">
-              <div className="stat-icon">✨</div>
-              <div className="stat-content">
-                <div className="stat-number">{availablePlayers.length || 0}</div>
-                <div className="stat-label">Available Players</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Teams List */}
-        {teams && teams.length > 0 ? (
-          <div className="teams-container">
-            <div className="section-header">
-              <h3 className="section-title">🏏 Active Teams</h3>
-              <p className="section-subtitle">Manage your team rosters and player assignments</p>
-            </div>
-            <div className="teams-grid">
-              {teams.map(team => (
-                <div key={team.id} className="team-card-modern">
-                  <div className="team-card-header">
-                    <div className="team-badge">
-                      <span className="team-icon">🏏</span>
-                      <div className="team-info">
-                        <h4 className="team-name">{team.name}</h4>
-                        <span className="team-size">
+        ) : (
+          <div className="teams-grid">
+            {filteredTeams.map(team => {
+              const stats = getTeamStats(team);
+              const topPerformers = getTopPerformers(team);
+              const isReady = (team.players?.length >= 11);
+              
+              return (
+                <div key={team.id} className={`team-card ${isReady ? 'ready' : ''}`}>
+                  <div className="team-header">
+                    <div className="team-info">
+                      <div className="team-name-section">
+                        <h3 className="team-name">{team.name.toUpperCase()}</h3>
+                        <div 
+                          className="team-jersey"
+                          style={{ backgroundColor: team.jerseyColor }}
+                          title={`Jersey Color: ${team.jerseyColor}`}
+                        />
+                      </div>
+                      <div className="team-meta">
+                        <span className="player-count">
                           {team.players?.length || 0}/11 players
+                        </span>
+                        <span className="win-rate">
+                          Win Rate: {stats.winRate}%
                         </span>
                       </div>
                     </div>
-                    <div className="team-actions">
-                      <button 
-                        onClick={() => openPlayerModal(team.id)}
-                        className="action-btn primary"
-                        disabled={(team.players?.length || 0) >= 11}
-                      >
-                        + Player
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteTeam(team.id)}
-                        className="action-btn danger"
-                      >
-                        🗑️
-                      </button>
+                    <div className="team-status">
+                      {isReady ? (
+                        <span className="status-badge ready">Ready</span>
+                      ) : (
+                        <span className="status-badge incomplete">
+                          Need {11 - (team.players?.length || 0)} more
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  {/* Players List */}
-                  {team.players && team.players.length > 0 && (
-                    <div className="team-players-section">
-                      <div className="players-header">
-                        <h5 className="players-title">⭐ Squad Players</h5>
-                        <span className="players-count">{team.players.length} players</span>
+                  {/* Team Performance Stats */}
+                  <div className="team-stats">
+                    <div className="stats-row">
+                      <div className="stat-item">
+                        <span className="stat-value">{stats.wins}</span>
+                        <span className="stat-label">Wins</span>
                       </div>
-                      <div className="modern-players-grid">
-                        {team.players.map(playerId => {
-                          const player = getPlayerDetails(playerId);
-                          if (!player) return null;
-                          
-                          return (
-                            <div key={playerId} className="modern-player-card">
-                              <div className="player-avatar">
-                                {player.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="player-details">
-                                <div className="player-name-row">
-                                  <span className="player-name">{player.name}</span>
-                                  {team.captainId === playerId && <span className="captain-badge">👑</span>}
-                                </div>
-                                <span className="player-role">{player.role}</span>
-                              </div>
-                              <div className="player-actions-modern">
-                                {team.captainId !== playerId && (
-                                  <button 
-                                    onClick={() => handleSetCaptain(team.id, playerId)}
-                                    className="mini-btn captain"
-                                    title="Make Captain"
-                                  >
-                                    👑
-                                  </button>
-                                )}
-                                <button 
-                                  onClick={() => handleRemovePlayer(team.id, playerId)}
-                                  className="mini-btn remove"
-                                  title="Remove Player"
-                                >
-                                  ✗
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                      <div className="stat-item">
+                        <span className="stat-value">{stats.losses}</span>
+                        <span className="stat-label">Losses</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-value">{stats.draws}</span>
+                        <span className="stat-label">Draws</span>
+                      </div>
+                      <div className="stat-item">
+                        <span className="stat-value">{stats.totalMatches}</span>
+                        <span className="stat-label">Total</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Top Performers */}
+                  {topPerformers && (
+                    <div className="top-performers">
+                      <h4>Top Performers</h4>
+                      <div className="performers-grid">
+                        <div className="performer-item">
+                          <div className="performer-icon">🏏</div>
+                          <div className="performer-details">
+                            <span className="performer-name">{topPerformers.topBatsman.name}</span>
+                            <span className="performer-stat">
+                              {topPerformers.topBatsman.runs} runs • SR: {topPerformers.topBatsman.strikeRate}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="performer-item">
+                          <div className="performer-icon">⚡</div>
+                          <div className="performer-details">
+                            <span className="performer-name">{topPerformers.topBowler.name}</span>
+                            <span className="performer-stat">
+                              {topPerformers.topBowler.wickets} wickets • Eco: {topPerformers.topBowler.economy}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="modern-empty-state">
-            <div className="empty-content">
-              <div className="empty-illustration">
-                <div className="cricket-icon-large">🏏</div>
-                <div className="empty-circles">
-                  <div className="circle-1"></div>
-                  <div className="circle-2"></div>
-                  <div className="circle-3"></div>
-                </div>
-              </div>
-              <h3 className="empty-title">No Teams Created Yet</h3>
-              <p className="empty-description">
-                Create your first cricket team and start building your squad from the club's player pool.
-              </p>
-              <button 
-                onClick={() => setIsCreateTeamModalOpen(true)}
-                className="primary-btn blue"
-                style={{ marginTop: '24px' }}
-              >
-                ⚡ Create Your First Team
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Available Players Pool */}
-        {availablePlayers.length > 0 && (
-          <div className="available-players-modern">
-            <div className="section-header">
-              <h3 className="section-title">✨ Available Players</h3>
-              <p className="section-subtitle">Players ready to join a team</p>
-            </div>
-            <div className="available-players-grid">
-              {availablePlayers.map(player => (
-                <div key={player.id} className="available-player-modern">
-                  <div className="player-avatar">
-                    {player.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="player-info">
-                    <span className="player-name">{player.name}</span>
-                    <span className="player-role">{player.role}</span>
-                  </div>
-                  <div className="player-meta">
-                    <span className="player-age">Age {player.age}</span>
-                    <span className="player-date">
-                      {new Date(player.joinedAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="player-status">
-                    <span className="status-badge available">Available</span>
+                  {team.description && (
+                    <p className="team-description">{team.description}</p>
+                  )}
+
+                  {/* Team Actions */}
+                  <div className="team-actions">
+                    <button
+                      className="team-action-btn edit"
+                      onClick={() => handleEditTeam(team)}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      className="team-action-btn players"
+                      onClick={() => openPlayerModal(team.id)}
+                      disabled={availablePlayers.length === 0}
+                    >
+                      👥 Manage
+                    </button>
+                    <button
+                      className="team-action-btn stats"
+                      onClick={() => navigate(`/team-details/${team.id}`)}
+                    >
+                      📊 Stats
+                    </button>
+                    <button
+                      className="team-action-btn delete"
+                      onClick={() => handleDeleteTeam(team.id)}
+                    >
+                      🗑️ Delete
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* Player Selection Modal */}
-      {isPlayerModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal large">
-            <div className="modal-header">
-              <h3>Select Player to Add</h3>
-              <button 
-                onClick={() => {
-                  setIsPlayerModalOpen(false);
-                  setSelectedTeamId(null);
-                }}
-                className="close-btn"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="modal-body">
-              {availablePlayers.length > 0 ? (
-                <div className="players-selection-grid">
-                  {availablePlayers.map(player => (
-                    <div key={player.id} className="selectable-player-card">
-                      <div className="player-info">
-                        <h4 className="player-name">{player.name}</h4>
-                        <span className="player-role">{player.role}</span>
-                        <span className="player-age">Age: {player.age}</span>
-                      </div>
-                      <button 
-                        onClick={() => handleAddPlayer(player.id)}
-                        className="select-btn"
-                      >
-                        Add to Team
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="no-players">
-                  <p>No available players in the club pool.</p>
-                  <button 
-                    onClick={() => navigate('/register-player')}
-                    className="primary-btn"
-                  >
-                    Register New Player
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Create Team Modal */}
       {isCreateTeamModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" onClick={() => setIsCreateTeamModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Create New Team</h3>
+              <h2>Create New Team</h2>
               <button 
+                className="modal-close"
                 onClick={() => setIsCreateTeamModalOpen(false)}
-                className="close-btn"
               >
                 ✕
               </button>
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label className="form-label">Team Name</label>
+                <label>Team Name</label>
                 <input
                   type="text"
-                  value={newTeamName}
-                  onChange={(e) => setNewTeamName(e.target.value)}
                   placeholder="Enter team name"
-                  className="form-input"
-                  maxLength={50}
+                  value={newTeamForm.name}
+                  onChange={(e) => setNewTeamForm(prev => ({ ...prev, name: e.target.value }))}
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Jersey Color</label>
+                <div className="color-input-group">
+                  <input
+                    type="color"
+                    value={newTeamForm.jerseyColor}
+                    onChange={(e) => setNewTeamForm(prev => ({ ...prev, jerseyColor: e.target.value }))}
+                  />
+                  <input
+                    type="text"
+                    value={newTeamForm.jerseyColor}
+                    onChange={(e) => setNewTeamForm(prev => ({ ...prev, jerseyColor: e.target.value }))}
+                    placeholder="#3498db"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Description (Optional)</label>
+                <textarea
+                  placeholder="Team description"
+                  value={newTeamForm.description}
+                  onChange={(e) => setNewTeamForm(prev => ({ ...prev, description: e.target.value }))}
+                  rows="3"
                 />
               </div>
             </div>
             <div className="modal-footer">
               <button 
+                className="btn btn-secondary"
                 onClick={() => setIsCreateTeamModalOpen(false)}
-                className="secondary-btn"
               >
                 Cancel
               </button>
               <button 
+                className="btn btn-primary"
                 onClick={handleCreateTeam}
-                className="primary-btn"
-                disabled={!newTeamName.trim()}
+                disabled={!newTeamForm.name.trim()}
               >
                 Create Team
               </button>
@@ -400,6 +514,131 @@ function TeamManagement() {
           </div>
         </div>
       )}
+
+      {/* Edit Team Modal */}
+      {isEditTeamModalOpen && selectedTeam && (
+        <div className="modal-overlay" onClick={() => setIsEditTeamModalOpen(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Team</h2>
+              <button 
+                className="modal-close"
+                onClick={() => setIsEditTeamModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Team Name</label>
+                <input
+                  type="text"
+                  placeholder="Enter team name"
+                  value={editTeamForm.name}
+                  onChange={(e) => setEditTeamForm(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div className="form-group">
+                <label>Jersey Color</label>
+                <div className="color-input-group">
+                  <input
+                    type="color"
+                    value={editTeamForm.jerseyColor}
+                    onChange={(e) => setEditTeamForm(prev => ({ ...prev, jerseyColor: e.target.value }))}
+                  />
+                  <input
+                    type="text"
+                    value={editTeamForm.jerseyColor}
+                    onChange={(e) => setEditTeamForm(prev => ({ ...prev, jerseyColor: e.target.value }))}
+                    placeholder="#3498db"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Description</label>
+                <textarea
+                  placeholder="Team description (optional)"
+                  value={editTeamForm.description}
+                  onChange={(e) => setEditTeamForm(prev => ({ ...prev, description: e.target.value }))}
+                  rows="3"
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setIsEditTeamModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handleUpdateTeam}
+                disabled={!editTeamForm.name.trim()}
+              >
+                Update Team
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Player Assignment Modal */}
+      {isPlayerModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsPlayerModalOpen(false)}>
+          <div className="modal-content large" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Manage Team Players</h2>
+              <button 
+                className="modal-close"
+                onClick={() => setIsPlayerModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              {availablePlayers.length === 0 ? (
+                <div className="empty-state">
+                  <p>No available players to assign.</p>
+                  <Link to="/player-management" className="btn btn-primary">
+                    Add New Players
+                  </Link>
+                </div>
+              ) : (
+                <div className="available-players">
+                  <h3>Available Players ({availablePlayers.length})</h3>
+                  <div className="players-list">
+                    {availablePlayers.map(player => (
+                      <div key={player.id} className="player-item">
+                        <div className="player-info">
+                          <h4>{player.name}</h4>
+                          <p>{player.position} • {player.battingStyle} • {player.bowlingStyle}</p>
+                        </div>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => handleAssignPlayer(selectedTeamId, player.id)}
+                        >
+                          Add to Team
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setIsPlayerModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+        </div>
+      </div>
     </div>
   );
 }

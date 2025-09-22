@@ -1,6 +1,100 @@
-# Getting Started with Create React App
+# 🏏 Cricket Scoring App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern, responsive cricket management application built with React and Redux for managing teams, players, and live match scoring.
+
+## 🚀 Live Demo
+
+**Deployed on GitHub Pages:** https://nayakmk.github.io/cricket-app
+
+## ✨ Features
+
+- 🏏 **Team Management** - Create and manage cricket teams
+- 👥 **Player Registration** - Add players to your club pool
+- 📊 **Club Dashboard** - Overview of players, teams, and statistics  
+- ⚡ **Match Setup** - Configure matches with team selection
+- 🎯 **Live Scoring** - Real-time match scoring interface
+- 📱 **Responsive Design** - Works perfectly on all devices
+- 🎨 **Modern UI** - Clean, professional design with smooth animations
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React 19, Redux Toolkit, React Router
+- **Styling:** CSS3 with modern gradients and animations
+- **Build Tool:** Create React App
+- **Deployment:** GitHub Pages with automated CI/CD
+- **State Management:** Redux with persistent storage
+
+## 🚀 Quick Start
+
+### Development
+
+```bash
+# Clone the repository
+git clone https://github.com/nayakmk/cricket-app.git
+
+# Navigate to project directory
+cd cricket-app
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+Visit `http://localhost:3000` to see the app in development mode.
+
+### Build for Production
+
+```bash
+# Create production build
+npm run build
+
+# Test production build locally
+npx serve -s build
+```
+
+### Deploy to GitHub Pages
+
+```bash
+# Deploy manually
+npm run deploy
+
+# Or push to main branch for automatic deployment
+git push origin main
+```
+
+## 📦 Deployment
+
+This app is configured for GitHub Pages deployment with:
+
+- ✅ Automated GitHub Actions workflow
+- ✅ SPA routing support (no 404 errors)
+- ✅ Optimized production builds
+- ✅ Asset path configuration
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed setup instructions.
+
+## 🎮 How to Use
+
+1. **Dashboard** - View your cricket club overview and statistics
+2. **Player Registration** - Add new players to your club
+3. **Team Management** - Create teams and assign players
+4. **Match Setup** - Configure new matches between teams
+5. **Live Scoring** - Track runs, wickets, and overs in real-time
+
+## 🔧 Configuration
+
+The app is already configured for GitHub Pages deployment at:
+**https://nayakmk.github.io/cricket-app**
+
+## 📱 Browser Support
+
+- ✅ Chrome (recommended)
+- ✅ Firefox  
+- ✅ Safari
+- ✅ Edge
+- ✅ Mobile browsers (iOS Safari, Chrome Mobile)
 
 ## Available Scripts
 

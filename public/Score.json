@@ -1,0 +1,31 @@
+{
+  "status": "success",
+  "response": [
+    {
+      "seriesName": "ENGLAND TOUR OF IRELAND, 2025",
+      "matchList": [
+        {
+          "seriesId": "8802",
+          "matchId": "105858",
+          "matchTitle": "Ireland vs England",
+          "matchFormat": " 3rd T20I",
+          "matchVenue": "Dublin, The Village",
+          "matchDate": "Sep 21",
+          "matchTime": " 01:30 PM LOCAL ",
+          "teamOne": {
+            "name": "ENG",
+            "score": "",
+            "status": "bowl"
+          },
+          "teamTwo": {
+            "name": "IRE",
+            "score": "44-1 (5.1 Ovs)",
+            "status": "bat"
+          },
+          "matchStatus": "England opt to bowl",
+          "currentStatus": "live"
+        }
+      ]
+    }
+  ]
+}

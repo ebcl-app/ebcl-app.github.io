@@ -2,7 +2,7 @@
 
 ## 🚀 Deployment Setup
 
-This guide will help you deploy the Cricket Scoring App to GitHub Pages so it's accessible at `https://yourusername.github.io/cricket-scoring-app`.
+This guide will help you deploy the Cricket Scoring App to GitHub Pages so it's accessible at `https://nayakmk.github.io/cricket-app`.
 
 ### 📋 Prerequisites
 
@@ -15,9 +15,9 @@ This guide will help you deploy the Cricket Scoring App to GitHub Pages so it's 
 The following files have been configured for GitHub Pages deployment:
 
 #### 1. **package.json** - Updated with:
-- `homepage` field pointing to your GitHub Pages URL
+- `homepage` field pointing to your GitHub Pages URL: `https://nayakmk.github.io/cricket-app`
 - `predeploy` and `deploy` scripts for gh-pages
-- `gh-pages` dev dependency
+- `gh-pages` dev dependency installed
 
 #### 2. **GitHub Actions Workflow** - `.github/workflows/deploy.yml`:
 - Automated deployment on push to main/master branch
@@ -45,35 +45,30 @@ The following files have been configured for GitHub Pages deployment:
    ```
 
 2. **Enable GitHub Pages:**
-   - Go to your repository on GitHub
+   - Go to your repository on GitHub: https://github.com/nayakmk/cricket-app
    - Navigate to Settings → Pages
    - Source: Select "GitHub Actions"
    - The workflow will automatically deploy your app
 
 3. **Access your app:**
-   - URL: `https://yourusername.github.io/cricket-scoring-app`
+   - URL: https://nayakmk.github.io/cricket-app
 
 ### Method 2: Manual Deployment
 
-1. **Update homepage in package.json:**
-   ```json
-   "homepage": "https://yourusername.github.io/your-repo-name"
-   ```
-
-2. **Deploy manually:**
+1. **Deploy manually:**
    ```bash
    npm run deploy
    ```
 
-## 🛠️ Setup Steps for New Repository
+## 🛠️ Setup Steps for Repository
 
-### 1. **Create GitHub Repository:**
+### 1. **Repository Setup:**
 ```bash
 # Initialize git if not already done
 git init
 
 # Add remote origin
-git remote add origin https://github.com/yourusername/cricket-scoring-app.git
+git remote add origin https://github.com/nayakmk/cricket-app.git
 
 # Add all files
 git add .
@@ -85,21 +80,15 @@ git commit -m "Initial commit with GitHub Pages setup"
 git push -u origin main
 ```
 
-### 2. **Update package.json homepage:**
-Replace `yourusername` and repository name in package.json:
-```json
-"homepage": "https://yourusername.github.io/cricket-scoring-app"
-```
-
-### 3. **Enable GitHub Pages:**
-1. Go to repository Settings
+### 2. **Enable GitHub Pages:**
+1. Go to repository Settings: https://github.com/nayakmk/cricket-app/settings
 2. Scroll to "Pages" section
 3. Source: Select "GitHub Actions"
 4. Save settings
 
-### 4. **Verify Deployment:**
+### 3. **Verify Deployment:**
 - Check the Actions tab for deployment status
-- Visit your GitHub Pages URL once deployment completes
+- Visit https://nayakmk.github.io/cricket-app once deployment completes
 
 ## 🔍 Troubleshooting
 
