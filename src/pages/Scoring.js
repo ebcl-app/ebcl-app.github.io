@@ -13,12 +13,19 @@ import {
 import '../styles/common.css';
 import '../styles/cricket.css';
 import '../styles/scoring.css';
+import '../styles/scoring-figma-exact.css';
 import '../styles/scoring-new.css';
 import '../styles/scoring-mockup.css';
 import '../styles/scoring-enhanced.css';
 import '../styles/scoring-responsive.css';
 
 const Scoring = () => {
+  const [toast, setToast] = useState(null);
+  const [showUndoModal, setShowUndoModal] = useState(false);
+  const [showEndOverModal, setShowEndOverModal] = useState(false);
+  const [showCustomRunModal, setShowCustomRunModal] = useState(false);
+  const [showExtraModal, setShowExtraModal] = useState(false);
+  const [showOverEndModal, setShowOverEndModal] = useState(false);
   const dispatch = useDispatch();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const { currentMatch } = useSelector(state => state.match);
@@ -61,508 +68,219 @@ const Scoring = () => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key >= '0' && event.key <= '6') {
-        handleRunScored(parseInt(event.key));
-      } else if (event.key === 'w' || event.key === 'W') {
-        handleWicketClick();
-      } else if (event.key === 'u' || event.key === 'U') {
-        dispatch(undoLastBall());
+        const runs = parseInt(event.key);
+        handleRunScored(runs);
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Calculate stats
-  const { striker, nonStriker } = currentBatsmen || {};
-  const bowler = currentBowler;
-  
-  const strikerStats = striker ? playerStats[striker.id] || {} : {};
-  const nonStrikerStats = nonStriker ? playerStats[nonStriker.id] || {} : {};
-  const bowlerStats = bowler ? playerStats[bowler.id] || {} : {};
-
-  const stats = {
-    striker: {
-      runs: strikerStats.runs || 78,
-      balls: strikerStats.balls || 45,
-      strikeRate: strikerStats.balls > 0 ? ((strikerStats.runs / strikerStats.balls) * 100).toFixed(1) : '173.3',
-      battingTime: strikerStats.battingTime || '45:32'
-    },
-    nonStriker: {
-      runs: nonStrikerStats.runs || 22,
-      balls: nonStrikerStats.balls || 18,
-      strikeRate: nonStrikerStats.balls > 0 ? ((nonStrikerStats.runs / nonStrikerStats.balls) * 100).toFixed(1) : '122.2',
-      battingTime: nonStrikerStats.battingTime || '18:15'
-    },
-    bowler: {
-      wickets: bowlerStats.wickets || 0,
-      runsConceded: bowlerStats.runsConceded || 23,
-      overs: bowlerStats.overs || '3.2',
-      economy: bowlerStats.economy || '4.50',
-      bowlingAverage: bowlerStats.bowlingAverage || '28.5'
-    }
-  };
-
+  // Mock handlers (to be implemented)
   const handleRunScored = (runs) => {
-    dispatch(addRuns({ runs, isExtra: false }));
+    console.log(`Scored ${runs} runs`);
   };
-
+  
   const handleExtra = (type, runs) => {
-    dispatch(addRuns({ runs, isExtra: true, extraType: type }));
+    console.log(`Extra: ${type}, runs: ${runs}`);
   };
-
-  const handlePlayerChange = (playerType) => {
-    if (playerType === 'striker' || playerType === 'nonStriker') {
-      setBatsmanModal({ open: true, type: playerType });
-      setPlayerSearch('');
-    } else if (playerType === 'bowler') {
-      setBowlerModal(true);
-      setBowlerSearch('');
-    }
-  };
-
-  const handlePlayerSelection = (playerType, position, player) => {
-    if (playerType === 'batsman') {
-      dispatch(changeBatsman({ position, player }));
-      setBatsmanModal({ open: false, type: null });
-    } else if (playerType === 'bowler') {
-      dispatch(setBowler(player));
-      setBowlerModal(false);
-    }
-    setPlayerSearch('');
-    setBowlerSearch('');
-  };
-
+  
   const handleWicketClick = () => {
     setWicketModal(true);
   };
-
-  const handleWicketType = (wicketType) => {
-    console.log('Wicket recorded:', wicketType);
-    setWicketModal(false);
+  
+  const handlePlayerChange = (type) => {
+    if (type === 'bowler') {
+      setBowlerModal(true);
+    }
   };
 
   return (
-    <div className={`dashboard-container app-theme ${isDarkMode ? 'dark' : 'light'}`}>
-      <div className="dashboard-content">
-        {/* Header with consistent styling matching Home page */}
-        <div className="dashboard-header">
-          <div className="app-title-section">
-            <div className="app-logo">
-              <Link to="/" className="logo-link">
-                <span className="logo-icon">🏏</span>
-              </Link>
-            </div>
-            <div className="title-content">
-              <h1 className="dashboard-title">Live Scoring</h1>
-              <div className="title-subtitle">Track Match Progress</div>
+    <div className={`figma-cricket-layout app-theme ${isDarkMode ? 'dark' : 'light'}`}>
+      {/* Header with Live Scoring and Dark Mode toggle */}
+      <div className="figma-header">
+        <div className="figma-header-left">
+          <div className="figma-logo-container">
+            <span className="figma-logo-icon">🏏</span>
+            <div className="figma-title-section">
+              <h1 className="figma-title">Live Scoring</h1>
+              <div className="figma-subtitle">Track Match Progress</div>
             </div>
           </div>
-          <div className="theme-toggle-section">
-            <div className="live-status-badge">
-              <span className="live-dot"></span>
-              <span className="live-text">LIVE</span>
+        </div>
+        <div className="figma-header-right">
+          <span className="figma-live-badge">● LIVE</span>
+          <button onClick={toggleDarkMode} className="figma-theme-toggle">
+            🌙
+          </button>
+        </div>
+      </div>
+
+      {/* Match Status Card - Consolidated Info */}
+      <div className="figma-match-status-card">
+        <div className="figma-status-header">
+          <span className="figma-status-icon">🏏</span>
+          <span className="figma-status-title">MATCH STATUS</span>
+        </div>
+        
+        {/* Current Batting Team Score */}
+        <div className="figma-current-team">
+          <div className="figma-team-name-current">TEAM A BATTING</div>
+          <div className="figma-current-score">148<span className="figma-wickets">/3</span></div>
+          <div className="figma-match-details">
+            <span className="figma-detail-item">Overs: 18.1</span>
+            <span className="figma-detail-divider">•</span>
+            <span className="figma-detail-item">Target: 210</span>
+            <span className="figma-detail-divider">•</span>
+            <span className="figma-detail-item">Need: 62 runs</span>
+          </div>
+        </div>
+
+        {/* Current Batsmen */}
+        <div className="figma-current-batsmen">
+          <div className="figma-batsman-compact">
+            <div className="figma-batsman-badge figma-striker-badge">★</div>
+            <div className="figma-batsman-info">
+              <span className="figma-batsman-name">Virat Kohli</span>
+              <span className="figma-batsman-score">78 (45)</span>
+              <span className="figma-batsman-sr">SR: 173.3</span>
             </div>
-            <button onClick={toggleDarkMode} className="theme-toggle-btn">
-              {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          </div>
+          <div className="figma-batsman-compact">
+            <div className="figma-batsman-badge figma-non-striker-badge">•</div>
+            <div className="figma-batsman-info">
+              <span className="figma-batsman-name">Rohit Sharma</span>
+              <span className="figma-batsman-score">22 (18)</span>
+              <span className="figma-batsman-sr">SR: 122.2</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Current Bowler */}
+        <div className="figma-current-bowler">
+          <div className="figma-bowler-info">
+            <div className="figma-bowler-details">
+              <span className="figma-bowler-name">🥎 Jasprit Bumrah</span>
+              <span className="figma-bowler-stats">3.1 Overs • 2-27 • Eco: 8.4</span>
+            </div>
+            <button className="figma-change-bowler-compact" onClick={() => handlePlayerChange('bowler')}>
+              CHANGE
             </button>
           </div>
         </div>
 
-        {/* Main Scoring Interface */}
-        <div className="scoring-main-container">
-          {/* Match Scorecard */}
-          <div className="match-scorecard">
-            <div className="teams-display">
-              {/* Team A (Batting) */}
-              <div className="team-display team-batting">
-                <div className="team-navigation">
-                  <button className="nav-arrow">‹</button>
-                </div>
-                <div className="team-content">
-                  <div className="team-name">{currentMatch?.team1?.name || 'TEAM A'}</div>
-                  <div className="team-score-large">
-                    <span className="runs-large">{score?.total || 145}</span>
-                    <span className="wickets-large">/{score?.wickets || 3}</span>
-                  </div>
-                  <div className="team-stats">
-                    <div className="overs-display">
-                      {Math.floor((score?.balls || 109) / 6)}.{(score?.balls || 109) % 6} Overs
-                    </div>
-                    <div className="run-rate">
-                      RR: {score?.balls > 0 ? ((score?.total / score?.balls) * 6).toFixed(2) : '7.91'}
-                    </div>
-                    <div className="target-info">
-                      Target: 250 (105 needed from 54 balls)
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Current Over */}
+        <div className="figma-current-over-compact">
+          <span className="figma-over-label-compact">Current Over:</span>
+          <div className="figma-over-balls-compact">
+            <div className="figma-ball-compact figma-ball-dot">0</div>
+            <div className="figma-ball-compact figma-ball-runs">1</div>
+            <div className="figma-ball-compact figma-ball-runs">2</div>
+            <div className="figma-ball-compact figma-ball-runs">6</div>
+            <div className="figma-ball-compact figma-ball-empty">•</div>
+            <div className="figma-ball-compact figma-ball-empty">•</div>
+          </div>
+        </div>
+      </div>
 
-              {/* VS Divider */}
-              <div className="vs-divider">
-                <span className="vs-text">VS</span>
-              </div>
-
-              {/* Team B (Bowling) */}
-              <div className="team-display team-bowling">
-                <div className="team-content">
-                  <div className="team-name">{currentMatch?.team2?.name || 'TEAM B'}</div>
-                  <div className="team-score-large bowling-score">
-                    <span className="runs-large">135</span>
-                    <span className="wickets-large">/3</span>
-                  </div>
-                  <div className="team-stats bowling-stats">
-                    <div className="last-wicket">
-                      <span className="label">LAST WICKET:</span>
-                    </div>
-                    <div className="projected-score">
-                      <span className="label">Proj. Score:</span> 200
-                    </div>
-                    <div className="last-et">
-                      <span className="label">LAST ET:</span> 135/2000
-                    </div>
-                  </div>
-                </div>
-                <div className="team-navigation">
-                  <button className="nav-arrow">›</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Current Over Display */}
-            <div className="current-over-section">
-              <div className="over-header">
-                <span className="over-label">CURRENT OVER</span>
-                <button className="change-bowler-btn" onClick={() => handlePlayerChange('bowler')}>
-                  Change Bowler
-                </button>
-              </div>
-              <div className="over-balls-display">
-                {(ballHistory || []).slice(-6).map((ball, index) => (
-                  <div key={index} className={`ball-indicator ${ball.type || 'runs'}`}>
-                    {ball.display || ball.runs || '•'}
-                  </div>
-                ))}
-                {Array.from({ length: 6 - ((ballHistory || []).slice(-6).length) }, (_, index) => (
-                  <div key={`empty-${index}`} className="ball-indicator empty">•</div>
-                ))}
-              </div>
+      {/* All Scoring Controls Card */}
+      <div className="figma-scoring-controls-card">
+        <div className="figma-controls-header">
+          <span className="figma-controls-icon">⚡</span>
+          <span className="figma-controls-title">SCORING CONTROLS</span>
+        </div>
+        
+        {/* Main Controls Layout - Runs on Left, Bowling Controls on Right */}
+        <div className="figma-controls-main-layout">
+          
+          {/* Left Side - Run Scoring Buttons (3x3) */}
+          <div className="figma-runs-section">
+            <div className="figma-section-label">RUNS</div>
+            <div className="figma-run-buttons-3x3">
+              <button className="figma-run-btn-mobile figma-dot-btn" onClick={() => handleRunScored(0)}>0</button>
+              <button className="figma-run-btn-mobile" onClick={() => handleRunScored(1)}>1</button>
+              <button className="figma-run-btn-mobile" onClick={() => handleRunScored(2)}>2</button>
+              <button className="figma-run-btn-mobile" onClick={() => handleRunScored(3)}>3</button>
+              <button className="figma-run-btn-mobile figma-boundary-btn" onClick={() => handleRunScored(4)}>4</button>
+              <button className="figma-run-btn-mobile" onClick={() => handleRunScored(5)}>5</button>
+              <button className="figma-run-btn-mobile figma-six-btn" onClick={() => handleRunScored(6)}>6</button>
+              <button className="figma-run-btn-mobile figma-dot-btn" onClick={() => setShowCustomRunModal(true)}>+</button>
+              <button className="figma-run-btn-mobile" onClick={() => handleRunScored(7)}>7+</button>
             </div>
           </div>
 
-          {/* Enhanced Current Players Section */}
-          <div className="players-section">
-            <div className="section-header">
-              <h2 className="section-title">CURRENT PLAYERS</h2>
+          {/* Right Side - Extras Controls */}
+          <div className="figma-extras-controls">
+            <div className="figma-section-label">EXTRAS</div>
+            
+            {/* Main Extras Events Grid (3x2) */}
+            <div className="figma-extras-buttons-main">
+              <button className="figma-extra-btn-mobile figma-wide-btn" onClick={() => handleExtra('wide', 1)}>
+                WIDE
+              </button>
+              <button className="figma-extra-btn-mobile figma-noball-btn" onClick={() => handleExtra('noBall', 1)}>
+                NO BALL
+              </button>
+              <button className="figma-extra-btn-mobile figma-bye-btn" onClick={() => handleExtra('bye', 1)}>
+                BYE
+              </button>
+              
+              <button className="figma-extra-btn-mobile figma-legbye-btn" onClick={() => handleExtra('legBye', 1)}>
+                LEG BYE
+              </button>
+              <button className="figma-action-btn-mobile figma-wicket-btn" onClick={handleWicketClick}>
+                ⚡ OUT
+              </button>
+              <button className="figma-action-btn-mobile" style={{background: 'var(--figma-orange)'}} onClick={() => dispatch(swapBatsmen())}>
+                ⇄ SWAP
+              </button>
             </div>
             
-            <div className="players-row">
-              {/* Current Batsmen */}
-              <div className="players-group batsmen-group">
-                <div className="group-header">
-                  <span className="group-icon">🏏</span>
-                  <span className="group-title">BATSMEN</span>
-                </div>
-                <div className="player-cards">
-                  {/* Striker */}
-                  <div className="player-card striker-card">
-                    <div className="player-badges">
-                      <span className="player-role striker">STRIKER</span>
-                    </div>
-                    <div className="player-main">
-                      <div className="player-avatar">
-                        <div className="avatar-placeholder">
-                          <span className="avatar-icon">👤</span>
-                        </div>
-                      </div>
-                      <div className="player-details">
-                        <div className="player-name">{currentBatsmen?.striker?.name || 'Virat Kohli'}</div>
-                        <div className="player-stats-main">
-                          <span className="runs-display">{stats.striker.runs}</span>
-                          <span className="balls-display">({stats.striker.balls} balls)</span>
-                        </div>
-                        <div className="player-stats-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">SR:</span>
-                            <span className="stat-value">{stats.striker.strikeRate}</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Time:</span>
-                            <span className="stat-value">43:5</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="player-actions">
-                      <button className="action-btn swap-btn" onClick={() => dispatch(swapBatsmen())}>
-                        <span className="btn-icon">🔄</span>
-                        <span className="btn-text">SWAP STRIKERS</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Non-Striker */}
-                  <div className="player-card non-striker-card">
-                    <div className="player-badges">
-                      <span className="player-role non-striker">PLAYER</span>
-                    </div>
-                    <div className="player-main">
-                      <div className="player-avatar">
-                        <div className="avatar-placeholder">
-                          <span className="avatar-icon">👤</span>
-                        </div>
-                      </div>
-                      <div className="player-details">
-                        <div className="player-name">{currentBatsmen?.nonStriker?.name || 'Rohit Sharma'}</div>
-                        <div className="player-stats-main">
-                          <span className="runs-display">{stats.nonStriker.runs}</span>
-                          <span className="balls-display">({stats.nonStriker.balls} balls)</span>
-                        </div>
-                        <div className="player-stats-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">SR:</span>
-                            <span className="stat-value">{stats.nonStriker.strikeRate}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Current Bowler */}
-              <div className="players-group bowler-group">
-                <div className="group-header">
-                  <span className="group-icon">⚾</span>
-                  <span className="group-title">BOWLER</span>
-                </div>
-                <div className="player-cards">
-                  <div className="player-card bowler-card">
-                    <div className="player-badges">
-                      <span className="player-role bowler">BOWLER</span>
-                    </div>
-                    <div className="player-main">
-                      <div className="player-avatar">
-                        <div className="avatar-placeholder">
-                          <span className="avatar-icon">👤</span>
-                        </div>
-                      </div>
-                      <div className="player-details">
-                        <div className="player-name">{currentBowler?.name || 'Jasprit Bumrah'}</div>
-                        <div className="player-stats-main">
-                          <span className="overs-display">0.3 Overs</span>
-                        </div>
-                        <div className="player-stats-grid">
-                          <div className="stat-item">
-                            <span className="stat-label">W:</span>
-                            <span className="stat-value">7</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">Econ:</span>
-                            <span className="stat-value">4.50</span>
-                          </div>
-                          <div className="stat-item">
-                            <span className="stat-label">R:</span>
-                            <span className="stat-value">77</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Enhanced Scoring Controls Section */}
-          <div className="scoring-controls-section">
-            <div className="controls-container">
-              {/* Extras Controls */}
-              <div className="controls-group extras-group">
-                <div className="group-header">
-                  <span className="group-icon">⚡</span>
-                  <span className="group-title">EXTRAS</span>
-                </div>
-                <div className="extras-grid">
-                  <button className="extra-btn wide-btn" onClick={() => handleExtra('wide', 1)}>
-                    <span className="btn-text">WIDE</span>
-                  </button>
-                  <button className="extra-btn noball-btn" onClick={() => handleExtra('noBall', 1)}>
-                    <span className="btn-text">NO BALL</span>
-                  </button>
-                  <button className="extra-btn bye-btn" onClick={() => handleExtra('bye', 1)}>
-                    <span className="btn-text">BYE</span>
-                  </button>
-                  <button className="extra-btn legbye-btn" onClick={() => handleExtra('legBye', 1)}>
-                    <span className="btn-text">LEG BYE</span>
-                  </button>
-                </div>
-                <div className="extras-counter">
-                  <div className="counter-value">0</div>
-                  <div className="counter-label">Ball</div>
-                </div>
-              </div>
-
-              {/* Run Scoring Controls */}
-              <div className="controls-group scoring-group">
-                <div className="group-header">
-                  <span className="group-icon">🏃</span>
-                  <span className="group-title">SCORING CONTROLS</span>
-                </div>
-                <div className="runs-grid">
-                  {[0, 4, 3, 5, 6].map(runs => (
-                    <button
-                      key={runs}
-                      className={`run-btn ${runs === 0 ? 'dot-btn' : runs >= 4 ? 'boundary-btn' : 'single-btn'}`}
-                      onClick={() => handleRunScored(runs)}
-                    >
-                      <span className="run-number">{runs}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Action Controls */}
-              <div className="controls-group actions-group">
-                <div className="group-header">
-                  <span className="group-icon">⚙️</span>
-                  <span className="group-title">ACTIONS</span>
-                </div>
-                <div className="actions-grid">
-                  <button className="action-btn wicket-btn" onClick={handleWicketClick}>
-                    <span className="btn-icon">🎯</span>
-                    <span className="btn-text">WICKET</span>
-                  </button>
-                  <button className="action-btn undo-btn" onClick={() => dispatch(undoLastBall())}>
-                    <span className="btn-icon">↩️</span>
-                    <span className="btn-text">UNDO Last Ball</span>
-                  </button>
-                  <button className="action-btn end-over-btn">
-                    <span className="btn-icon">🏁</span>
-                    <span className="btn-text">End Over</span>
-                  </button>
-                </div>
-              </div>
+            {/* Generic Over Actions (Horizontal Line) - Final Row */}
+            <div className="figma-over-actions-final">
+              <button className="figma-action-btn-mobile figma-undo-btn" onClick={() => setShowUndoModal(true)}>
+                ↻ UNDO
+              </button>
+              <button className="figma-action-btn-mobile" style={{background: 'var(--figma-purple)'}} onClick={() => setShowOverEndModal(true)}>
+                END OVER
+              </button>
+              <button className="figma-extra-btn-mobile" style={{background: 'var(--figma-gray)', fontSize: '8px'}} onClick={() => setShowExtraModal(true)}>
+                MORE
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Batsman Selection Modal */}
+      {/* Modals */}
       {batsmanModal.open && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Select {batsmanModal.type === 'striker' ? 'Striker' : 'Non-Striker'}</h3>
-              <button className="modal-close" onClick={() => setBatsmanModal({ open: false, type: null })}>
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search players..."
-                  value={playerSearch}
-                  onChange={(e) => setPlayerSearch(e.target.value)}
-                  className="search-input"
-                />
-              </div>
-              <div className="player-list">
-                {availablePlayers
-                  .filter(player => player.name.toLowerCase().includes(playerSearch.toLowerCase()))
-                  .map(player => (
-                    <div 
-                      key={player.id} 
-                      className="player-item"
-                      onClick={() => handlePlayerSelection('batsman', batsmanModal.type, player)}
-                    >
-                      <div className="player-info">
-                        <div className="player-name">{player.name}</div>
-                        <div className="player-stats">
-                          Runs: {player.totalRuns} | Avg: {player.average} | SR: {player.strikeRate}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
+        <div className="figma-modal-overlay">
+          <div className="figma-modal">
+            <h3>Select {batsmanModal.type === 'striker' ? 'Striker' : 'Non-Striker'}</h3>
+            <button onClick={() => setBatsmanModal({ open: false, type: null })}>Close</button>
           </div>
         </div>
       )}
-
-      {/* Bowler Selection Modal */}
+      
       {bowlerModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Select Bowler</h3>
-              <button className="modal-close" onClick={() => setBowlerModal(false)}>
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="search-container">
-                <input
-                  type="text"
-                  placeholder="Search bowlers..."
-                  value={bowlerSearch}
-                  onChange={(e) => setBowlerSearch(e.target.value)}
-                  className="search-input"
-                />
-              </div>
-              <div className="player-list">
-                {availableBowlers
-                  .filter(bowler => bowler.name.toLowerCase().includes(bowlerSearch.toLowerCase()))
-                  .map(bowler => (
-                    <div 
-                      key={bowler.id} 
-                      className="player-item"
-                      onClick={() => handlePlayerSelection('bowler', null, bowler)}
-                    >
-                      <div className="player-info">
-                        <div className="player-name">{bowler.name}</div>
-                        <div className="player-stats">
-                          Wickets: {bowler.totalWickets} | Economy: {bowler.economy} | Best: {bowler.bestFigures}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
+        <div className="figma-modal-overlay">
+          <div className="figma-modal">
+            <h3>Select Bowler</h3>
+            <button onClick={() => setBowlerModal(false)}>Close</button>
           </div>
         </div>
       )}
-
-      {/* Wicket Modal */}
+      
       {wicketModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Record Wicket</h3>
-              <button className="modal-close" onClick={() => setWicketModal(false)}>
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="wicket-options">
-                <div className="wicket-type-grid">
-                  {wicketTypes.map(type => (
-                    <button 
-                      key={type}
-                      className="wicket-btn"
-                      onClick={() => handleWicketType(type)}
-                    >
-                      {type}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+        <div className="figma-modal-overlay">
+          <div className="figma-modal">
+            <h3>Record Wicket</h3>
+            <button onClick={() => setWicketModal(false)}>Close</button>
           </div>
         </div>
       )}
+      
+      {toast && <div className="figma-toast">{toast}</div>}
     </div>
   );
 };
