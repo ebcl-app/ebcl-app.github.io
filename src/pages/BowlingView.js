@@ -22,7 +22,7 @@ const BowlingView = () => {
     return (
       <div className="bowling-view-page">
         <div className="back-link-container">
-          <Link to="/scoring" className="back-link">
+          <Link to={`/scoring/${currentMatch?.id}`} className="back-link">
             ← Back to Scoring
           </Link>
         </div>
@@ -56,7 +56,7 @@ const BowlingView = () => {
     <div className="bowling-view-page">
       {/* Back Button */}
       <div className="back-link-container">
-        <Link to="/scoring" className="back-link">
+        <Link to={`/scoring/${currentMatch?.id}`} className="back-link">
           ← Back to Scoring
         </Link>
       </div>
@@ -241,7 +241,7 @@ const BowlingView = () => {
           <span className="btn-icon">🏏</span>
           Batting View
         </Link>
-        <Link to="/scoring" className="action-btn scoring-btn">
+        <Link to={`/scoring/${currentMatch?.id}`} className="action-btn scoring-btn">
           <span className="btn-icon">📊</span>
           Back to Scoring
         </Link>

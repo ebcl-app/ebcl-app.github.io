@@ -36,7 +36,8 @@ const StartMatch = () => {
       };
       
       dispatch(createNewMatch(newMatch));
-      navigate('/scoring');
+      const matchId = Date.now(); // Same ID generation as in the reducer
+      navigate(`/scoring/${matchId}`);
     }
   };
 

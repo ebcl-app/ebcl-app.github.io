@@ -9,15 +9,59 @@ import {
   setCurrentMatch,
   startMatch 
 } from '../store/slices/matchSlice';
-import '../styles/common.css';
+import matchService from '../services/matchService';
+import teamService from '../services/teamService';
+import '../styles/figma-cricket-theme.css';
 import '../styles/match-management.css';
 
 const MatchManagement = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { isDarkMode, toggleTheme } = useTheme();
-  const { upcomingMatches, currentMatch, completedMatches } = useSelector(state => state.match);
-  const { teams } = useSelector(state => state.club);
+  const { currentMatch, completedMatches } = useSelector(state => state.match);
+  const { teams: reduxTeams } = useSelector(state => state.club);
+  
+  const [matches, setMatches] = useState([]);
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  // Fetch matches and teams from API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [matchesResponse, teamsResponse] = await Promise.all([
+          matchService.getAllMatches(),
+          teamService.getAllTeams()
+        ]);
+        
+        if (matchesResponse) {
+          setMatches(matchesResponse);
+        } else {
+          setMatches([]);
+        }
+        
+        if (teamsResponse.success && teamsResponse.data) {
+          setTeams(teamsResponse.data);
+        } else {
+          setTeams([]);
+        }
+        
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err.message);
+        setMatches([]);
+        setTeams([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
   
   const [activeTab, setActiveTab] = useState('upcoming');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -43,69 +87,20 @@ const MatchManagement = () => {
     setActiveTab(newTab);
   };
 
-  // Sample data for demonstration
-  const sampleUpcomingMatches = [
-    {
-      id: 1,
-      team1: { name: 'Team Soumyak (Black Jersey)', shortName: 'TSB', players: 11 },
-      team2: { name: 'Team Sonal (White Jersey)', shortName: 'TSW', players: 11 },
-      status: 'upcoming',
-      scheduledDate: '2025-09-22T14:00:00Z',
-      venue: 'Ground A',
-      format: 'T20',
-      overs: 20
-    },
-    {
-      id: 2,
-      team1: { name: 'Team Alpha', shortName: 'TA', players: 11 },
-      team2: { name: 'Team Beta', shortName: 'TB', players: 11 },
-      status: 'upcoming',
-      scheduledDate: '2025-09-23T16:00:00Z',
-      venue: 'Ground B',
-      format: 'T10',
-      overs: 10
-    }
-  ];
-
-  const sampleCompletedMatches = [
-    {
-      id: 3,
-      team1: { name: 'Team Soumyak', score: '145/5', overs: '19.3' },
-      team2: { name: 'Team Sonal', score: '132/3', overs: '18.5' },
-      status: 'completed',
-      result: 'Team Soumyak won by 13 runs',
-      completedDate: '2025-09-20T18:30:00',
-      venue: 'Ground A'
-    },
-    {
-      id: 4,
-      team1: { name: 'Team Alpha', score: '156/6', overs: '20.0' },
-      team2: { name: 'Team Beta', score: '144/8', overs: '20.0' },
-      status: 'completed',
-      result: 'Team Alpha won by 12 runs',
-      completedDate: '2025-09-19T17:15:00',
-      venue: 'Ground B'
-    }
-  ];
-
-  // Debug Redux data
-  console.log('Redux upcomingMatches:', upcomingMatches);
-  console.log('Redux completedMatches:', completedMatches);
-  console.log('Sample upcoming:', sampleUpcomingMatches);
-  console.log('Sample completed:', sampleCompletedMatches);
-
   // Calculate combined matches for both tabs using useMemo
   const upcomingDisplayMatches = useMemo(() => {
-    // For testing, use only sample data to isolate the issue
-    return sampleUpcomingMatches;
-    // return [...(upcomingMatches || []), ...sampleUpcomingMatches];
-  }, []);
+    if (!matches || matches.length === 0) {
+      return [];
+    }
+    return matches.filter(match => match.status !== 'completed' && match.status !== 'abandoned');
+  }, [matches]);
 
   const completedDisplayMatches = useMemo(() => {
-    // For testing, use only sample data to isolate the issue  
-    return sampleCompletedMatches;
-    // return [...(completedMatches || []), ...sampleCompletedMatches];
-  }, []);
+    if (!matches || matches.length === 0) {
+      return [];
+    }
+    return matches.filter(match => match.status === 'completed' || match.status === 'abandoned');
+  }, [matches]);
   
   const displayMatches = useMemo(() => {
     console.log('Recalculating displayMatches for tab:', activeTab);
@@ -130,7 +125,7 @@ const MatchManagement = () => {
   const handleStartMatch = (matchId) => {
     dispatch(setCurrentMatch(matchId));
     dispatch(startMatch(matchId));
-    navigate('/scoring');
+    navigate(`/scoring/${matchId}`);
   };
 
   const handleAbandonMatch = (matchId) => {
@@ -140,15 +135,26 @@ const MatchManagement = () => {
 
   const handleScoreMatch = (matchId) => {
     dispatch(setCurrentMatch(matchId));
-    navigate('/scoring');
+    navigate(`/scoring/${matchId}`);
   };
 
   const formatDate = (dateString) => {
     try {
-      const date = new Date(dateString);
+      let date;
+      
+      // Handle Firestore timestamp format
+      if (dateString && typeof dateString === 'object' && dateString._seconds) {
+        date = new Date(dateString._seconds * 1000);
+      } else if (typeof dateString === 'string') {
+        date = new Date(dateString);
+      } else {
+        return 'Date TBD';
+      }
+      
       if (isNaN(date.getTime())) {
         return 'Date TBD';
       }
+      
       return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
@@ -162,89 +168,35 @@ const MatchManagement = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-content">
-        {/* Header */}
-        <div className="dashboard-header">
-          <div className="app-title-section">
-            <div className="app-logo">
-              <span className="logo-icon">📊</span>
-            </div>
-            <div className="title-content">
-              <h1 className="dashboard-title">Match Management</h1>
-              <div className="title-subtitle">Organize and track cricket matches</div>
-            </div>
-          </div>
-          <div className="theme-toggle-section">
-            <button onClick={toggleTheme} className="theme-toggle-btn">
-              {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-            </button>
+    <div className={`figma-cricket-app app-theme ${isDarkMode ? 'dark' : 'light'}`} role="main">
+      
+      {/* Header */}
+      <header className="figma-header">
+        <div className="figma-header-left">
+          <Link to="/" className="figma-back-button" aria-label="Go back to home">
+            <span className="figma-back-icon">‹</span>
+          </Link>
+          <div className="figma-logo-container">
+            <span className="figma-logo-icon" role="img" aria-label="Matches">⚡</span>
+            <h1 className="figma-title">Match Management</h1>
           </div>
         </div>
-
-        <div className="match-management-container">
-          {/* Floating Action Button */}
-          <div className={`fab-container ${isFabOpen ? 'fab-open' : ''}`}>
-            {/* Overlay to close FAB when clicking outside */}
-            {isFabOpen && (
-              <div 
-                className="fab-overlay" 
-                onClick={() => setIsFabOpen(false)}
-              />
-            )}
-            
-            {/* FAB Menu Items */}
-            <div className="fab-menu">
-              <Link 
-                to="/" 
-                className="fab-menu-item fab-item-1"
-                onClick={() => setIsFabOpen(false)}
-              >
-                <div className="fab-item-icon">🏠</div>
-                <span className="fab-item-label">Home Dashboard</span>
-              </Link>
-              
-              <button 
-                className="fab-menu-item fab-item-2"
-                onClick={() => {
-                  handleCreateMatch();
-                  setIsFabOpen(false);
-                }}
-              >
-                <div className="fab-item-icon">⚡</div>
-                <span className="fab-item-label">Create Match</span>
-              </button>
-              
-              <Link 
-                to="/team-management" 
-                className="fab-menu-item fab-item-3"
-                onClick={() => setIsFabOpen(false)}
-              >
-                <div className="fab-item-icon">👥</div>
-                <span className="fab-item-label">Manage Teams</span>
-              </Link>
-              
-              <Link 
-                to="/player-management" 
-                className="fab-menu-item fab-item-4"
-                onClick={() => setIsFabOpen(false)}
-              >
-                <div className="fab-item-icon">👤</div>
-                <span className="fab-item-label">Manage Players</span>
-              </Link>
+        <div className="figma-header-right">
+          <button 
+            className="figma-theme-toggle"
+            onClick={toggleTheme}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-pressed={isDarkMode}
+          >
+            <div className="figma-toggle-icon">
+              {isDarkMode ? '☀️' : '🌙'}
             </div>
-            
-            {/* Main FAB Button */}
-            <button 
-              className="fab-button"
-              onClick={() => setIsFabOpen(!isFabOpen)}
-              aria-label="Quick Actions"
-            >
-              <span className={`fab-icon ${isFabOpen ? 'fab-icon-close' : ''}`}>
-                {isFabOpen ? '✕' : '⚙️'}
-              </span>
-            </button>
-          </div>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="figma-main-layout">
 
           {/* Filter Tabs */}
           <div className="filter-tabs">
@@ -313,27 +265,21 @@ const MatchManagement = () => {
                         <div className="team-score-section">
                           <div className="team-info">
                             <div className="team-jerseys">
-                              {match.team1.name.includes('Soumyak') || match.team1.name.includes('Black') ? (
-                                <>
-                                  <div className="jersey jersey-black">S</div>
-                                  <div className="jersey jersey-black">O</div>
-                                  <div className="jersey jersey-black">U</div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="jersey jersey-white">S</div>
-                                  <div className="jersey jersey-white">O</div>
-                                  <div className="jersey jersey-white">N</div>
-                                </>
-                              )}
+                              <div className="jersey jersey-white">T</div>
+                              <div className="jersey jersey-white">E</div>
+                              <div className="jersey jersey-white">A</div>
                             </div>
                             <div className="team-name-short">
-                              {match.team1.name.includes('Soumyak') || match.team1.name.includes('Black') 
-                                ? 'TEAM SOUMYAK' 
-                                : match.team1.shortName || match.team1.name.toUpperCase()
-                              }
+                              {match.team1.shortName || match.team1.name.toUpperCase()}
                             </div>
-                            {match.team1.score ? (
+                            {match.status === 'completed' ? (
+                              <>
+                                <div className="team-score">
+                                  {match.winner === match.team1.id ? 'Won' : 'Lost'}
+                                </div>
+                                <div className="team-overs">({match.result})</div>
+                              </>
+                            ) : match.team1.score ? (
                               <>
                                 <div className="team-score">{match.team1.score}</div>
                                 <div className="team-overs">({match.team1.overs} ov)</div>
@@ -341,42 +287,36 @@ const MatchManagement = () => {
                             ) : (
                               <>
                                 <div className="team-score">Ready</div>
-                                <div className="team-overs">({match.team1.players || 11} players)</div>
+                                <div className="team-overs">({match.lineups[match.team1Id]?.playersDetails?.length || 11} players)</div>
                               </>
                             )}
                           </div>
                         </div>
 
                         {/* VS Divider */}
-                        <div className="vs-divider-match">
-                          <span className="vs-text">VS</span>
+                        <div className="vs-divider">
+                          <span className="vs-badge">VS</span>
                         </div>
 
                         {/* Team 2 */}
                         <div className="team-score-section">
                           <div className="team-info">
                             <div className="team-jerseys">
-                              {match.team2.name.includes('Sonal') || match.team2.name.includes('White') ? (
-                                <>
-                                  <div className="jersey jersey-white">S</div>
-                                  <div className="jersey jersey-white">O</div>
-                                  <div className="jersey jersey-white">N</div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="jersey jersey-black">S</div>
-                                  <div className="jersey jersey-black">O</div>
-                                  <div className="jersey jersey-black">U</div>
-                                </>
-                              )}
+                              <div className="jersey jersey-black">T</div>
+                              <div className="jersey jersey-black">E</div>
+                              <div className="jersey jersey-black">A</div>
                             </div>
                             <div className="team-name-short">
-                              {match.team2.name.includes('Sonal') || match.team2.name.includes('White')
-                                ? 'TEAM SONAL'
-                                : match.team2.shortName || match.team2.name.toUpperCase()
-                              }
+                              {match.team2.shortName || match.team2.name.toUpperCase()}
                             </div>
-                            {match.team2.score ? (
+                            {match.status === 'completed' ? (
+                              <>
+                                <div className="team-score">
+                                  {match.winner === match.team2.id ? 'Won' : 'Lost'}
+                                </div>
+                                <div className="team-overs">({match.result})</div>
+                              </>
+                            ) : match.team2.score ? (
                               <>
                                 <div className="team-score">{match.team2.score}</div>
                                 <div className="team-overs">({match.team2.overs} ov)</div>
@@ -384,7 +324,7 @@ const MatchManagement = () => {
                             ) : (
                               <>
                                 <div className="team-score">Ready</div>
-                                <div className="team-overs">({match.team2.players || 11} players)</div>
+                                <div className="team-overs">({match.lineups[match.team2Id]?.playersDetails?.length || 11} players)</div>
                               </>
                             )}
                           </div>
@@ -393,17 +333,23 @@ const MatchManagement = () => {
 
                       {/* Match Result (for completed matches) */}
                       {match.result && (
-                        <div className="match-result">
-                          {match.result}
+                        <div className="match-result-section">
+                          <div className="match-result-text">{match.result}</div>
                         </div>
                       )}
 
                       {/* Match Info */}
-                      <div className="match-info">
-                        <div className="match-date-venue">
-                          {formatDate(match.scheduledDate || match.completedDate)}
-                          {match.venue && ` • ${match.venue}`}
-                          {` • ${match.format || 'T20'} (${match.overs || 20} overs)`}
+                      <div className="match-details-row">
+                        <div className="match-detail-item">
+                          📅 {formatDate(match.scheduledDate || match.completedDate)}
+                        </div>
+                        {match.venue && (
+                          <div className="match-detail-item">
+                            📍 {match.venue}
+                          </div>
+                        )}
+                        <div className="match-detail-item">
+                          🏏 {match.format || 'T20'} ({match.overs || 20} overs)
                         </div>
                       </div>
 
@@ -412,25 +358,25 @@ const MatchManagement = () => {
                         {activeTab === 'upcoming' ? (
                           <>
                             <button 
-                              className="match-action-btn action-start"
+                              className="btn btn-primary"
                               onClick={() => handleStartMatch(match.id)}
                             >
                               ▶️ Start Match
                             </button>
                             <button 
-                              className="match-action-btn action-score"
+                              className="btn btn-secondary"
                               onClick={() => handleScoreMatch(match.id)}
                             >
                               📊 Score
                             </button>
                             <Link 
                               to={`/match-setup/${match.id}`}
-                            className="match-action-btn action-edit"
+                              className="btn btn-secondary"
                             >
                               ✏️ Edit
                             </Link>
                             <button 
-                              className="match-action-btn action-abandon"
+                              className="btn btn-danger"
                               onClick={() => setShowAbandonConfirm(match.id)}
                             >
                               🗑️ Abandon
@@ -440,12 +386,12 @@ const MatchManagement = () => {
                           <>
                             <Link 
                               to={`/match-details/${match.id}`}
-                              className="match-action-btn action-view"
+                              className="btn btn-primary"
                             >
                               👁️ View Details
                             </Link>
                             <button 
-                              className="match-action-btn action-score"
+                              className="btn btn-secondary"
                               onClick={() => handleScoreMatch(match.id)}
                             >
                               📊 Scorecard
@@ -459,7 +405,6 @@ const MatchManagement = () => {
               )}
             </div>
           </div>
-        </div>
 
         {/* Abandon Confirmation Modal */}
         {showAbandonConfirm && (
@@ -494,7 +439,100 @@ const MatchManagement = () => {
             </div>
           </div>
         )}
+
+      </div> {/* End of figma-main-layout */}
+
+      {/* Bottom Navigation */}
+      <nav className="figma-bottom-nav" role="navigation" aria-label="Main navigation">
+        <div className="figma-nav-items">
+          <Link to="/" className="figma-nav-item">
+            <div className="figma-nav-icon" role="img" aria-hidden="true">🏠</div>
+            <div className="figma-nav-label">Home</div>
+          </Link>
+          <Link 
+            to="/news" 
+            className="figma-nav-item"
+            aria-label="View cricket news and live scores"
+          >
+            <div className="figma-nav-icon" role="img" aria-hidden="true">📰</div>
+            <div className="figma-nav-label">News</div>
+          </Link>
+          <Link 
+            to="/match-management" 
+            className="figma-nav-item active"
+            aria-current="page"
+            aria-label="View and manage cricket matches"
+          >
+            <div className="figma-nav-icon" role="img" aria-hidden="true">📊</div>
+            <div className="figma-nav-label">Matches</div>
+          </Link>
+          <Link 
+            to="/player-management" 
+            className="figma-nav-item"
+            aria-label="View and manage cricket players"
+          >
+            <div className="figma-nav-icon" role="img" aria-hidden="true">👤</div>
+            <div className="figma-nav-label">Players</div>
+          </Link>
+        </div>
+      </nav>
+
+      {/* Floating Action Button */}
+      <div className={`figma-fab-container ${isFabOpen ? 'open' : ''}`}>
+        <button 
+          className="figma-fab-main"
+          onClick={() => setIsFabOpen(!isFabOpen)}
+          aria-expanded={isFabOpen}
+          aria-label="Quick actions menu"
+        >
+          <span className="figma-fab-icon">
+            {isFabOpen ? '✕' : '⚡'}
+          </span>
+        </button>
+        
+        {isFabOpen && (
+          <div className="figma-fab-menu" role="menu">
+            <button 
+              className="figma-fab-option"
+              role="menuitem"
+              onClick={() => {
+                handleCreateMatch();
+                setIsFabOpen(false);
+              }}
+            >
+              <span className="figma-fab-option-icon">⚡</span>
+              <span className="figma-fab-option-label">Create Match</span>
+            </button>
+            <Link 
+              to="/team-management" 
+              className="figma-fab-option"
+              role="menuitem"
+              onClick={() => setIsFabOpen(false)}
+            >
+              <span className="figma-fab-option-icon">👥</span>
+              <span className="figma-fab-option-label">Manage Teams</span>
+            </Link>
+            <Link 
+              to="/match-setup" 
+              className="figma-fab-option"
+              role="menuitem"
+              onClick={() => setIsFabOpen(false)}
+            >
+              <span className="figma-fab-option-icon">⚙️</span>
+              <span className="figma-fab-option-label">Match Setup</span>
+            </Link>
+          </div>
+        )}
       </div>
+      
+      {/* Click overlay to close FAB */}
+      {isFabOpen && (
+        <div 
+          className="figma-fab-overlay" 
+          onClick={() => setIsFabOpen(false)}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 };

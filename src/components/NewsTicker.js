@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import newsService from '../services/newsService';
+import '../styles/news-ticker.css';
 
 const NewsTicker = () => {
   const [news, setNews] = useState([]);
@@ -14,12 +15,13 @@ const NewsTicker = () => {
       
       const response = await newsService.fetchCricketNews(8);
       
-      if (response.success) {
-        setNews(response.data);
-      } else {
-        setError(response.error);
-        setNews(response.data); // Fallback to mock data
+      // Now both success:true and success:false return valid data
+      setNews(response.data);
+      
+      if (response.fallback) {
+        console.info('Using mock news data due to API failure');
       }
+      
     } catch (err) {
       console.error('Error in NewsTicker:', err);
       setError('Failed to load news');

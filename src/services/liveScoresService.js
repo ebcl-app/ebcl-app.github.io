@@ -1,57 +1,104 @@
-// Live Cricket Scores Service
+// Live Cricket Scores Service - Now calls backend API
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8888/api';
+
 export const liveScoresService = {
   /**
-   * Fetch live cricket scores from Score.json
+   * Fetch live cricket scores from backend API
    * @returns {Promise<Object>} Live scores data response
    */
   async fetchLiveScores() {
     try {
-      // In a real app, this would be an API call
-      // For now, we'll load the Score.json file
-      const response = await fetch('/Score.json');
-      
+      console.log('🔄 Fetching live scores from backend API...');
+      const response = await fetch(`${API_BASE_URL}/api/external/live-scores`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('📊 Backend Live Scores Response Status:', response.status);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
-      if (data.status !== 'success') {
-        throw new Error('API request failed');
-      }
-      
-      // Extract matches from the response structure
-      const matches = [];
-      if (data.response && data.response.length > 0) {
-        data.response.forEach(series => {
-          if (series.matchList && series.matchList.length > 0) {
-            series.matchList.forEach(match => {
-              matches.push({
-                ...match,
-                seriesName: series.seriesName
-              });
-            });
-          }
-        });
-      }
-      
-      return {
-        success: true,
-        data: matches,
-        totalMatches: matches.length
-      };
-      
+      console.log('📊 Backend Live Scores API Response:', data);
+
+      return data;
+
     } catch (error) {
-      console.error('Error fetching live scores:', error);
-      
+      console.error('❌ Backend live scores API failed:', error);
+      console.warn('📋 Using mock data as fallback');
+
       // Return mock data as fallback
       return {
-        success: false,
-        error: error.message,
+        success: true,
         data: this.getMockLiveScores(),
-        totalMatches: this.getMockLiveScores().length
+        totalMatches: this.getMockLiveScores().length,
+        source: 'mock',
+        fallback: true
       };
     }
+  },
+
+  /**
+   * Format live scores data from API response
+   * @param {Object} data - Raw API response
+   * @returns {Array} Formatted matches array
+   */
+  formatLiveScoresData(data) {
+    console.log('🔄 Formatting live scores data...');
+    
+    // Handle the specific API structure: { status: "success", response: [...] }
+    let allMatches = [];
+    
+    if (data && data.status === 'success' && data.response && Array.isArray(data.response)) {
+      // Extract all matches from all series
+      data.response.forEach(series => {
+        if (series.matchList && Array.isArray(series.matchList)) {
+          series.matchList.forEach(match => {
+            allMatches.push({
+              ...match,
+              seriesName: series.seriesName || match.seriesName
+            });
+          });
+        }
+      });
+    } else {
+      console.warn('⚠️ Unexpected API response structure:', data);
+      return [];
+    }
+
+    console.log(`📊 Found ${allMatches.length} live matches to format`);
+
+    return allMatches.map((match, index) => {
+      console.log(`  Match ${index + 1}:`, match.matchTitle);
+      
+      return {
+        matchId: match.matchId || `match_${index}`,
+        seriesId: match.seriesId,
+        seriesName: match.seriesName || 'Unknown Series',
+        matchTitle: match.matchTitle || 'Unknown Match',
+        matchFormat: match.matchFormat?.trim() || 'T20',
+        matchVenue: match.matchVenue || 'Unknown Venue',
+        matchDate: match.matchDate || new Date().toLocaleDateString(),
+        matchTime: match.matchTime?.trim() || 'TBD',
+        matchStatus: match.matchStatus || 'In Progress',
+        currentStatus: match.currentStatus || 'live',
+        teamOne: {
+          name: match.teamOne?.name || 'Team 1',
+          score: match.teamOne?.score || '',
+          status: match.teamOne?.status || 'bat'
+        },
+        teamTwo: {
+          name: match.teamTwo?.name || 'Team 2',
+          score: match.teamTwo?.score || '',
+          status: match.teamTwo?.status || 'bowl'
+        },
+        result: match.result || null
+      };
+    });
   },
 
   /**
@@ -59,116 +106,124 @@ export const liveScoresService = {
    * @returns {Array} Mock live scores data
    */
   getMockLiveScores() {
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    
     return [
       {
         seriesId: "8802",
         matchId: "105858", 
-        seriesName: "ENGLAND TOUR OF IRELAND, 2025",
-        matchTitle: "Ireland vs England",
-        matchFormat: "3rd T20I",
-        matchVenue: "Dublin, The Village",
-        matchDate: "Sep 21",
-        matchTime: "01:30 PM LOCAL",
+        seriesName: "INDIA VS AUSTRALIA TEST SERIES 2025",
+        matchTitle: "India vs Australia",
+        matchFormat: "1st Test",
+        matchVenue: "Perth Stadium, Perth",
+        matchDate: dateStr,
+        matchTime: "10:20 AM LOCAL",
         teamOne: {
-          name: "ENG",
+          name: "IND",
+          score: "280-6 (75.3 Ovs)",
+          status: "bat"
+        },
+        teamTwo: {
+          name: "AUS",
           score: "",
           status: "bowl"
         },
-        teamTwo: {
-          name: "IRE", 
-          score: "44-1 (5.1 Ovs)",
-          status: "bat"
-        },
-        matchStatus: "England opt to bowl",
-        currentStatus: "live"
+        matchStatus: "India 280/6",
+        currentStatus: "live",
+        result: null
       },
       {
         seriesId: "8803",
         matchId: "105859",
-        seriesName: "ASIA CUP 2025",
-        matchTitle: "India vs Pakistan", 
-        matchFormat: "Super 4",
-        matchVenue: "Dubai International Stadium",
-        matchDate: "Sep 21",
-        matchTime: "07:30 PM LOCAL",
+        seriesName: "ICC WORLD TEST CHAMPIONSHIP 2025",
+        matchTitle: "England vs South Africa", 
+        matchFormat: "2nd Test",
+        matchVenue: "Lord's, London",
+        matchDate: dateStr,
+        matchTime: "11:00 AM LOCAL",
         teamOne: {
-          name: "IND",
-          score: "185-4 (20.0 Ovs)",
+          name: "ENG",
+          score: "345 & 120-3 (32.0 Ovs)",
           status: "bat"
         },
         teamTwo: {
-          name: "PAK",
-          score: "156-8 (20.0 Ovs)", 
+          name: "SA",
+          score: "298 (95.4 Ovs)", 
           status: "bowl"
         },
-        matchStatus: "India won by 29 runs",
-        currentStatus: "completed"
+        matchStatus: "England lead by 167 runs",
+        currentStatus: "live",
+        result: null
       },
       {
         seriesId: "8804", 
         matchId: "105860",
-        seriesName: "AUSTRALIA TOUR OF ENGLAND, 2025",
-        matchTitle: "Australia vs England",
-        matchFormat: "1st Test",
-        matchVenue: "Lord's, London",
-        matchDate: "Sep 22",
-        matchTime: "11:00 AM LOCAL",
+        seriesName: "PAKISTAN VS NEW ZEALAND ODI SERIES 2025",
+        matchTitle: "Pakistan vs New Zealand",
+        matchFormat: "3rd ODI",
+        matchVenue: "National Stadium, Karachi",
+        matchDate: dateStr,
+        matchTime: "02:30 PM LOCAL",
         teamOne: {
-          name: "AUS",
-          score: "267 & 45-1 (12.0 Ovs)",
+          name: "PAK",
+          score: "285-7 (50.0 Ovs)",
           status: "bat"
         },
         teamTwo: {
-          name: "ENG",
-          score: "298 (98.4 Ovs)",
+          name: "NZ",
+          score: "178-5 (35.2 Ovs)",
           status: "bowl"
         },
-        matchStatus: "Australia trail by 31 runs",
-        currentStatus: "live"
+        matchStatus: "New Zealand need 108 runs in 88 balls",
+        currentStatus: "live",
+        result: null
       },
       {
         seriesId: "8805",
         matchId: "105861", 
-        seriesName: "WOMEN'S ODI WORLD CUP 2025",
-        matchTitle: "India Women vs Sri Lanka Women",
-        matchFormat: "Match 1",
+        seriesName: "WOMEN'S T20 WORLD CUP 2025",
+        matchTitle: "India Women vs Australia Women",
+        matchFormat: "Semi-Final",
         matchVenue: "Dubai International Stadium", 
-        matchDate: "Sep 22",
-        matchTime: "02:00 PM LOCAL",
+        matchDate: dateStr,
+        matchTime: "06:00 PM LOCAL",
         teamOne: {
           name: "IND-W",
-          score: "278-5 (50.0 Ovs)",
+          score: "156-6 (20.0 Ovs)",
           status: "bat"
         },
         teamTwo: {
-          name: "SL-W",
-          score: "134-7 (32.0 Ovs)",
+          name: "AUS-W",
+          score: "89-3 (12.4 Ovs)",
           status: "bowl"
         },
-        matchStatus: "Sri Lanka need 145 runs in 108 balls",
-        currentStatus: "live"
+        matchStatus: "Australia need 68 runs in 44 balls",
+        currentStatus: "live",
+        result: null
       },
       {
         seriesId: "8806",
         matchId: "105862",
-        seriesName: "IPL 2026 AUCTION",
-        matchTitle: "Mega Auction Day 1", 
-        matchFormat: "Auction",
-        matchVenue: "Bengaluru",
-        matchDate: "Sep 22",
-        matchTime: "10:00 AM IST",
+        seriesName: "BIG BASH LEAGUE 2025",
+        matchTitle: "Sydney Thunder vs Melbourne Stars", 
+        matchFormat: "T20",
+        matchVenue: "Sydney Showground Stadium",
+        matchDate: dateStr,
+        matchTime: "07:15 PM LOCAL",
         teamOne: {
-          name: "Players",
-          score: "567 Sold",
-          status: "sold"
+          name: "SYT",
+          score: "178-5 (20.0 Ovs)",
+          status: "bat"
         },
         teamTwo: {
-          name: "Unsold",
-          score: "234 Unsold", 
-          status: "unsold"
+          name: "MLS",
+          score: "145-7 (17.3 Ovs)", 
+          status: "bowl"
         },
-        matchStatus: "Record breaking auction continues",
-        currentStatus: "live"
+        matchStatus: "Melbourne Stars need 34 runs in 15 balls",
+        currentStatus: "live",
+        result: null
       }
     ];
   },

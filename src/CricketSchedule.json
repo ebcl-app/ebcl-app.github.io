@@ -1,0 +1,1026 @@
+{
+    "status": "success",
+    "response": {
+        "schedules": [
+            {
+                "date": "THU, OCT 02 2025",
+                "matchList": [
+                    {
+                        "seriesName": "West Indies tour of India, 2025",
+                        "seriesId": "9629",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "West Indies tour of India, 2025",
+                                "seriesId": "9629",
+                                "matchId": "117359",
+                                "matchTitle": "India vs West Indies, 1st Test, Day 1",
+                                "matchDesc": "Follow IND vs WI, 1st Test, Day 1, THU, OCT 02 2025, West Indies tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Test",
+                                "venue": "Narendra Modi Stadium,  Ahmedabad",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Irani Cup 2025",
+                        "seriesId": "10300",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "Irani Cup 2025",
+                                "seriesId": "10300",
+                                "matchId": "123650",
+                                "matchTitle": "Vidarbha vs Rest of India, Irani Cup, Day 2",
+                                "matchDesc": "Follow VID vs ROI, Irani Cup, Day 2, THU, OCT 02 2025, Irani Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "Irani Cup",
+                                "venue": "Vidarbha Cricket Association Stadium,  Nagpur",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division One 2025-26",
+                        "seriesId": "10878",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133886",
+                                "matchTitle": "KwaZulu-Natal Inland vs Warriors, 6th Match, Day 1",
+                                "matchDesc": "Follow KZNIN vs WAR, 6th Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "6th Match",
+                                "venue": "City Oval,  Pietermaritzburg",
+                                "startDate": "07:00 AM GMT / 09:00 AM LOCAL"
+                            },
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133875",
+                                "matchTitle": "Boland vs Dolphins, 4th Match, Day 1",
+                                "matchDesc": "Follow BOL vs DOL, 4th Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Boland Park,  Paarl",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133897",
+                                "matchTitle": "North West vs Titans, 7th Match, Day 1",
+                                "matchDesc": "Follow NWEST vs TIT, 7th Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "7th Match",
+                                "venue": "Senwes Park,  Potchefstroom",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133880",
+                                "matchTitle": "Western Province vs Lions, 5th Match, Day 1",
+                                "matchDesc": "Follow WPR vs LIONS, 5th Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Match",
+                                "venue": "Newlands,  Cape Town",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "United Arab Emirates Women tour of Zimbabwe 2025",
+                        "seriesId": "10983",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "United Arab Emirates Women tour of Zimbabwe 2025",
+                                "seriesId": "10983",
+                                "matchId": "135173",
+                                "matchTitle": "Zimbabwe Women vs United Arab Emirates Women, 4th ODI",
+                                "matchDesc": "Follow ZIMW vs UAEW, 4th ODI, THU, OCT 02 2025, United Arab Emirates Women tour of Zimbabwe 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th ODI",
+                                "venue": "Queens Sports Club,  Bulawayo",
+                                "startDate": "07:15 AM GMT / 09:15 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                        "seriesId": "10911",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134491",
+                                "matchTitle": "Limpopo vs South Western Districts, 4th Match, Day 1",
+                                "matchDesc": "Follow LIMPO vs SWD, 4th Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Polokwane Cricket Club,  Polokwane",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134485",
+                                "matchTitle": "Northern Cape vs Mpumalanga Rhinos, 3rd Match, Day 1",
+                                "matchDesc": "Follow NCAPE vs MPR, 3rd Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "Diamond Oval,  Kimberley",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134480",
+                                "matchTitle": "Knights vs Eastern Storm, 2nd Match, Day 1",
+                                "matchDesc": "Follow KNG vs ESTORM, 2nd Match, Day 1, THU, OCT 02 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Mangaung Oval,  Bloemfontein",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Womens World Cup 2025",
+                        "seriesId": "10009",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "ICC Womens World Cup 2025",
+                                "seriesId": "10009",
+                                "matchId": "121455",
+                                "matchTitle": "Bangladesh Women vs Pakistan Women, 3rd Match",
+                                "matchDesc": "Follow BANW vs PAKW, 3rd Match, THU, OCT 02 2025, ICC Womens World Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "R.Premadasa Stadium,  Colombo",
+                                "startDate": "09:30 AM GMT / 03:00 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                        "seriesId": "10944",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                                "seriesId": "10944",
+                                "matchId": "134876",
+                                "matchTitle": "Zimbabwe vs Kenya, 2nd Semi-Final",
+                                "matchDesc": "Follow ZIM vs KEN, 2nd Semi-Final, THU, OCT 02 2025, ICC Mens T20 World Cup Africa Regional Final 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Semi-Final",
+                                "venue": "Harare Sports Club,  Harare",
+                                "startDate": "11:50 AM GMT / 01:50 PM LOCAL"
+                            },
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                                "seriesId": "10944",
+                                "matchId": "134881",
+                                "matchTitle": "Malawi vs Uganda, 5th Place Play-off 2nd Semi-Final",
+                                "matchDesc": "Follow MWI vs UGA, 5th Place Play-off 2nd Semi-Final, THU, OCT 02 2025, ICC Mens T20 World Cup Africa Regional Final 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Place Play-off 2nd Semi-Final",
+                                "venue": "Takashinga Sports Club,  Harare",
+                                "startDate": "11:50 AM GMT / 01:50 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Afghanistan vs Bangladesh in UAE 2025",
+                        "seriesId": "10840",
+                        "seriesList": [
+                            {
+                                "date": "THU, OCT 02 2025",
+                                "seriesName": "Afghanistan vs Bangladesh in UAE 2025",
+                                "seriesId": "10840",
+                                "matchId": "133644",
+                                "matchTitle": "Afghanistan vs Bangladesh, 1st T20I",
+                                "matchDesc": "Follow AFG vs BAN, 1st T20I, THU, OCT 02 2025, Afghanistan vs Bangladesh in UAE 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st T20I",
+                                "venue": "Sharjah Cricket Stadium,  Sharjah",
+                                "startDate": "03:00 PM GMT / 07:00 PM LOCAL"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "date": "FRI, OCT 03 2025",
+                "matchList": [
+                    {
+                        "seriesName": "West Indies tour of India, 2025",
+                        "seriesId": "9629",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "West Indies tour of India, 2025",
+                                "seriesId": "9629",
+                                "matchId": "117359",
+                                "matchTitle": "India vs West Indies, 1st Test, Day 2",
+                                "matchDesc": "Follow IND vs WI, 1st Test, Day 2, FRI, OCT 03 2025, West Indies tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Test",
+                                "venue": "Narendra Modi Stadium,  Ahmedabad",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Irani Cup 2025",
+                        "seriesId": "10300",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "Irani Cup 2025",
+                                "seriesId": "10300",
+                                "matchId": "123650",
+                                "matchTitle": "Vidarbha vs Rest of India, Irani Cup, Day 3",
+                                "matchDesc": "Follow VID vs ROI, Irani Cup, Day 3, FRI, OCT 03 2025, Irani Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "Irani Cup",
+                                "venue": "Vidarbha Cricket Association Stadium,  Nagpur",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Australia tour of New Zealand, 2025",
+                        "seriesId": "10201",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "Australia tour of New Zealand, 2025",
+                                "seriesId": "10201",
+                                "matchId": "122522",
+                                "matchTitle": "New Zealand vs Australia, 2nd T20I",
+                                "matchDesc": "Follow NZ vs AUS, 2nd T20I, FRI, OCT 03 2025, Australia tour of New Zealand, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd T20I",
+                                "venue": "Bay Oval,  Mount Maunganui",
+                                "startDate": "06:15 AM GMT / 07:15 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division One 2025-26",
+                        "seriesId": "10878",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133886",
+                                "matchTitle": "KwaZulu-Natal Inland vs Warriors, 6th Match, Day 2",
+                                "matchDesc": "Follow KZNIN vs WAR, 6th Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "6th Match",
+                                "venue": "City Oval,  Pietermaritzburg",
+                                "startDate": "07:00 AM GMT / 09:00 AM LOCAL"
+                            },
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133875",
+                                "matchTitle": "Boland vs Dolphins, 4th Match, Day 2",
+                                "matchDesc": "Follow BOL vs DOL, 4th Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Boland Park,  Paarl",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133880",
+                                "matchTitle": "Western Province vs Lions, 5th Match, Day 2",
+                                "matchDesc": "Follow WPR vs LIONS, 5th Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Match",
+                                "venue": "Newlands,  Cape Town",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133897",
+                                "matchTitle": "North West vs Titans, 7th Match, Day 2",
+                                "matchDesc": "Follow NWEST vs TIT, 7th Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "7th Match",
+                                "venue": "Senwes Park,  Potchefstroom",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Australia A tour of India, 2025",
+                        "seriesId": "9935",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "Australia A tour of India, 2025",
+                                "seriesId": "9935",
+                                "matchId": "119864",
+                                "matchTitle": "India A vs Australia A, 2nd Unofficial ODI",
+                                "matchDesc": "Follow INDA vs AUSA, 2nd Unofficial ODI, FRI, OCT 03 2025, Australia A tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Unofficial ODI",
+                                "venue": "Green Park,  Kanpur",
+                                "startDate": "08:00 AM GMT / 01:30 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                        "seriesId": "10911",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134480",
+                                "matchTitle": "Knights vs Eastern Storm, 2nd Match, Day 2",
+                                "matchDesc": "Follow KNG vs ESTORM, 2nd Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Mangaung Oval,  Bloemfontein",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134485",
+                                "matchTitle": "Northern Cape vs Mpumalanga Rhinos, 3rd Match, Day 2",
+                                "matchDesc": "Follow NCAPE vs MPR, 3rd Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "Diamond Oval,  Kimberley",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134491",
+                                "matchTitle": "Limpopo vs South Western Districts, 4th Match, Day 2",
+                                "matchDesc": "Follow LIMPO vs SWD, 4th Match, Day 2, FRI, OCT 03 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Polokwane Cricket Club,  Polokwane",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Womens World Cup 2025",
+                        "seriesId": "10009",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "ICC Womens World Cup 2025",
+                                "seriesId": "10009",
+                                "matchId": "121466",
+                                "matchTitle": "England Women vs South Africa Women, 4th Match",
+                                "matchDesc": "Follow ENGW vs RSAW, 4th Match, FRI, OCT 03 2025, ICC Womens World Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Barsapara Cricket Stadium,  Guwahati",
+                                "startDate": "09:30 AM GMT / 03:00 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Afghanistan vs Bangladesh in UAE 2025",
+                        "seriesId": "10840",
+                        "seriesList": [
+                            {
+                                "date": "FRI, OCT 03 2025",
+                                "seriesName": "Afghanistan vs Bangladesh in UAE 2025",
+                                "seriesId": "10840",
+                                "matchId": "133655",
+                                "matchTitle": "Afghanistan vs Bangladesh, 2nd T20I",
+                                "matchDesc": "Follow AFG vs BAN, 2nd T20I , FRI, OCT 03 2025, Afghanistan vs Bangladesh in UAE 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd T20I",
+                                "venue": "Sharjah Cricket Stadium,  Sharjah",
+                                "startDate": "03:00 PM GMT / 07:00 PM LOCAL"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "date": "SAT, OCT 04 2025",
+                "matchList": [
+                    {
+                        "seriesName": "Sheffield Shield 2025-26",
+                        "seriesId": "10823",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133209",
+                                "matchTitle": "South Australia vs Victoria, 2nd Match, Day 1",
+                                "matchDesc": "Follow SAUS vs VIC, 2nd Match, Day 1, SAT, OCT 04 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Adelaide Oval,  Adelaide",
+                                "startDate": "12:00 AM GMT / 10:30 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133198",
+                                "matchTitle": "Queensland vs Tasmania, 1st Match, Day 1",
+                                "matchDesc": "Follow QL vs TAS, 1st Match, Day 1, SAT, OCT 04 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Match",
+                                "venue": "Allan Border Field,  Brisbane",
+                                "startDate": "12:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133220",
+                                "matchTitle": "Western Australia vs New South Wales, 3rd Match, Day 1",
+                                "matchDesc": "Follow WA vs NSW, 3rd Match, Day 1, SAT, OCT 04 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "W.A.C.A. Ground,  Perth",
+                                "startDate": "02:30 AM GMT / 10:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Nepal Women tour of Malaysia 2025",
+                        "seriesId": "11056",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "Nepal Women tour of Malaysia 2025",
+                                "seriesId": "11056",
+                                "matchId": "135494",
+                                "matchTitle": "Malaysia Women vs Nepal Women, 2nd T20I",
+                                "matchDesc": "Follow MLYW vs NEPW, 2nd T20I, SAT, OCT 04 2025, Nepal Women tour of Malaysia 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd T20I",
+                                "venue": "Bayuemas Oval,  Kuala Lumpur",
+                                "startDate": "02:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "West Indies tour of India, 2025",
+                        "seriesId": "9629",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "West Indies tour of India, 2025",
+                                "seriesId": "9629",
+                                "matchId": "117359",
+                                "matchTitle": "India vs West Indies, 1st Test, Day 3",
+                                "matchDesc": "Follow IND vs WI, 1st Test, Day 3, SAT, OCT 04 2025, West Indies tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Test",
+                                "venue": "Narendra Modi Stadium,  Ahmedabad",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Irani Cup 2025",
+                        "seriesId": "10300",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "Irani Cup 2025",
+                                "seriesId": "10300",
+                                "matchId": "123650",
+                                "matchTitle": "Vidarbha vs Rest of India, Irani Cup, Day 4",
+                                "matchDesc": "Follow VID vs ROI, Irani Cup, Day 4, SAT, OCT 04 2025, Irani Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "Irani Cup",
+                                "venue": "Vidarbha Cricket Association Stadium,  Nagpur",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Australia tour of New Zealand, 2025",
+                        "seriesId": "10201",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "Australia tour of New Zealand, 2025",
+                                "seriesId": "10201",
+                                "matchId": "122528",
+                                "matchTitle": "New Zealand vs Australia, 3rd T20I",
+                                "matchDesc": "Follow NZ vs AUS, 3rd T20I, SAT, OCT 04 2025, Australia tour of New Zealand, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd T20I",
+                                "venue": "Bay Oval,  Mount Maunganui",
+                                "startDate": "06:15 AM GMT / 07:15 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division One 2025-26",
+                        "seriesId": "10878",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133886",
+                                "matchTitle": "KwaZulu-Natal Inland vs Warriors, 6th Match, Day 3",
+                                "matchDesc": "Follow KZNIN vs WAR, 6th Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "6th Match",
+                                "venue": "City Oval,  Pietermaritzburg",
+                                "startDate": "07:00 AM GMT / 09:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133875",
+                                "matchTitle": "Boland vs Dolphins, 4th Match, Day 3",
+                                "matchDesc": "Follow BOL vs DOL, 4th Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Boland Park,  Paarl",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133880",
+                                "matchTitle": "Western Province vs Lions, 5th Match, Day 3",
+                                "matchDesc": "Follow WPR vs LIONS, 5th Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Match",
+                                "venue": "Newlands,  Cape Town",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133897",
+                                "matchTitle": "North West vs Titans, 7th Match, Day 3",
+                                "matchDesc": "Follow NWEST vs TIT, 7th Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "7th Match",
+                                "venue": "Senwes Park,  Potchefstroom",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                        "seriesId": "10944",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                                "seriesId": "10944",
+                                "matchId": "134892",
+                                "matchTitle": "TBC vs TBC, 3rd Place Play-off",
+                                "matchDesc": "Follow TBC vs TBC, 3rd Place Play-off, SAT, OCT 04 2025, ICC Mens T20 World Cup Africa Regional Final 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Place Play-off",
+                                "venue": "Harare Sports Club,  Harare",
+                                "startDate": "07:30 AM GMT / 09:30 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                                "seriesId": "10944",
+                                "matchId": "134903",
+                                "matchTitle": "TBC vs TBC, 7th Place Play-off",
+                                "matchDesc": "Follow TBC vs TBC, 7th Place Play-off, SAT, OCT 04 2025, ICC Mens T20 World Cup Africa Regional Final 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "7th Place Play-off",
+                                "venue": "Takashinga Sports Club,  Harare",
+                                "startDate": "07:30 AM GMT / 09:30 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                                "seriesId": "10944",
+                                "matchId": "134914",
+                                "matchTitle": "TBC vs TBC, 5th Place Play-off",
+                                "matchDesc": "Follow TBC vs TBC, 5th Place Play-off, SAT, OCT 04 2025, ICC Mens T20 World Cup Africa Regional Final 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Place Play-off",
+                                "venue": "Takashinga Sports Club,  Harare",
+                                "startDate": "11:50 AM GMT / 01:50 PM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "ICC Mens T20 World Cup Africa Regional Final 2025",
+                                "seriesId": "10944",
+                                "matchId": "134925",
+                                "matchTitle": "TBC vs TBC, Final",
+                                "matchDesc": "Follow TBC vs TBC, Final, SAT, OCT 04 2025, ICC Mens T20 World Cup Africa Regional Final 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "Final",
+                                "venue": "Harare Sports Club,  Harare",
+                                "startDate": "11:50 AM GMT / 01:50 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                        "seriesId": "10911",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134480",
+                                "matchTitle": "Knights vs Eastern Storm, 2nd Match, Day 3",
+                                "matchDesc": "Follow KNG vs ESTORM, 2nd Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Mangaung Oval,  Bloemfontein",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134485",
+                                "matchTitle": "Northern Cape vs Mpumalanga Rhinos, 3rd Match, Day 3",
+                                "matchDesc": "Follow NCAPE vs MPR, 3rd Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "Diamond Oval,  Kimberley",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134491",
+                                "matchTitle": "Limpopo vs South Western Districts, 4th Match, Day 3",
+                                "matchDesc": "Follow LIMPO vs SWD, 4th Match, Day 3, SAT, OCT 04 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Polokwane Cricket Club,  Polokwane",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Womens World Cup 2025",
+                        "seriesId": "10009",
+                        "seriesList": [
+                            {
+                                "date": "SAT, OCT 04 2025",
+                                "seriesName": "ICC Womens World Cup 2025",
+                                "seriesId": "10009",
+                                "matchId": "121477",
+                                "matchTitle": "Sri Lanka Women vs Australia Women, 5th Match",
+                                "matchDesc": "Follow SLW vs AUSW, 5th Match, SAT, OCT 04 2025, ICC Womens World Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Match",
+                                "venue": "R.Premadasa Stadium,  Colombo",
+                                "startDate": "09:30 AM GMT / 03:00 PM LOCAL"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "date": "SUN, OCT 05 2025",
+                "matchList": [
+                    {
+                        "seriesName": "Sheffield Shield 2025-26",
+                        "seriesId": "10823",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133198",
+                                "matchTitle": "Queensland vs Tasmania, 1st Match, Day 2",
+                                "matchDesc": "Follow QL vs TAS, 1st Match, Day 2, SUN, OCT 05 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Match",
+                                "venue": "Allan Border Field,  Brisbane",
+                                "startDate": "12:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133209",
+                                "matchTitle": "South Australia vs Victoria, 2nd Match, Day 2",
+                                "matchDesc": "Follow SAUS vs VIC, 2nd Match, Day 2, SUN, OCT 05 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Adelaide Oval,  Adelaide",
+                                "startDate": "12:00 AM GMT / 10:30 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133220",
+                                "matchTitle": "Western Australia vs New South Wales, 3rd Match, Day 2",
+                                "matchDesc": "Follow WA vs NSW, 3rd Match, Day 2, SUN, OCT 05 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "W.A.C.A. Ground,  Perth",
+                                "startDate": "02:30 AM GMT / 10:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Nepal Women tour of Malaysia 2025",
+                        "seriesId": "11056",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Nepal Women tour of Malaysia 2025",
+                                "seriesId": "11056",
+                                "matchId": "135505",
+                                "matchTitle": "Malaysia Women vs Nepal Women, 3rd T20I",
+                                "matchDesc": "Follow MLYW vs NEPW, 3rd T20I, SUN, OCT 05 2025, Nepal Women tour of Malaysia 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd T20I",
+                                "venue": "Bayuemas Oval,  Kuala Lumpur",
+                                "startDate": "02:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "West Indies tour of India, 2025",
+                        "seriesId": "9629",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "West Indies tour of India, 2025",
+                                "seriesId": "9629",
+                                "matchId": "117359",
+                                "matchTitle": "India vs West Indies, 1st Test, Day 4",
+                                "matchDesc": "Follow IND vs WI, 1st Test, Day 4, SUN, OCT 05 2025, West Indies tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Test",
+                                "venue": "Narendra Modi Stadium,  Ahmedabad",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Irani Cup 2025",
+                        "seriesId": "10300",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Irani Cup 2025",
+                                "seriesId": "10300",
+                                "matchId": "123650",
+                                "matchTitle": "Vidarbha vs Rest of India, Irani Cup, Day 5",
+                                "matchDesc": "Follow VID vs ROI, Irani Cup, Day 5, SUN, OCT 05 2025, Irani Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "Irani Cup",
+                                "venue": "Vidarbha Cricket Association Stadium,  Nagpur",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division One 2025-26",
+                        "seriesId": "10878",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133886",
+                                "matchTitle": "KwaZulu-Natal Inland vs Warriors, 6th Match, Day 4",
+                                "matchDesc": "Follow KZNIN vs WAR, 6th Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "6th Match",
+                                "venue": "City Oval,  Pietermaritzburg",
+                                "startDate": "07:00 AM GMT / 09:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133880",
+                                "matchTitle": "Western Province vs Lions, 5th Match, Day 4",
+                                "matchDesc": "Follow WPR vs LIONS, 5th Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "5th Match",
+                                "venue": "Newlands,  Cape Town",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133897",
+                                "matchTitle": "North West vs Titans, 7th Match, Day 4",
+                                "matchDesc": "Follow NWEST vs TIT, 7th Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "7th Match",
+                                "venue": "Senwes Park,  Potchefstroom",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division One 2025-26",
+                                "seriesId": "10878",
+                                "matchId": "133875",
+                                "matchTitle": "Boland vs Dolphins, 4th Match, Day 4",
+                                "matchDesc": "Follow BOL vs DOL, 4th Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division One 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Boland Park,  Paarl",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "United Arab Emirates Women tour of Zimbabwe 2025",
+                        "seriesId": "10983",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "United Arab Emirates Women tour of Zimbabwe 2025",
+                                "seriesId": "10983",
+                                "matchId": "135184",
+                                "matchTitle": "Zimbabwe Women vs United Arab Emirates Women, 1st T20I",
+                                "matchDesc": "Follow ZIMW vs UAEW, 1st T20I, SUN, OCT 05 2025, United Arab Emirates Women tour of Zimbabwe 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st T20I",
+                                "venue": "Queens Sports Club,  Bulawayo",
+                                "startDate": "07:15 AM GMT / 09:15 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Australia A tour of India, 2025",
+                        "seriesId": "9935",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Australia A tour of India, 2025",
+                                "seriesId": "9935",
+                                "matchId": "119870",
+                                "matchTitle": "India A vs Australia A, 3rd unofficial ODI",
+                                "matchDesc": "Follow INDA vs AUSA, 3rd unofficial ODI, SUN, OCT 05 2025, Australia A tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd unofficial ODI",
+                                "venue": "Green Park,  Kanpur",
+                                "startDate": "08:00 AM GMT / 01:30 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                        "seriesId": "10911",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134480",
+                                "matchTitle": "Knights vs Eastern Storm, 2nd Match, Day 4",
+                                "matchDesc": "Follow KNG vs ESTORM, 2nd Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Mangaung Oval,  Bloemfontein",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134485",
+                                "matchTitle": "Northern Cape vs Mpumalanga Rhinos, 3rd Match, Day 4",
+                                "matchDesc": "Follow NCAPE vs MPR, 3rd Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "Diamond Oval,  Kimberley",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "CSA Four-Day Series Division Two 2025-26",
+                                "seriesId": "10911",
+                                "matchId": "134491",
+                                "matchTitle": "Limpopo vs South Western Districts, 4th Match, Day 4",
+                                "matchDesc": "Follow LIMPO vs SWD, 4th Match, Day 4, SUN, OCT 05 2025, CSA Four-Day Series Division Two 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "4th Match",
+                                "venue": "Polokwane Cricket Club,  Polokwane",
+                                "startDate": "08:00 AM GMT / 10:00 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Womens World Cup 2025",
+                        "seriesId": "10009",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "ICC Womens World Cup 2025",
+                                "seriesId": "10009",
+                                "matchId": "121488",
+                                "matchTitle": "India Women vs Pakistan Women, 6th Match",
+                                "matchDesc": "Follow INDW vs PAKW, 6th Match, SUN, OCT 05 2025, ICC Womens World Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "6th Match",
+                                "venue": "R.Premadasa Stadium,  Colombo",
+                                "startDate": "09:30 AM GMT / 03:00 PM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "Afghanistan vs Bangladesh in UAE 2025",
+                        "seriesId": "10840",
+                        "seriesList": [
+                            {
+                                "date": "SUN, OCT 05 2025",
+                                "seriesName": "Afghanistan vs Bangladesh in UAE 2025",
+                                "seriesId": "10840",
+                                "matchId": "133666",
+                                "matchTitle": "Afghanistan vs Bangladesh, 3rd T20I",
+                                "matchDesc": "Follow AFG vs BAN, 3rd T20I, SUN, OCT 05 2025, Afghanistan vs Bangladesh in UAE 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd T20I",
+                                "venue": "Sharjah Cricket Stadium,  Sharjah",
+                                "startDate": "03:00 PM GMT / 07:00 PM LOCAL"
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "date": "MON, OCT 06 2025",
+                "matchList": [
+                    {
+                        "seriesName": "Sheffield Shield 2025-26",
+                        "seriesId": "10823",
+                        "seriesList": [
+                            {
+                                "date": "MON, OCT 06 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133198",
+                                "matchTitle": "Queensland vs Tasmania, 1st Match, Day 3",
+                                "matchDesc": "Follow QL vs TAS, 1st Match, Day 3, MON, OCT 06 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Match",
+                                "venue": "Allan Border Field,  Brisbane",
+                                "startDate": "12:00 AM GMT / 10:00 AM LOCAL"
+                            },
+                            {
+                                "date": "MON, OCT 06 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133209",
+                                "matchTitle": "South Australia vs Victoria, 2nd Match, Day 3",
+                                "matchDesc": "Follow SAUS vs VIC, 2nd Match, Day 3, MON, OCT 06 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd Match",
+                                "venue": "Adelaide Oval,  Adelaide",
+                                "startDate": "12:00 AM GMT / 10:30 AM LOCAL"
+                            },
+                            {
+                                "date": "MON, OCT 06 2025",
+                                "seriesName": "Sheffield Shield 2025-26",
+                                "seriesId": "10823",
+                                "matchId": "133220",
+                                "matchTitle": "Western Australia vs New South Wales, 3rd Match, Day 3",
+                                "matchDesc": "Follow WA vs NSW, 3rd Match, Day 3, MON, OCT 06 2025, Sheffield Shield 2025-26 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "3rd Match",
+                                "venue": "W.A.C.A. Ground,  Perth",
+                                "startDate": "02:30 AM GMT / 10:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "West Indies tour of India, 2025",
+                        "seriesId": "9629",
+                        "seriesList": [
+                            {
+                                "date": "MON, OCT 06 2025",
+                                "seriesName": "West Indies tour of India, 2025",
+                                "seriesId": "9629",
+                                "matchId": "117359",
+                                "matchTitle": "India vs West Indies, 1st Test, Day 5",
+                                "matchDesc": "Follow IND vs WI, 1st Test, Day 5, MON, OCT 06 2025, West Indies tour of India, 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "1st Test",
+                                "venue": "Narendra Modi Stadium,  Ahmedabad",
+                                "startDate": "04:00 AM GMT / 09:30 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "United Arab Emirates Women tour of Zimbabwe 2025",
+                        "seriesId": "10983",
+                        "seriesList": [
+                            {
+                                "date": "MON, OCT 06 2025",
+                                "seriesName": "United Arab Emirates Women tour of Zimbabwe 2025",
+                                "seriesId": "10983",
+                                "matchId": "135195",
+                                "matchTitle": "Zimbabwe Women vs United Arab Emirates Women, 2nd T20I",
+                                "matchDesc": "Follow ZIMW vs UAEW, 2nd T20I, MON, OCT 06 2025, United Arab Emirates Women tour of Zimbabwe 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "2nd T20I",
+                                "venue": "Queens Sports Club,  Bulawayo",
+                                "startDate": "07:15 AM GMT / 09:15 AM LOCAL"
+                            }
+                        ]
+                    },
+                    {
+                        "seriesName": "ICC Womens World Cup 2025",
+                        "seriesId": "10009",
+                        "seriesList": [
+                            {
+                                "date": "MON, OCT 06 2025",
+                                "seriesName": "ICC Womens World Cup 2025",
+                                "seriesId": "10009",
+                                "matchId": "121494",
+                                "matchTitle": "New Zealand Women vs South Africa Women, 7th Match",
+                                "matchDesc": "Follow NZW vs RSAW, 7th Match, MON, OCT 06 2025, ICC Womens World Cup 2025 with live Cricket score, ball by ball commentary updates on Cricbuzz",
+                                "matchFormat": "7th Match",
+                                "venue": "Holkar Cricket Stadium,  Indore",
+                                "startDate": "09:30 AM GMT / 03:00 PM LOCAL"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "nextPaginate": "1759743000000"
+    }
+}

@@ -43,12 +43,7 @@ const MatchDetails = () => {
   const handleStartMatch = () => {
     if (match) {
       dispatch(startMatch(match));
-      navigate('/scoring', { 
-        state: { 
-          match, 
-          startedFrom: 'match-details'
-        } 
-      });
+      navigate(`/scoring/${match.id}`);
     }
   };
 
@@ -198,7 +193,7 @@ const MatchDetails = () => {
             <div className="nav-icon">🏠</div>
             <div className="nav-label">Home</div>
           </Link>
-          <Link to="/scoring" className="nav-item">
+          <Link to={`/scoring/${matchId}`} className="nav-item">
             <div className="nav-icon scoring-icon">$</div>
             <div className="nav-label">Scoring</div>
           </Link>

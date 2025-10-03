@@ -10,7 +10,8 @@ import {
   removePlayerFromTeam, 
   deleteTeam 
 } from '../store/slices/clubSlice';
-import '../styles/common.css';
+import teamService from '../services/teamService';
+import '../styles/figma-cricket-theme.css';
 import '../styles/team-management.css';
 
 function TeamManagement() {
@@ -24,7 +25,7 @@ function TeamManagement() {
   const [isPlayerModalOpen, setIsPlayerModalOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
   const [selectedTeam, setSelectedTeam] = useState(null);
-  const [isFabOpen, setIsFabOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
   const [newTeamForm, setNewTeamForm] = useState({
     name: '',
     jerseyColor: '#3498db',
@@ -36,24 +37,41 @@ function TeamManagement() {
     description: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterByReadiness, setFilterByReadiness] = useState('all');
+  const [teams, setTeams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
-  // Get club data from Redux store
-  const { teams, playerPool } = useSelector(state => state.club);
+  // Get playerPool from Redux store (players are still managed locally)
+  const { playerPool } = useSelector(state => state.club);
   
-  // Close FAB on escape key
+  // Fetch teams from API
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape' && isFabOpen) {
-        setIsFabOpen(false);
+    const fetchTeams = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await teamService.getAllTeams();
+        if (response.success && response.data) {
+          setTeams(response.data);
+        } else {
+          setTeams([]);
+        }
+      } catch (err) {
+        console.error('Error fetching teams:', err);
+        setError(err.message);
+        setTeams([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (isFabOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
-    }
-  }, [isFabOpen]);
+    fetchTeams();
+  }, []);
+  
+  // Handle tab changes
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
   
   // Get available players (not assigned to any team)
   const availablePlayers = playerPool?.filter(player => 
@@ -103,19 +121,17 @@ function TeamManagement() {
     return { topBatsman, topBowler };
   };
 
-  // Filter teams based on search and readiness
+  // Filter teams based on search and tab
   const filteredTeams = useMemo(() => {
     if (!teams) return [];
     return teams.filter(team => {
       const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase());
-      if (filterByReadiness === 'ready') {
+      if (activeTab === 'ready') {
         return matchesSearch && (team.players?.length >= 11);
-      } else if (filterByReadiness === 'incomplete') {
-        return matchesSearch && (team.players?.length < 11);
       }
       return matchesSearch;
     });
-  }, [teams, searchTerm, filterByReadiness]);
+  }, [teams, searchTerm, activeTab]);
 
   // Get team statistics
   const teamStats = useMemo(() => {
@@ -191,93 +207,60 @@ function TeamManagement() {
   };
   
   return (
-    <div className={`dashboard-container app-theme ${isDarkMode ? 'dark' : 'light'}`}>
-      <div className="dashboard-content">
-        {/* Header Section */}
-        <div className="dashboard-header">
-                    <div className="app-title-section">
-            <div className="app-logo">
-              <span className="logo-icon">👥</span>
-            </div>
-            <div className="title-content">
-              <h1 className="dashboard-title">Team Management</h1>
-              <div className="title-subtitle">Create and manage your cricket teams</div>
-            </div>
-          </div>
-          <div className="theme-toggle-section">
-            <button onClick={toggleDarkMode} className="theme-toggle-btn">
-              {isDarkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
-            </button>
+    <div className={`figma-cricket-app app-theme ${isDarkMode ? 'dark' : 'light'}`} role="main">
+      
+      {/* Header */}
+      <header className="figma-header">
+        <div className="figma-header-left">
+          <Link to="/" className="figma-back-button" aria-label="Go back to home">
+            <span className="figma-back-icon">‹</span>
+          </Link>
+          <div className="figma-logo-container">
+            <span className="figma-logo-icon" role="img" aria-label="Teams">🏏</span>
+            <h1 className="figma-title">Team Management</h1>
           </div>
         </div>
-
-        {/* Floating Action Button */}
-        <div className={`fab-container ${isFabOpen ? 'fab-open' : ''}`}>
-          {/* Overlay to close FAB when clicking outside */}
-          {isFabOpen && (
-            <div 
-              className="fab-overlay" 
-              onClick={() => setIsFabOpen(false)}
-            />
-          )}
-          
-          {/* FAB Menu Items */}
-          <div className="fab-menu">
-            <Link 
-              to="/" 
-              className="fab-menu-item fab-item-1"
-              onClick={() => setIsFabOpen(false)}
-            >
-              <div className="fab-item-icon">🏠</div>
-              <span className="fab-item-label">Home Dashboard</span>
-            </Link>
-            
-            <button 
-              className="fab-menu-item fab-item-2"
-              onClick={() => {
-                setIsCreateTeamModalOpen(true);
-                setIsFabOpen(false);
-              }}
-            >
-              <div className="fab-item-icon">➕</div>
-              <span className="fab-item-label">Create New Team</span>
-            </button>
-            
-            <Link 
-              to="/player-management" 
-              className="fab-menu-item fab-item-3"
-              onClick={() => setIsFabOpen(false)}
-            >
-              <div className="fab-item-icon">👤</div>
-              <span className="fab-item-label">Manage Players</span>
-            </Link>
-            
-            <Link 
-              to="/match-management" 
-              className="fab-menu-item fab-item-4"
-              onClick={() => setIsFabOpen(false)}
-            >
-              <div className="fab-item-icon">🏆</div>
-              <span className="fab-item-label">Match Management</span>
-            </Link>
-          </div>
-          
-          {/* Main FAB Button */}
+        <div className="figma-header-right">
           <button 
-            className="fab-button"
-            onClick={() => setIsFabOpen(!isFabOpen)}
-            aria-label="Quick Actions"
+            className="figma-theme-toggle"
+            onClick={toggleDarkMode}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-pressed={isDarkMode}
           >
-            <span className={`fab-icon ${isFabOpen ? 'fab-icon-close' : ''}`}>
-              {isFabOpen ? '✕' : '⚙️'}
-            </span>
+            <div className="figma-toggle-icon">
+              {isDarkMode ? '☀️' : '🌙'}
+            </div>
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="figma-main-layout">
+
+        {/* Tab Navigation */}
+        <div className="figma-tab-navigation">
+          <button 
+            className={`figma-tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
+            aria-pressed={activeTab === 'all'}
+          >
+            <span className="figma-tab-icon">📋</span>
+            <span className="figma-tab-label">All Teams</span>
+          </button>
+          <button 
+            className={`figma-tab-btn ${activeTab === 'ready' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ready')}
+            aria-pressed={activeTab === 'ready'}
+          >
+            <span className="figma-tab-icon">✅</span>
+            <span className="figma-tab-label">Ready Teams</span>
           </button>
         </div>
 
         {/* Teams Section */}
         <div className="teams-section">
           <div className="section-header">
-            <h2>Your Teams</h2>
+            <h2>{activeTab === 'all' ? 'All Teams' : 'Ready Teams'}</h2>
             <div className="section-controls">
               <input
                 type="text"
@@ -286,31 +269,29 @@ function TeamManagement() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <select
-                className="filter-select"
-                value={filterByReadiness}
-                onChange={(e) => setFilterByReadiness(e.target.value)}
+              <button 
+                className="figma-btn figma-btn-orange"
+                onClick={() => setIsCreateTeamModalOpen(true)}
               >
-                <option value="all">All Teams</option>
-                <option value="ready">Ready (11+ players)</option>
-                <option value="incomplete">Incomplete</option>
-              </select>
+                <span className="btn-icon">➕</span>
+                Create Team
+              </button>
             </div>
-      </div>
+          </div>
 
-      {/* Teams Display */}
-      <div className="teams-container">
+          {/* Teams Display */}
+          <div className="teams-container">
         {filteredTeams.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">🏏</div>
             <h3>No teams found</h3>
             <p>
-              {searchTerm || filterByReadiness !== 'all' 
-                ? 'Try adjusting your search or filter criteria'
+              {searchTerm || activeTab !== 'all' 
+                ? 'Try adjusting your search or switch to All Teams tab'
                 : 'Create your first team to get started'
               }
             </p>
-            {!searchTerm && filterByReadiness === 'all' && (
+            {!searchTerm && activeTab === 'all' && (
               <button 
                 className="btn btn-primary"
                 onClick={() => setIsCreateTeamModalOpen(true)}

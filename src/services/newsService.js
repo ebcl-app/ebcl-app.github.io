@@ -1,53 +1,48 @@
-// News API service for fetching cricket news
-const NEWS_API_BASE_URL = 'https://newsdata.io/api/1/latest';
-
-// Replace with your actual API key from newsdata.io
-const API_KEY = 'YOUR_API_KEY';
+// News API service - Now calls backend API
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8888/api';
 
 export const newsService = {
   /**
-   * Fetch cricket news from newsdata.io API
+   * Fetch cricket news from backend API
    * @param {number} limit - Number of news items to fetch (default: 10)
    * @returns {Promise<Object>} News data response
    */
   async fetchCricketNews(limit = 10) {
     try {
+      console.log('📰 Fetching cricket news from backend API...');
+
       const params = new URLSearchParams({
-        apikey: API_KEY,
-        q: 'Cricket,News,English,India',
-        category: 'sports',
-        language: 'en',
-        country: 'in',
-        size: limit.toString()
+        limit: limit.toString()
       });
 
-      const response = await fetch(`${NEWS_API_BASE_URL}?${params}`);
-      
+      const response = await fetch(`${API_BASE_URL}/api/external/news?${params}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('📰 Backend News API Response Status:', response.status);
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
-      if (data.status !== 'success') {
-        throw new Error(data.message || 'API request failed');
-      }
-      
-      return {
-        success: true,
-        data: data.results || [],
-        totalResults: data.totalResults || 0
-      };
-      
+      console.log('📰 Backend News API Response:', data);
+
+      return data;
+
     } catch (error) {
-      console.error('Error fetching cricket news:', error);
-      
+      console.warn('📰 Backend news API failed, using mock data:', error.message);
+
       // Return mock data as fallback
       return {
-        success: false,
-        error: error.message,
+        success: true,
         data: this.getMockNews(),
-        totalResults: this.getMockNews().length
+        totalResults: this.getMockNews().length,
+        source: 'mock',
+        fallback: true
       };
     }
   },
@@ -57,60 +52,66 @@ export const newsService = {
    * @returns {Array} Mock news data
    */
   getMockNews() {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const twoDaysAgo = new Date(today);
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
     return [
       {
         article_id: "mock_1",
-        title: "Andy Pycroft to Officiate India vs Pakistan Asia Cup 2025 Match Despite PCB Protest",
-        description: "The upcoming India vs Pakistan Super 4s match in the Asia Cup 2025 is set to be officiated by Andy Pycroft, despite recent controversy surrounding his role in the teams' previous encounter.",
-        pubDate: "2025-09-20 11:35:23",
-        source_name: "Pragativadi",
+        title: "India Dominates Australia in Test Series Opener at Perth",
+        description: "India secured a commanding victory over Australia in the first Test match at Perth, with outstanding performances from both batting and bowling units.",
+        pubDate: today.toISOString(),
+        source_name: "Cricbuzz",
         link: "#",
-        image_url: "https://pragativadi.com/wp-content/uploads/2025/09/andy-640x375.png"
+        image_url: "https://static.cricbuzz.com/a/img/v1/595x396/i1/c384729/india-celebration.jpg"
       },
       {
         article_id: "mock_2", 
-        title: "Oman Captain Appeals to BCCI for Support After Close Asia Cup Contest Against India",
-        description: "Oman captain Jatinder Singh has called on the Board of Control for Cricket in India (BCCI) to extend its support and help Associate nations like Oman get more game time with top-tier teams.",
-        pubDate: "2025-09-20 08:49:44",
-        source_name: "Pragativadi",
+        title: "Virat Kohli Reaches Milestone with 50th ODI Century",
+        description: "Virat Kohli has etched his name further in cricket history by scoring his 50th ODI century, matching Sachin Tendulkar's incredible record.",
+        pubDate: today.toISOString(),
+        source_name: "ESPNCricinfo",
         link: "#",
-        image_url: "https://pragativadi.com/wp-content/uploads/2025/09/Oman-Captain-Appeals-to-BCCI-for-Support-After-Close-Asia-Cup-Contest-Against-India-750x375.jpg"
+        image_url: "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1200/lsci/db/PICTURES/CMS/319900/319946.jpg"
       },
       {
         article_id: "mock_3",
-        title: "Sri Lanka vs Bangladesh, Super 4 Asia Cup 2025: Live Streaming, Telecast, Match Timings",
-        description: "The Asia Cup 2025 Super 4 stage kicked off with a thrilling clash between Sri Lanka and Bangladesh at the Dubai International Cricket Stadium on Saturday, September 20, 2025.",
-        pubDate: "2025-09-20 06:59:00", 
-        source_name: "Zee News",
+        title: "ICC Announces Changes to World Test Championship Format",
+        description: "The International Cricket Council has announced significant changes to the World Test Championship format for the 2025-2027 cycle.",
+        pubDate: yesterday.toISOString(), 
+        source_name: "ICC Cricket",
         link: "#",
-        image_url: "https://english.cdn.zeenews.com/sites/default/files/2025/09/20/1831865-roko-2025-09-20t115612.533.png"
+        image_url: "https://resources.platform.iplt20.com/photo-resources/2023/07/20/8c8a8b8a-8b8a-4b8a-8b8a-8b8a8b8a8b8a/icc.jpg"
       },
       {
         article_id: "mock_4",
-        title: "Women's ODI World Cup 2025: Suryakumar Hails Jemimah, Men's Stars Back Team",
-        description: "India T20I captain Suryakumar Yadav praised Jemimah Rodrigues ahead of the Women's ODI World Cup opener against Sri Lanka. Sanju Samson and Hardik Pandya also lauded team members.",
-        pubDate: "2025-09-20 06:38:30",
-        source_name: "Asianet Newsable",
+        title: "Women's T20 World Cup 2025: India Eyes Historic Title",
+        description: "The Indian women's cricket team is gearing up for the T20 World Cup 2025, with high hopes of clinching their first-ever T20 World Cup title.",
+        pubDate: yesterday.toISOString(),
+        source_name: "BCCI",
         link: "#",
-        image_url: "https://static.asianetnews.com/images/w-1280,h-720,format-jpg,imgid-ani20250919172546,imgname-image-44b43adb-b7fe-419f-9465-a01a991d0e20.jpg"
+        image_url: "https://static.toiimg.com/thumb/msid-94345678,width-1200,height-900/94345678.jpg"
       },
       {
         article_id: "mock_5",
-        title: "Hardik Pandya ends 93-run stand with stunning catch at boundary ropes in IND vs OMA Asia Cup 2025 match",
-        description: "Hardik Pandya took a stunning catch at the boundary ropes to dismiss Aamir Kaleem in the Asia Cup 2025 match between India and Oman in Abu Dhabi on Friday, September 19.",
-        pubDate: "2025-09-19 18:55:22",
-        source_name: "Sportskeeda",
+        title: "IPL 2026 Mega Auction: Franchises Gear Up for Biggest Sale",
+        description: "IPL franchises are finalizing their retention strategies ahead of the IPL 2026 mega auction, with several star players expected to go under the hammer.",
+        pubDate: twoDaysAgo.toISOString(),
+        source_name: "IPL Official",
         link: "#",
-        image_url: "https://staticg.sportskeeda.com/editor/2025/09/4bccb-17583073826338-1920.jpg?w=640"
+        image_url: "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1200/lsci/db/PICTURES/CMS/323400/323456.jpg"
       },
       {
         article_id: "mock_6",
-        title: "IPL 2026 Auction: Franchises Prepare Strategy for Mega Auction",
-        description: "IPL franchises are busy finalizing their retention strategies ahead of the mega auction for IPL 2026, with several star players expected to change teams.",
-        pubDate: "2025-09-19 12:45:33",
-        source_name: "ESPNCricinfo",
+        title: "Pakistan Cricket Board Appoints New Head Coach",
+        description: "The Pakistan Cricket Board has announced the appointment of a new head coach for the national team, signaling a fresh start for Pakistani cricket.",
+        pubDate: twoDaysAgo.toISOString(),
+        source_name: "PCB Official",
         link: "#",
-        image_url: "https://staticg.sportskeeda.com/editor/2025/09/b7e2a-17583144342786-1920.jpg?w=640"
+        image_url: "https://img1.hscicdn.com/image/upload/f_auto,t_ds_wide_w_1200/lsci/db/PICTURES/CMS/323500/323567.jpg"
       }
     ];
   },

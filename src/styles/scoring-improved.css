@@ -1,0 +1,1345 @@
+/* Improved Cricket Scoring UI - Addressing All Issues */
+
+/* CSS Reset and Base Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ========================================
+   TAB NAVIGATION - News UI Style
+   ======================================== */
+
+.figma-tab-navigation {
+  display: flex;
+  gap: 0;
+  background: #f8f9fa;
+  padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px);
+  margin: 0 0 clamp(16px, 4vw, 20px) 0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  max-width: 768px;
+  margin-left: auto;
+  margin-right: auto;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.figma-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.5vw, 8px);
+  padding: clamp(10px, 2.5vw, 14px) clamp(16px, 4vw, 20px);
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  font-size: clamp(13px, 3vw, 14px);
+  font-weight: 700;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.figma-tab-btn:hover:not(.active) {
+  background: rgba(255, 149, 0, 0.1);
+  color: var(--figma-orange);
+}
+
+.figma-tab-btn.active {
+  background: var(--figma-white);
+  color: var(--figma-orange);
+  border-bottom-color: var(--figma-orange);
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.figma-tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--figma-orange);
+  border-radius: 3px 3px 0 0;
+}
+
+.figma-tab-icon {
+  font-size: clamp(16px, 4vw, 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.figma-tab-label {
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 640px) {
+  .figma-tab-navigation {
+    padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
+  }
+  
+  .figma-tab-btn {
+    padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
+  }
+}
+
+/* ========================================
+   INNINGS TABS - Sub-navigation in Match Overview
+   ======================================== */
+
+.figma-innings-tabs-container {
+  display: flex;
+  gap: clamp(8px, 2vw, 12px);
+  background: #f8f9fa;
+  padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
+  margin: clamp(12px, 3vw, 16px) 0;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.figma-innings-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2vw, 10px) clamp(12px, 3vw, 16px);
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 6px 6px 0 0;
+  font-size: clamp(12px, 2.8vw, 13px);
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.3px;
+  position: relative;
+}
+
+.figma-innings-tab:hover:not(.active) {
+  background: rgba(255, 149, 0, 0.08);
+  color: var(--figma-orange);
+}
+
+.figma-innings-tab.active {
+  background: var(--figma-white);
+  color: var(--figma-orange);
+  border-bottom-color: var(--figma-orange);
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.figma-innings-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--figma-orange);
+  border-radius: 2px 2px 0 0;
+}
+
+.figma-innings-tab-label {
+  font-size: clamp(11px, 2.5vw, 12px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+@media (max-width: 640px) {
+  .figma-innings-tabs-container {
+    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 12px);
+    gap: clamp(6px, 1.5vw, 8px);
+  }
+  
+  .figma-innings-tab {
+    padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 12px);
+  }
+}
+
+/* ========================================
+   BOWLING STATS STYLES
+   ======================================== */
+
+.figma-player-score.figma-bowling {
+  color: var(--figma-orange);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.figma-player-score.figma-yet-to-bowl {
+  color: #999;
+  font-style: italic;
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
+/* 📊 TEAM BATTING CARD - Combined */
+.figma-team-batting-card {
+  background: var(--figma-white);
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: 16px;
+  box-shadow: var(--figma-shadow);
+  margin-bottom: clamp(16px, 4vw, 20px);
+}
+
+.figma-team-batting-card .figma-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(12px, 3vw, 16px);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Batsmen Section within Team Card */
+.figma-batsmen-section {
+  margin: clamp(16px, 4vw, 20px) 0;
+  padding-top: clamp(12px, 3vw, 16px);
+  border-top: 2px solid var(--figma-border);
+}
+
+.figma-section-subtitle {
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  color: var(--figma-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 clamp(12px, 3vw, 16px) 0;
+}
+
+/* Batting Controls */
+.figma-batting-controls,
+.figma-bowling-controls {
+  margin-top: clamp(16px, 4vw, 20px);
+  padding-top: clamp(12px, 3vw, 16px);
+  border-top: 2px solid var(--figma-border);
+}
+
+.figma-controls-title {
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 700;
+  color: var(--figma-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 clamp(8px, 2vw, 12px) 0;
+}
+
+.figma-batting-buttons,
+.figma-bowling-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(6px, 1.5vw, 10px);
+}
+
+.figma-bowling-buttons {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.figma-control-btn {
+  min-height: clamp(40px, 10vw, 48px);
+  border: none;
+  border-radius: 12px;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--figma-white);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(4px, 1vw, 6px);
+  flex-direction: column;
+  padding: clamp(4px, 1vw, 8px);
+}
+
+@media (min-width: 480px) {
+  .figma-control-btn {
+    flex-direction: row;
+  }
+}
+
+.figma-control-btn:active {
+  transform: scale(0.95);
+}
+
+.figma-out-btn { background: var(--figma-red); }
+.figma-swap-btn,
+.figma-swap-bowler-btn { background: var(--figma-orange); }
+.figma-change-btn-alt { background: var(--figma-blue); }
+.figma-end-over-btn { background: var(--figma-purple); }
+
+/* 📊 MATCH SUMMARY CARD (Removed as it's merged into team batting) */
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Color Variables */
+:root {
+  --figma-orange: #ff9500;
+  --figma-blue: #007aff;
+  --figma-red: #ff3b30;
+  --figma-green: #34c759;
+  --figma-purple: #af52de;
+  --figma-gray: #8e8e93;
+  --figma-dark: #1c1c1e;
+  --figma-light: #f2f2f7;
+  --figma-white: #ffffff;
+  --figma-border: #d1d1d6;
+  --figma-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --figma-shadow-light: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Main Container */
+.figma-cricket-improved {
+  max-width: 768px;
+  margin: 0 auto;
+  background: var(--figma-light);
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 80px; /* Space for sticky footer */
+}
+
+/* 🔧 FIXED HEADER */
+.figma-header-improved {
+  background: var(--figma-white);
+  padding: clamp(12px, 3vw, 20px);
+  box-shadow: var(--figma-shadow-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.figma-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.figma-logo-container {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 1.5vw, 10px);
+}
+
+.figma-logo-icon {
+  font-size: clamp(20px, 5vw, 28px);
+}
+
+.figma-title {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.figma-header-right {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.figma-live-badge {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  padding: clamp(4px, 1vw, 8px) clamp(8px, 2vw, 16px);
+  border-radius: 20px;
+  font-size: clamp(10px, 2.5vw, 14px);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.figma-theme-toggle {
+  background: var(--figma-gray);
+  color: var(--figma-white);
+  border: none;
+  padding: clamp(6px, 1.5vw, 10px);
+  border-radius: 50%;
+  font-size: clamp(14px, 3vw, 18px);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 🏗️ MAIN LAYOUT GRID */
+.figma-main-layout {
+  padding: clamp(8px, 2vw, 16px);
+  display: grid;
+  gap: clamp(12px, 3vw, 20px);
+  flex: 1;
+}
+
+/* 📊 MATCH SUMMARY CARD */
+.figma-match-summary-card {
+  background: var(--figma-white);
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: 16px;
+  box-shadow: var(--figma-shadow);
+}
+
+.figma-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(12px, 3vw, 16px);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.figma-team-name {
+  font-size: clamp(14px, 3.5vw, 18px);
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.figma-match-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.figma-badge {
+  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
+  border-radius: 12px;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  color: var(--figma-white);
+}
+
+.figma-badge-blue { background: var(--figma-blue); }
+.figma-badge-green { background: var(--figma-green); }
+
+.figma-score-display {
+  text-align: center;
+}
+
+.figma-main-score {
+  font-size: clamp(36px, 10vw, 56px);
+  font-weight: 800;
+  color: #000;
+  margin-bottom: clamp(8px, 2vw, 12px);
+  line-height: 1;
+}
+
+.figma-wickets-slash {
+  color: var(--figma-gray);
+  font-weight: 400;
+}
+
+.figma-target-info {
+  font-size: clamp(12px, 3vw, 14px);
+  color: var(--figma-gray);
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(4px, 1vw, 8px);
+}
+
+.figma-divider {
+  color: var(--figma-border);
+}
+
+/* 👥 PLAYER CARDS */
+.figma-players-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(12px, 3vw, 16px);
+}
+
+@media (min-width: 640px) {
+  .figma-players-layout {
+    grid-template-columns: 2fr 1.5fr;
+  }
+}
+
+/* Bowling Section */
+.figma-bowling-section {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(12px, 3vw, 16px);
+  margin-bottom: clamp(16px, 4vw, 20px);
+}
+
+.figma-batsmen-card,
+.figma-bowler-over-card {
+  background: var(--figma-white);
+  padding: clamp(16px, 4vw, 20px);
+  border-radius: 16px;
+  box-shadow: var(--figma-shadow);
+}
+
+.figma-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(12px, 3vw, 16px);
+}
+
+.figma-card-icon {
+  font-size: clamp(16px, 4vw, 20px);
+}
+
+.figma-card-title {
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.figma-batsman-row,
+.figma-bowler-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+  padding: clamp(8px, 2vw, 12px);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+
+.figma-batsman-row {
+  background: var(--figma-light);
+  border: 2px solid transparent;
+}
+
+.figma-striker {
+  border-color: var(--figma-red);
+  background: rgba(255, 59, 48, 0.05);
+}
+
+.figma-player-badge {
+  width: clamp(20px, 5vw, 24px);
+  height: clamp(20px, 5vw, 24px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 700;
+  color: var(--figma-white);
+  flex-shrink: 0;
+}
+
+.figma-striker-badge { background: var(--figma-red); }
+.figma-non-striker-badge { background: var(--figma-blue); }
+
+.figma-player-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.figma-player-name {
+  font-size: clamp(14px, 3.5vw, 16px);
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.figma-player-stats,
+.figma-bowler-stats {
+  font-size: clamp(10px, 2.5vw, 12px);
+  color: var(--figma-gray);
+}
+
+.figma-player-sr {
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  color: var(--figma-blue);
+  white-space: nowrap;
+}
+
+.figma-change-btn {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  border: none;
+  padding: clamp(6px, 1.5vw, 8px) clamp(10px, 2.5vw, 14px);
+  border-radius: 8px;
+  font-size: clamp(9px, 2vw, 11px);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+/* ⚾ CURRENT OVER TRACKER */
+.figma-current-over-tracker {
+  background: var(--figma-white);
+  padding: clamp(16px, 4vw, 20px);
+  border-radius: 16px;
+  box-shadow: var(--figma-shadow);
+}
+
+/* Combined Over Section within Bowler Card */
+.figma-over-section {
+  margin-top: clamp(16px, 4vw, 20px);
+  padding-top: clamp(12px, 3vw, 16px);
+  border-top: 2px solid var(--figma-border);
+}
+
+.figma-over-header {
+  margin-bottom: clamp(8px, 2vw, 12px);
+}
+
+.figma-over-title {
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 600;
+  color: var(--figma-gray);
+  margin: 0;
+}
+
+.figma-over-balls {
+  display: flex;
+  gap: clamp(4px, 1vw, 6px);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.figma-ball-tracker {
+  width: clamp(24px, 6vw, 32px);
+  height: clamp(24px, 6vw, 32px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  color: var(--figma-white);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-ball-dot { background: var(--figma-gray); }
+.figma-ball-single,
+.figma-ball-double { background: var(--figma-blue); }
+.figma-ball-six { background: var(--figma-red); }
+.figma-ball-current {
+  background: var(--figma-orange);
+  box-shadow: 0 0 0 2px var(--figma-orange), 0 0 0 4px rgba(255, 149, 0, 0.2);
+}
+.figma-ball-empty {
+  background: var(--figma-border);
+  color: var(--figma-gray);
+}
+
+/* ⚡ SCORING CONTROLS */
+.figma-scoring-section {
+  background: var(--figma-white);
+  padding: clamp(16px, 4vw, 20px);
+  border-radius: 16px;
+  box-shadow: var(--figma-shadow);
+}
+
+.figma-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(16px, 4vw, 20px);
+  padding-bottom: clamp(8px, 2vw, 12px);
+  border-bottom: 2px solid var(--figma-border);
+}
+
+.figma-section-icon {
+  font-size: clamp(16px, 4vw, 20px);
+}
+
+.figma-section-title {
+  font-size: clamp(14px, 3.5vw, 16px);
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+}
+
+.figma-scoring-grid {
+  display: grid;
+  gap: clamp(16px, 4vw, 24px);
+}
+
+@media (min-width: 640px) {
+  .figma-scoring-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Run Controls */
+.figma-runs-control {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.figma-control-label {
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 700;
+  color: var(--figma-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.figma-run-buttons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(6px, 1.5vw, 10px);
+}
+
+@media (min-width: 480px) {
+  .figma-run-buttons {
+    grid-template-columns: repeat(8, 1fr);
+  }
+}
+
+.figma-run-btn {
+  min-height: clamp(40px, 10vw, 50px);
+  min-width: clamp(40px, 10vw, 50px);
+  border: none;
+  border-radius: 12px;
+  font-size: clamp(14px, 3.5vw, 18px);
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--figma-white);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.figma-run-btn:active {
+  transform: scale(0.95);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.figma-run-btn.dot { background: var(--figma-gray); }
+.figma-run-btn.normal { background: var(--figma-blue); }
+.figma-run-btn.boundary { background: var(--figma-green); }
+.figma-run-btn.six { background: var(--figma-red); }
+.figma-run-btn.custom { background: var(--figma-purple); }
+
+/* Extras Controls */
+.figma-extras-control {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 2vw, 12px);
+}
+
+.figma-extras-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 1.5vw, 10px);
+}
+
+@media (min-width: 640px) {
+  .figma-extras-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.figma-extra-btn {
+  min-height: clamp(40px, 10vw, 48px);
+  border: none;
+  border-radius: 12px;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--figma-white);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-direction: column;
+  padding: clamp(4px, 1vw, 8px);
+}
+
+.figma-extra-btn:active {
+  transform: scale(0.95);
+}
+
+.figma-extra-btn.wide { background: var(--figma-orange); }
+.figma-extra-btn.noball { background: var(--figma-purple); }
+.figma-extra-btn.bye { background: var(--figma-blue); }
+.figma-extra-btn.legbye { background: var(--figma-dark); }
+
+.figma-btn-icon {
+  font-size: clamp(12px, 3vw, 16px);
+  display: block;
+}
+
+/* 🔧 STICKY FOOTER ACTIONS */
+.figma-action-footer {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 768px;
+  background: var(--figma-white);
+  padding: clamp(12px, 3vw, 16px);
+  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.1);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(8px, 2vw, 12px);
+  z-index: 90;
+}
+
+.figma-footer-btn {
+  min-height: clamp(48px, 12vw, 56px);
+  border: none;
+  border-radius: 12px;
+  font-size: clamp(10px, 2.5vw, 12px);
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--figma-white);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.figma-footer-btn:active {
+  transform: scale(0.95);
+}
+
+.figma-footer-btn.wicket { background: var(--figma-red); }
+.figma-footer-btn.swap { background: var(--figma-orange); }
+.figma-footer-btn.undo { background: var(--figma-gray); }
+.figma-footer-btn.end-over { background: var(--figma-purple); }
+
+.figma-btn-text {
+  font-size: clamp(8px, 2vw, 10px);
+  font-weight: 600;
+}
+
+/* 🍞 TOAST NOTIFICATIONS */
+.figma-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--figma-dark);
+  color: var(--figma-white);
+  padding: clamp(12px, 3vw, 16px) clamp(20px, 5vw, 28px);
+  border-radius: 12px;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 600;
+  z-index: 200;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  animation: toastSlide 0.3s ease-out;
+}
+
+@keyframes toastSlide {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 🎭 MODALS */
+.figma-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  padding: clamp(16px, 4vw, 24px);
+}
+
+.figma-modal {
+  background: var(--figma-white);
+  padding: clamp(20px, 5vw, 28px);
+  border-radius: 16px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.figma-modal h3 {
+  font-size: clamp(16px, 4vw, 18px);
+  font-weight: 700;
+  color: #000;
+  margin-bottom: clamp(12px, 3vw, 16px);
+}
+
+.figma-modal p {
+  font-size: clamp(14px, 3.5vw, 16px);
+  color: var(--figma-gray);
+  margin-bottom: clamp(16px, 4vw, 20px);
+}
+
+.figma-modal-actions {
+  display: flex;
+  gap: clamp(8px, 2vw, 12px);
+  justify-content: flex-end;
+}
+
+.figma-btn-primary,
+.figma-btn-secondary {
+  padding: clamp(8px, 2vw, 12px) clamp(16px, 4vw, 24px);
+  border-radius: 8px;
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px;
+  border: none;
+}
+
+.figma-btn-primary {
+  background: var(--figma-red);
+  color: var(--figma-white);
+}
+
+.figma-btn-secondary {
+  background: var(--figma-gray);
+  color: var(--figma-white);
+}
+
+/* 🌙 DARK MODE */
+.dark {
+  --figma-light: #1c1c1e;
+  --figma-white: #2c2c2e;
+  --figma-dark: #f2f2f7;
+  --figma-border: #48484a;
+}
+
+.dark .figma-title,
+.dark .figma-team-name,
+.dark .figma-card-title,
+.dark .figma-section-title,
+.dark .figma-player-name {
+  color: var(--figma-white);
+}
+
+.dark .figma-main-score {
+  color: var(--figma-white);
+}
+
+/* 📱 RESPONSIVE DESIGN */
+@media (max-width: 480px) {
+  .figma-cricket-improved {
+    padding-bottom: 70px;
+  }
+  
+  .figma-action-footer {
+    padding: 8px;
+  }
+  
+  .figma-footer-btn {
+    min-height: 44px;
+  }
+  
+  .figma-btn-text {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .figma-main-layout {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 
+      "summary summary"
+      "players players"
+      "scoring scoring";
+  }
+  
+  .figma-match-summary-card {
+    grid-area: summary;
+  }
+  
+  .figma-players-layout {
+    grid-area: players;
+  }
+  
+  .figma-scoring-section {
+    grid-area: scoring;
+  }
+}
+
+/* ♿ ACCESSIBILITY IMPROVEMENTS */
+@media (prefers-reduced-motion: reduce) {
+  .figma-run-btn,
+  .figma-extra-btn,
+  .figma-footer-btn {
+    transition: none;
+  }
+  
+  .figma-toast {
+    animation: none;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .figma-run-btn,
+  .figma-extra-btn,
+  .figma-footer-btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Focus indicators for keyboard navigation */
+.figma-run-btn:focus,
+.figma-extra-btn:focus,
+.figma-footer-btn:focus,
+.figma-change-btn:focus,
+.figma-theme-toggle:focus {
+  outline: 3px solid var(--figma-orange);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   MATCH OVERVIEW SECTION - Teams & Stats
+   ======================================== */
+
+.figma-match-overview-section {
+  background: var(--figma-white);
+  padding: clamp(16px, 4vw, 24px);
+  border-radius: 16px;
+  box-shadow: var(--figma-shadow);
+  margin-bottom: clamp(16px, 4vw, 20px);
+  border: 2px solid var(--figma-orange);
+}
+
+.figma-teams-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(16px, 4vw, 20px);
+  margin-bottom: clamp(16px, 4vw, 20px);
+}
+
+@media (min-width: 768px) {
+  .figma-teams-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.figma-team-card {
+  background: var(--figma-light);
+  border-radius: 12px;
+  padding: clamp(12px, 3vw, 16px);
+  border: 1px solid var(--figma-border);
+}
+
+.figma-team-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(12px, 3vw, 16px);
+  padding-bottom: clamp(8px, 2vw, 12px);
+  border-bottom: 2px solid var(--figma-border);
+}
+
+.figma-team-name {
+  font-size: clamp(14px, 3.5vw, 16px);
+  font-weight: 700;
+  color: var(--figma-dark);
+  letter-spacing: 0.5px;
+}
+
+.figma-team-status-badge {
+  font-size: clamp(10px, 2.5vw, 11px);
+  font-weight: 700;
+  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.figma-batting-badge {
+  background: #34c759;
+  color: white;
+}
+
+.figma-bowling-badge {
+  background: #007aff;
+  color: white;
+}
+
+.figma-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.5vw, 8px);
+}
+
+.figma-player-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: clamp(8px, 2vw, 12px);
+  align-items: center;
+  padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
+  background: white;
+  border-radius: 8px;
+  border: 1px solid var(--figma-border);
+  transition: all 0.2s ease;
+}
+
+.figma-player-row:hover {
+  background: var(--figma-light);
+  transform: translateX(2px);
+}
+
+.figma-player-row.figma-player-active {
+  border-left: 4px solid #34c759;
+  background: #f0fff4;
+}
+
+.figma-player-row.figma-player-out {
+  opacity: 0.7;
+  background: #fff5f5;
+  border-left: 4px solid #ff3b30;
+}
+
+.figma-player-number {
+  font-size: clamp(11px, 2.5vw, 12px);
+  font-weight: 600;
+  color: var(--figma-gray);
+  min-width: 20px;
+}
+
+.figma-player-name {
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 600;
+  color: var(--figma-dark);
+}
+
+.figma-player-score {
+  font-size: clamp(11px, 2.5vw, 12px);
+  font-weight: 500;
+  text-align: right;
+  padding: clamp(2px, 0.5vw, 4px) clamp(6px, 1.5vw, 8px);
+  border-radius: 6px;
+}
+
+.figma-player-score.figma-batting {
+  background: #d4edda;
+  color: #155724;
+  font-weight: 700;
+}
+
+.figma-player-score.figma-out {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.figma-player-score.figma-yet-to-bat {
+  background: #fff3cd;
+  color: #856404;
+  font-style: italic;
+}
+
+/* Match Statistics Summary */
+.figma-match-stats-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(12px, 3vw, 16px);
+  padding: clamp(12px, 3vw, 16px);
+  background: var(--figma-light);
+  border-radius: 12px;
+  border: 1px solid var(--figma-border);
+}
+
+@media (min-width: 640px) {
+  .figma-match-stats-summary {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.figma-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4px, 1vw, 6px);
+  text-align: center;
+}
+
+.figma-stat-label {
+  font-size: clamp(10px, 2.5vw, 11px);
+  font-weight: 600;
+  color: var(--figma-gray);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.figma-stat-value {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 700;
+  color: var(--figma-dark);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .figma-player-row {
+    padding: clamp(4px, 1vw, 6px) clamp(6px, 1.5vw, 8px);
+  }
+  
+  .figma-player-name {
+    font-size: clamp(11px, 2.5vw, 12px);
+  }
+  
+  .figma-player-score {
+    font-size: clamp(10px, 2vw, 11px);
+  }
+}
+
+/* ========================================
+   LOADING OVERLAY
+   ======================================== */
+
+.figma-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
+}
+
+.figma-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  padding: 24px 32px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.figma-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--figma-orange);
+  border-radius: 50%;
+  animation: figma-spin 1s linear infinite;
+}
+
+@keyframes figma-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.figma-loading-spinner p {
+  color: var(--figma-dark);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ========================================
+   MATCH SUMMARY SECTION
+   ======================================== */
+
+.figma-match-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.figma-summary-item {
+  flex: 1;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.figma-summary-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.figma-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.figma-summary-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--figma-dark);
+  line-height: 1.3;
+}
+
+.figma-summary-value strong {
+  color: var(--figma-orange);
+}

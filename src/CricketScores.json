@@ -1,0 +1,156 @@
+{
+    "status": "success",
+    "response": [
+        {
+            "seriesName": "WEST INDIES TOUR OF INDIA, 2025",
+            "matchList": [
+                {
+                    "seriesId": "9629",
+                    "matchId": "117359",
+                    "matchTitle": "West Indies vs India",
+                    "matchFormat": " 1st Test",
+                    "matchVenue": "Ahmedabad, Narendra Modi Stadium",
+                    "matchDate": "Oct 02-Oct 06",
+                    "matchTime": " 09:30 AM LOCAL ",
+                    "teamOne": {
+                        "name": "WI",
+                        "score": "162",
+                        "status": "bowl"
+                    },
+                    "teamTwo": {
+                        "name": "IND",
+                        "score": "121-2",
+                        "status": "bat"
+                    },
+                    "matchStatus": "Day 1: Stumps - India trail by 41 runs",
+                    "currentStatus": "live"
+                }
+            ]
+        },
+        {
+            "seriesName": "ICC MENS T20 WORLD CUP AFRICA REGIONAL FINAL 2025",
+            "matchList": [
+                {
+                    "seriesId": "10944",
+                    "matchId": "134881",
+                    "matchTitle": "Uganda vs Malawi",
+                    "matchFormat": " 5th Place Play-off 2nd Semi-Final",
+                    "matchVenue": "Harare, Takashinga Sports Club",
+                    "matchDate": "Oct 02",
+                    "matchTime": " 01:50 PM LOCAL ",
+                    "teamOne": {
+                        "name": "UGA",
+                        "score": "192-3 (20 Ovs)",
+                        "status": "bowl"
+                    },
+                    "teamTwo": {
+                        "name": "MWI",
+                        "score": "10-1 (3.3 Ovs)",
+                        "status": "bat"
+                    },
+                    "matchStatus": "Malawi need 183 runs",
+                    "currentStatus": "live"
+                },
+                {
+                    "seriesId": "10944",
+                    "matchId": "134876",
+                    "matchTitle": "Kenya vs Zimbabwe",
+                    "matchFormat": " 2nd Semi-Final",
+                    "matchVenue": "Harare, Harare Sports Club",
+                    "matchDate": "Oct 02",
+                    "matchTime": " 01:50 PM LOCAL ",
+                    "teamOne": {
+                        "name": "KEN",
+                        "score": "122-6 (20 Ovs)",
+                        "status": "bowl"
+                    },
+                    "teamTwo": {
+                        "name": "ZIM",
+                        "score": "23-0 (3 Ovs)",
+                        "status": "bat"
+                    },
+                    "matchStatus": "Zimbabwe need 100 runs",
+                    "currentStatus": "live"
+                }
+            ]
+        },
+        {
+            "seriesName": "IRANI CUP 2025",
+            "matchList": [
+                {
+                    "seriesId": "10300",
+                    "matchId": "123650",
+                    "matchTitle": "Vidarbha vs Rest of India",
+                    "matchFormat": " Irani Cup",
+                    "matchVenue": "Nagpur, Vidarbha Cricket Associ",
+                    "matchDate": "Oct 01-Oct 05",
+                    "matchTime": " 09:30 AM LOCAL ",
+                    "teamOne": {
+                        "name": "VID",
+                        "score": "342",
+                        "status": "bowl"
+                    },
+                    "teamTwo": {
+                        "name": "ROI",
+                        "score": "142-5",
+                        "status": "bat"
+                    },
+                    "matchStatus": "Day 2: Stumps - Rest of India trail by 200 runs",
+                    "currentStatus": "live"
+                }
+            ]
+        },
+        {
+            "seriesName": "ICC WOMENS WORLD CUP 2025",
+            "matchList": [
+                {
+                    "seriesId": "10009",
+                    "matchId": "121455",
+                    "matchTitle": "Pakistan Women vs Bangladesh Women",
+                    "matchFormat": " 3rd Match",
+                    "matchVenue": "Colombo, R.Premadasa Stadium",
+                    "matchDate": "Oct 02",
+                    "matchTime": " 03:00 PM LOCAL ",
+                    "teamOne": {
+                        "name": "PAKW",
+                        "score": "129 (38.3 Ovs)",
+                        "status": "bowl"
+                    },
+                    "teamTwo": {
+                        "name": "BANW",
+                        "score": "36-2 (13 Ovs)",
+                        "status": "bat"
+                    },
+                    "matchStatus": "Bangladesh Women need 94 runs",
+                    "currentStatus": "live"
+                }
+            ]
+        },
+        {
+            "seriesName": "UNITED ARAB EMIRATES WOMEN TOUR OF ZIMBABWE 2025",
+            "matchList": [
+                {
+                    "seriesId": "10983",
+                    "matchId": "135173",
+                    "matchTitle": "United Arab Emirates Women vs Zimbabwe Women",
+                    "matchFormat": " 4th ODI",
+                    "matchVenue": "Bulawayo, Queens Sports Club",
+                    "matchDate": "Oct 02",
+                    "matchTime": " 09:15 AM LOCAL ",
+                    "teamOne": {
+                        "name": "UAEW",
+                        "score": "274-7 (50 Ovs)",
+                        "status": "bowl"
+                    },
+                    "teamTwo": {
+                        "name": "ZIMW",
+                        "score": "139-4 (36 Ovs)",
+                        "status": "bat"
+                    },
+                    "matchStatus": "Zimbabwe Women need 136 runs in 84 balls",
+                    "currentStatus": "live"
+                }
+            ]
+        }
+    ]
+}

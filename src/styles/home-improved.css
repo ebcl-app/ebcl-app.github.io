@@ -1,0 +1,1001 @@
+/**
+ * =====================================================
+ * HOME PAGE SPECIFIC STYLES
+ * =====================================================
+ * 
+ * This file contains only HOME page-specific styles.
+ * Global styles are inherited from figma-cricket-theme.css
+ * 
+ * Import order in Home_improved.js:
+ * 1. figma-cricket-theme.css (global)
+ * 2. home-improved.css (this file - page-specific)
+ * 
+ * =====================================================
+ */
+
+/* ==================== CRICKET GROUND HERO SECTION ==================== */
+.cricket-ground-hero {
+  position: relative;
+  height: 300px;
+  margin: var(--figma-space-lg) 0;
+  border-radius: var(--figma-radius-lg);
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a4d3a 0%, #0f2920 50%, #0a1f17 100%);
+  background-image:
+    linear-gradient(135deg, rgba(26, 77, 58, 0.9) 0%, rgba(15, 41, 32, 0.9) 50%, rgba(10, 31, 23, 0.9) 100%),
+    url('https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: var(--figma-shadow);
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--figma-space-lg);
+}
+
+.hero-content {
+  text-align: center;
+  color: var(--figma-white);
+  max-width: 600px;
+  z-index: 2;
+}
+
+.hero-title {
+  font-size: clamp(24px, 5vw, 36px);
+  font-weight: 700;
+  margin-bottom: var(--figma-space-sm);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  color: var(--figma-white);
+}
+
+.hero-subtitle {
+  font-size: clamp(14px, 3vw, 18px);
+  font-weight: 400;
+  margin-bottom: var(--figma-space-lg);
+  opacity: 0.9;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--figma-space-xl);
+  flex-wrap: wrap;
+}
+
+.hero-stat {
+  text-align: center;
+  min-width: 80px;
+}
+
+.hero-stat-number {
+  display: block;
+  font-size: clamp(28px, 6vw, 42px);
+  font-weight: 700;
+  color: var(--figma-orange);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  margin-bottom: 4px;
+}
+
+.hero-stat-label {
+  font-size: clamp(12px, 2.5vw, 14px);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+/* Dark mode adjustments for hero */
+.app-theme.dark .cricket-ground-hero {
+  background-image:
+    linear-gradient(135deg, rgba(26, 77, 58, 0.95) 0%, rgba(15, 41, 32, 0.95) 50%, rgba(10, 31, 23, 0.95) 100%),
+    url('https://images.unsplash.com/photo-1531415074968-036ba1b575da?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80');
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .cricket-ground-hero {
+    height: 250px;
+    margin: var(--figma-space-md) 0;
+  }
+
+  .hero-stats {
+    gap: var(--figma-space-lg);
+  }
+
+  .hero-stat {
+    min-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cricket-ground-hero {
+    height: 200px;
+  }
+
+  .hero-stats {
+    flex-direction: column;
+    gap: var(--figma-space-md);
+  }
+
+  .hero-stat {
+    min-width: auto;
+  }
+}
+
+/* ==================== NEWS & LIVE SCORE TICKERS ==================== */
+.figma-news-ticker,
+.figma-live-ticker {
+  background: var(--figma-dark);
+  color: var(--figma-white);
+  padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px);
+  overflow: hidden;
+  font-size: clamp(11px, 2.5vw, 13px);
+  font-weight: 500;
+}
+
+.figma-news-ticker {
+  background: var(--figma-orange);
+}
+
+.figma-live-ticker {
+  background: var(--figma-blue);
+}
+
+/* ==================== PROFILE STATS CARD (Home-Specific) ==================== */
+.figma-profile-stats-card {
+  background: var(--figma-white);
+  padding: var(--figma-space-lg);
+  border-radius: var(--figma-radius-lg);
+  box-shadow: var(--figma-shadow);
+  margin-bottom: var(--figma-space-lg);
+}
+
+.figma-profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-lg);
+}
+
+.figma-welcome-text {
+  text-align: center;
+}
+
+.figma-welcome-title {
+  font-size: var(--figma-font-size-lg);
+  font-weight: 700;
+  color: var(--figma-dark);
+  margin: 0 0 var(--figma-space-xs) 0;
+}
+
+.figma-welcome-subtitle {
+  font-size: var(--figma-font-size-sm);
+  color: var(--figma-gray);
+  font-weight: 500;
+  margin: 0;
+}
+
+.figma-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--figma-space-sm);
+}
+
+@media (max-width: 480px) {
+  .figma-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ==================== QUICK ACTIONS (Home-Specific) ==================== */
+.figma-quick-actions {
+  background: var(--figma-white);
+  padding: var(--figma-space-lg);
+  border-radius: var(--figma-radius-lg);
+  box-shadow: var(--figma-shadow);
+  margin-bottom: var(--figma-space-lg);
+}
+
+.figma-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--figma-space-md);
+}
+
+.figma-action-button {
+  background: var(--figma-light);
+  border-radius: var(--figma-radius-md);
+  padding: var(--figma-space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--figma-space-sm);
+  text-decoration: none;
+  color: var(--figma-dark);
+  transition: transform 0.1s ease, background 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 60px;
+}
+
+.figma-action-button:hover {
+  background: var(--figma-border);
+  transform: translateY(-2px);
+}
+
+.figma-action-button:active {
+  transform: scale(0.98);
+}
+
+.figma-action-icon {
+  font-size: clamp(20px, 5vw, 24px);
+  flex-shrink: 0;
+}
+
+.figma-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.5vw, 4px);
+}
+
+.figma-action-label {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.figma-action-desc {
+  font-size: var(--figma-font-size-xs);
+  color: var(--figma-gray);
+  line-height: 1.2;
+}
+
+/* ==================== MATCHES CARD WITH TOGGLE ==================== */
+.figma-matches-card {
+  background: var(--figma-white);
+  padding: var(--figma-space-lg);
+  border-radius: var(--figma-radius-lg);
+  box-shadow: var(--figma-shadow);
+  margin-bottom: var(--figma-space-lg);
+}
+
+.figma-match-toggle {
+  margin-left: auto;
+  display: flex;
+  gap: var(--figma-space-xs);
+  background: var(--figma-light);
+  border-radius: var(--figma-radius-md);
+  padding: clamp(2px, 0.5vw, 4px);
+}
+
+.figma-toggle-button {
+  background: transparent;
+  border: none;
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
+  border-radius: var(--figma-radius-sm);
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  color: var(--figma-gray);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-toggle-button.active {
+  background: var(--figma-white);
+  color: var(--figma-orange);
+  box-shadow: var(--figma-shadow-light);
+}
+
+.figma-matches-content {
+  margin-top: var(--figma-space-md);
+}
+
+/* ==================== STANDARDIZED CARD LAYOUTS ==================== */
+/* All cards follow the same structure for consistency */
+
+/* Card Header with Navigation Override */
+.figma-recent-matches .figma-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: clamp(10px, 2.5vw, 14px);
+}
+
+.figma-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--figma-space-sm);
+}
+
+/* Recent Matches Card - Optimized Padding */
+.figma-recent-matches,
+.figma-upcoming-matches,
+.figma-player-pool {
+  background: var(--figma-white);
+  padding: clamp(12px, 3vw, 18px);
+  border-radius: var(--figma-radius-lg);
+  box-shadow: var(--figma-shadow);
+  margin-bottom: var(--figma-space-lg);
+}
+
+/* Card Navigation (Unified) - Now inline with header */
+.figma-card-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--figma-space-sm);
+}
+
+.figma-nav-arrow-btn {
+  background: var(--figma-light);
+  border: none;
+  border-radius: var(--figma-radius-md);
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: clamp(18px, 4.5vw, 24px);
+  font-weight: 600;
+  color: var(--figma-dark);
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-nav-arrow-btn:hover {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  transform: scale(1.05);
+}
+
+.figma-nav-arrow-btn:active {
+  transform: scale(0.95);
+}
+
+.figma-nav-indicator {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-gray);
+  min-width: clamp(40px, 10vw, 50px);
+  text-align: center;
+}
+
+/* Match Content - Optimized for better space utilization */
+.figma-match-content {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 1.5vw, 10px);
+}
+
+.figma-match-status-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0;
+}
+
+.figma-status-badge {
+  padding: clamp(4px, 1vw, 6px) clamp(12px, 3vw, 16px);
+  border-radius: var(--figma-radius-full);
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.figma-status-badge.completed {
+  background: var(--figma-green);
+  color: var(--figma-white);
+}
+
+.figma-status-badge.live {
+  background: var(--figma-red);
+  color: var(--figma-white);
+  animation: pulse 2s infinite;
+}
+
+.figma-status-badge.upcoming {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+}
+
+/* Optimized Match Teams Layout - Side by Side */
+.figma-match-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(8px, 2vw, 12px);
+  padding: clamp(12px, 3vw, 16px);
+  background: var(--figma-light);
+  border-radius: var(--figma-radius-md);
+}
+
+.figma-team-score {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1vw, 6px);
+}
+
+.figma-team-score:first-child {
+  text-align: left;
+}
+
+.figma-team-score:last-child {
+  text-align: right;
+}
+
+.figma-team-name {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 700;
+  color: var(--figma-dark);
+  line-height: 1.2;
+}
+
+.figma-score-display {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.5vw, 3px);
+}
+
+.figma-team-score:last-child .figma-score-display {
+  align-items: flex-end;
+}
+
+.figma-score {
+  font-size: clamp(20px, 5vw, 28px);
+  font-weight: 700;
+  color: var(--figma-orange);
+  line-height: 1;
+}
+
+.figma-overs {
+  font-size: var(--figma-font-size-xs);
+  color: var(--figma-gray);
+  line-height: 1.2;
+}
+
+.figma-vs-divider {
+  font-size: clamp(12px, 3vw, 14px);
+  font-weight: 700;
+  color: var(--figma-gray);
+  letter-spacing: 1px;
+  padding: 0 var(--figma-space-xs);
+}
+
+.figma-match-result {
+  background: var(--figma-light);
+  padding: clamp(10px, 2.5vw, 14px) clamp(12px, 3vw, 16px);
+  border-radius: var(--figma-radius-md);
+  text-align: center;
+  margin-top: clamp(4px, 1vw, 6px);
+}
+
+.figma-result-text {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-dark);
+  line-height: 1.3;
+}
+
+/* Mobile optimization - Stack on very small screens */
+@media (max-width: 380px) {
+  .figma-match-teams {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    gap: var(--figma-space-sm);
+    text-align: center;
+  }
+  
+  .figma-team-score:first-child,
+  .figma-team-score:last-child {
+    text-align: center;
+  }
+  
+  .figma-team-score:last-child .figma-score-display {
+    align-items: center;
+  }
+  
+  .figma-vs-divider {
+    padding: clamp(4px, 1vw, 6px) 0;
+  }
+}
+
+/* Upcoming Matches List */
+.figma-upcoming-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-sm);
+}
+
+.figma-upcoming-item {
+  background: var(--figma-light);
+  padding: var(--figma-space-md);
+  border-radius: var(--figma-radius-md);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--figma-space-md);
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.figma-upcoming-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--figma-shadow-light);
+}
+
+.figma-upcoming-date {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  border-radius: var(--figma-radius-sm);
+  padding: clamp(8px, 2vw, 12px);
+  text-align: center;
+  min-width: clamp(50px, 12vw, 60px);
+}
+
+.figma-date-day {
+  font-size: var(--figma-font-size-lg);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.figma-date-month {
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.figma-upcoming-details {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1vw, 6px);
+}
+
+.figma-upcoming-title {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-dark);
+}
+
+.figma-upcoming-info {
+  display: flex;
+  gap: var(--figma-space-sm);
+  flex-wrap: wrap;
+}
+
+.figma-upcoming-time,
+.figma-upcoming-venue {
+  font-size: var(--figma-font-size-xs);
+  color: var(--figma-gray);
+}
+
+.figma-upcoming-action {
+  display: flex;
+}
+
+.figma-setup-button {
+  background: var(--figma-blue);
+  color: var(--figma-white);
+  border: none;
+  border-radius: var(--figma-radius-md);
+  padding: clamp(6px, 1.5vw, 8px) clamp(16px, 4vw, 20px);
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-setup-button:hover {
+  background: var(--figma-orange);
+  transform: scale(1.05);
+}
+
+.figma-setup-button:active {
+  transform: scale(0.95);
+}
+
+/* Card Actions (for Player Pool and similar sections) */
+.figma-card-actions {
+  display: flex;
+  gap: var(--figma-space-sm);
+  margin-top: var(--figma-space-md);
+  padding-top: var(--figma-space-md);
+  border-top: 1px solid var(--figma-border);
+}
+
+.figma-action-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--figma-space-xs);
+  background: var(--figma-light);
+  padding: var(--figma-space-md);
+  border-radius: var(--figma-radius-md);
+  text-decoration: none;
+  color: var(--figma-dark);
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-action-link:hover {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  transform: translateY(-2px);
+}
+
+.figma-action-link:active {
+  transform: scale(0.98);
+}
+
+.figma-action-link-icon {
+  font-size: var(--figma-font-size-md);
+}
+
+.figma-action-link-text {
+  font-size: var(--figma-font-size-sm);
+}
+
+/* Empty State (for when no data) */
+.figma-empty-state {
+  text-align: center;
+  padding: var(--figma-space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--figma-space-md);
+}
+
+.figma-empty-icon {
+  font-size: clamp(48px, 12vw, 64px);
+  opacity: 0.5;
+}
+
+.figma-empty-text h4 {
+  font-size: var(--figma-font-size-md);
+  font-weight: 600;
+  color: var(--figma-dark);
+  margin: 0 0 var(--figma-space-xs) 0;
+}
+
+.figma-empty-text p {
+  font-size: var(--figma-font-size-sm);
+  color: var(--figma-gray);
+  margin: 0;
+}
+
+.figma-empty-action {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  padding: var(--figma-space-md) var(--figma-space-xl);
+  border-radius: var(--figma-radius-md);
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-empty-action:hover {
+  background: var(--figma-blue);
+  transform: translateY(-2px);
+}
+
+.figma-empty-action:active {
+  transform: scale(0.98);
+}
+
+.figma-upcoming-date {
+  background: var(--figma-orange);
+  color: var(--figma-white);
+  padding: var(--figma-space-sm);
+  border-radius: var(--figma-radius-md);
+  text-align: center;
+  min-width: 60px;
+}
+
+.figma-date-day {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.figma-date-month {
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: clamp(2px, 0.5vw, 4px);
+}
+
+.figma-upcoming-details {
+  flex: 1;
+}
+
+.figma-upcoming-title {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-dark);
+  margin-bottom: clamp(4px, 1vw, 6px);
+}
+
+.figma-upcoming-info {
+  display: flex;
+  gap: var(--figma-space-sm);
+  font-size: var(--figma-font-size-xs);
+  color: var(--figma-gray);
+}
+
+.figma-setup-button {
+  background: var(--figma-blue);
+  color: var(--figma-white);
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
+  border-radius: var(--figma-radius-sm);
+  text-decoration: none;
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  transition: transform 0.1s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-setup-button:hover {
+  transform: translateY(-1px);
+}
+
+/* Completed Matches Carousel */
+.figma-completed-matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-md);
+}
+
+.figma-recent-matches-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-md);
+}
+
+.figma-match-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--figma-space-md);
+}
+
+.figma-nav-button {
+  background: var(--figma-light);
+  border: none;
+  border-radius: 50%;
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: clamp(18px, 4.5vw, 24px);
+  color: var(--figma-dark);
+  transition: transform 0.1s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.figma-nav-button:hover {
+  background: var(--figma-border);
+  transform: scale(1.05);
+}
+
+.figma-nav-button:active {
+  transform: scale(0.95);
+}
+
+.figma-match-indicator {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-gray);
+}
+
+.figma-match-card {
+  background: var(--figma-light);
+  padding: var(--figma-space-lg);
+  border-radius: var(--figma-radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-md);
+}
+
+.figma-match-status {
+  display: flex;
+  justify-content: center;
+}
+
+.figma-status-badge {
+  background: var(--figma-gray);
+  color: var(--figma-white);
+  padding: clamp(4px, 1vw, 6px) clamp(12px, 3vw, 16px);
+  border-radius: var(--figma-radius-full);
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.figma-status-badge.completed {
+  background: var(--figma-green);
+}
+
+.figma-match-teams {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--figma-space-md);
+  align-items: center;
+}
+
+.figma-team-score {
+  text-align: center;
+}
+
+.figma-team-name {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-dark);
+  margin-bottom: clamp(4px, 1vw, 6px);
+  line-height: 1.2;
+}
+
+.figma-score-display {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2px, 0.5vw, 4px);
+}
+
+.figma-score {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 700;
+  color: var(--figma-orange);
+  line-height: 1;
+}
+
+.figma-overs {
+  font-size: var(--figma-font-size-xs);
+  color: var(--figma-gray);
+}
+
+.figma-vs-badge {
+  background: var(--figma-light);
+  color: var(--figma-gray);
+  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 10px);
+  border-radius: var(--figma-radius-sm);
+  font-size: var(--figma-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--figma-border);
+}
+
+.figma-match-result {
+  text-align: center;
+  padding-top: var(--figma-space-sm);
+  border-top: 1px solid var(--figma-border);
+}
+
+.figma-result-text {
+  font-size: var(--figma-font-size-sm);
+  font-weight: 600;
+  color: var(--figma-dark);
+}
+
+/* ==================== NEWS & SCORES COMBINED CARD ==================== */
+.figma-news-scores-card {
+  background: var(--figma-white);
+  padding: var(--figma-space-lg);
+  border-radius: var(--figma-radius-lg);
+  box-shadow: var(--figma-shadow);
+  margin-bottom: var(--figma-space-lg);
+}
+
+.figma-updates-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-lg);
+}
+
+.figma-updates-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--figma-space-sm);
+}
+
+.figma-updates-divider {
+  height: 1px;
+  background: var(--figma-border);
+  margin: var(--figma-space-sm) 0;
+}
+
+.figma-news-content,
+.figma-scores-content {
+  background: var(--figma-light);
+  padding: var(--figma-space-md);
+  border-radius: var(--figma-radius-sm);
+  font-size: var(--figma-font-size-sm);
+  color: var(--figma-dark);
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+@media (max-width: 480px) {
+  /* Stack header on small screens if needed */
+  .figma-recent-matches .figma-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--figma-space-sm);
+  }
+  
+  .figma-card-navigation {
+    align-self: flex-end;
+  }
+}
+
+@media (min-width: 480px) {
+  .figma-action-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .figma-action-button {
+    flex-direction: column;
+    text-align: center;
+    min-height: 80px;
+  }
+  
+  .figma-action-icon {
+    font-size: clamp(24px, 6vw, 28px);
+  }
+}
+
+@media (max-width: 380px) {
+  .figma-match-teams {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+  
+  .figma-vs-badge {
+    margin: var(--figma-space-xs) auto;
+  }
+}
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.figma-match-card {
+  animation: fadeIn 0.3s ease;
+}
+
+/* ==================== END OF HOME-SPECIFIC STYLES ==================== */

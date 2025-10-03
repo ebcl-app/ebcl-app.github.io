@@ -1,25 +1,41 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useTheme } from '../contexts/ThemeContext';
 import '../styles/cricket.css';
 
 const GlobalNavigation = () => {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showHamburgerMenu, setShowHamburgerMenu] = useState(false);
   const location = useLocation();
+  const { isDarkMode, toggleTheme } = useTheme();
 
-  // Navigation items configuration
-  const navigationItems = [
+  // Navigation items - organized by priority
+  const primaryNavItems = [
+    // Main Dashboard
     {
       path: '/',
       label: 'Home',
       icon: '🏠',
       description: 'Dashboard & Overview'
     },
+    
+    // Match Management
     {
       path: '/match-management',
       label: 'Matches',
       icon: '📅',
       description: 'Schedule & Manage Matches'
     },
+    
+    // Live Scoring
+    {
+      path: '/scoring',
+      label: 'Scoring',
+      icon: '📊',
+      description: 'Live Match Scoring'
+    },
+    
+    // Player & Team Management
     {
       path: '/player-management',
       label: 'Players',
@@ -31,12 +47,51 @@ const GlobalNavigation = () => {
       label: 'Teams',
       icon: '🏏',
       description: 'Team Organization'
+    }
+  ];
+
+  const secondaryNavItems = [
+    {
+      path: '/match-setup',
+      label: 'Match Setup',
+      icon: '⚙️',
+      description: 'Match Setup'
     },
     {
-      path: '/scoring',
-      label: 'Live Scoring',
-      icon: '📊',
-      description: 'Match Scoring System'
+      path: '/start-match',
+      label: 'Start Match',
+      icon: '▶️',
+      description: 'Start New Match'
+    },
+    {
+      path: '/scoreboard',
+      label: 'Scoreboard',
+      icon: '📋',
+      description: 'Scoreboard View'
+    },
+    {
+      path: '/batting-view',
+      label: 'Batting Stats',
+      icon: '🏃',
+      description: 'Batting Statistics'
+    },
+    {
+      path: '/bowling-view',
+      label: 'Bowling Stats',
+      icon: '🎯',
+      description: 'Bowling Statistics'
+    },
+    {
+      path: '/news',
+      label: 'News',
+      icon: '📰',
+      description: 'Cricket News'
+    },
+    {
+      path: '/waiting-list',
+      label: 'Waiting List',
+      icon: '⏳',
+      description: 'Waiting List'
     }
   ];
 
@@ -51,27 +106,15 @@ const GlobalNavigation = () => {
   // Close dropdown when clicking outside
   const handleClickOutside = () => {
     setShowProfileDropdown(false);
+    setShowHamburgerMenu(false);
   };
 
   return (
     <nav className="global-navigation">
       <div className="nav-container">
-        {/* Logo and Branding */}
-        <div className="nav-brand">
-          <Link to="/" className="brand-link">
-            <div className="brand-logo">
-              <span className="logo-icon">🏏</span>
-              <div className="brand-text">
-                <h1 className="brand-title">Ecolife Cricket</h1>
-                <span className="brand-subtitle">Match Management</span>
-              </div>
-            </div>
-          </Link>
-        </div>
-
         {/* Global Navigation Tabs */}
         <div className="nav-tabs">
-          {navigationItems.map((item) => (
+          {primaryNavItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
@@ -82,88 +125,77 @@ const GlobalNavigation = () => {
               <span className="tab-label">{item.label}</span>
             </Link>
           ))}
+          
+          {/* Hamburger Menu Button */}
+          <button 
+            className={`nav-tab hamburger-btn ${showHamburgerMenu ? 'active' : ''}`}
+            onClick={() => setShowHamburgerMenu(!showHamburgerMenu)}
+            title="More options"
+            aria-label="More navigation options"
+          >
+            <span className="tab-icon">☰</span>
+            <span className="tab-label">More</span>
+          </button>
         </div>
 
-        {/* User Profile Section */}
-        <div className="nav-profile">
-          <div className="profile-container">
-            <button 
-              className="profile-trigger"
-              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+        {/* Hamburger Menu Dropdown */}
+        {showHamburgerMenu && (
+          <div className="hamburger-menu">
+            {secondaryNavItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`hamburger-item ${isActiveTab(item.path) ? 'active' : ''}`}
+                onClick={() => setShowHamburgerMenu(false)}
+                title={item.description}
+              >
+                <span className="hamburger-icon">{item.icon}</span>
+                <span className="hamburger-label">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {/* Theme Toggle and User Menu */}
+        <div className="nav-actions">
+          {/* Dark Mode Toggle */}
+          <button
+            className="theme-toggle-btn"
+            onClick={toggleTheme}
+            aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            <span className="theme-icon">{isDarkMode ? '☀️' : '🌙'}</span>
+          </button>
+
+          {/* User Menu */}
+          <div className="user-menu">
+            <button
+              className="user-menu-trigger"
+              onClick={() => {
+                setShowProfileDropdown(!showProfileDropdown);
+                setShowHamburgerMenu(false);
+              }}
               onBlur={handleClickOutside}
+              title="User menu"
+              aria-label="User menu"
             >
-              <div className="profile-avatar">
-                <span className="avatar-text">EM</span>
-              </div>
-              <div className="profile-info">
-                <span className="profile-name">Ecolife Member</span>
-                <span className="profile-id">ID: a1b2c3d4e5f6</span>
-              </div>
-              <span className="dropdown-caret">{showProfileDropdown ? '▲' : '▼'}</span>
+              <span className="user-icon">👤</span>
             </button>
-            
+
             {showProfileDropdown && (
-              <div className="profile-dropdown">
-                <div className="dropdown-header">
-                  <div className="user-avatar-large">
-                    <span className="avatar-large-text">EM</span>
-                  </div>
-                  <div className="user-details">
-                    <h3 className="user-name">Ecolife Member</h3>
-                    <p className="user-email">member@ecolife.com</p>
-                    <div className="user-id-badge">
-                      <span className="id-label">User ID:</span>
-                      <span className="id-value">a1b2c3d4e5f6</span>
-                      <button className="copy-id-btn" title="Copy User ID">📋</button>
-                    </div>
-                  </div>
-                </div>
-                
+              <div className="user-dropdown">
+                <button className="user-dropdown-item">
+                  <span className="item-icon">👤</span>
+                  <span className="item-text">View Profile</span>
+                </button>
+
                 <div className="dropdown-divider"></div>
-                
-                <div className="dropdown-menu">
-                  <button className="dropdown-item">
-                    <span className="item-icon">👤</span>
-                    <div className="item-content">
-                      <span className="item-title">Profile Settings</span>
-                      <span className="item-subtitle">Update your information</span>
-                    </div>
-                  </button>
-                  
-                  <button className="dropdown-item">
-                    <span className="item-icon">🏏</span>
-                    <div className="item-content">
-                      <span className="item-title">My Teams</span>
-                      <span className="item-subtitle">View your teams</span>
-                    </div>
-                  </button>
-                  
-                  <button className="dropdown-item">
-                    <span className="item-icon">📊</span>
-                    <div className="item-content">
-                      <span className="item-title">Statistics</span>
-                      <span className="item-subtitle">Performance analytics</span>
-                    </div>
-                  </button>
-                  
-                  <button className="dropdown-item">
-                    <span className="item-icon">⚙️</span>
-                    <div className="item-content">
-                      <span className="item-title">Preferences</span>
-                      <span className="item-subtitle">App settings</span>
-                    </div>
-                  </button>
-                  
-                  <div className="dropdown-divider"></div>
-                  
-                  <button className="dropdown-item logout-item">
-                    <span className="item-icon">🚪</span>
-                    <div className="item-content">
-                      <span className="item-title">Sign Out</span>
-                      <span className="item-subtitle">End your session</span>
-                    </div>
-                  </button>
-                </div>
+
+                <button className="user-dropdown-item logout-item">
+                  <span className="item-icon">🚪</span>
+                  <span className="item-text">Sign Out</span>
+                </button>
               </div>
             )}
           </div>

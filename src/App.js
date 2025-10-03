@@ -4,9 +4,9 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
 import { ThemeProvider } from './contexts/ThemeContext';
+import './styles/figma-cricket-theme.css'; // Global Figma Cricket Pro Theme
 import Home from './pages/Home';
 import Signup from './pages/Signup';
-import Dashboard from './pages/Dashboard';
 import TeamManagement from './pages/TeamManagement';
 import MatchSetup from './pages/MatchSetup';
 import Scoring from './pages/Scoring';
@@ -20,6 +20,8 @@ import MatchManagement from './pages/MatchManagement';
 import MatchDetails from './pages/MatchDetails';
 import PlayerManagement from './pages/PlayerManagement';
 import StartMatch from './pages/StartMatch';
+import News from './pages/News';
+import GlobalNavigation from './components/GlobalNavigation';
 
 // Get the basename from the homepage URL for GitHub Pages compatibility
 const getBasename = () => {
@@ -35,7 +37,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/team-management" element={<TeamManagement />} />
             <Route path="/match-setup" element={<MatchSetup />} />
             <Route path="/start-match" element={<StartMatch />} />
@@ -44,12 +45,14 @@ function App() {
             <Route path="/match-details/:matchId" element={<MatchDetails />} />
             <Route path="/player-registration" element={<PlayerRegistration />} />
             <Route path="/player-management" element={<PlayerManagement />} />
-            <Route path="/scoring" element={<Scoring />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/scoring/:matchId?" element={<Scoring />} />
             <Route path="/batting-view" element={<BattingView />} />
             <Route path="/bowling-view" element={<BowlingView />} />
             <Route path="/scoreboard" element={<Scoreboard />} />
             <Route path="/waiting-list" element={<WaitingList />} />
           </Routes>
+          <GlobalNavigation />
         </Router>
       </ThemeProvider>
     </Provider>

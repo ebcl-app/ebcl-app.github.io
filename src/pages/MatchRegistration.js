@@ -190,7 +190,7 @@ const MatchRegistration = () => {
     }));
 
     // Navigate to scoring page
-    navigate('/scoring');
+    navigate(`/scoring/${finalMatchId}`);
   };
 
   // Enhanced navigation functions with confirmation

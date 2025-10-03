@@ -55,7 +55,7 @@ const PlayerRegistration = () => {
         <div className="home-header">
           <div className="header-left">
             <span className="brand-icon">🏏</span>
-            <h1 className="app-title">Ecolife Box Cricket</h1>
+            <h1 className="app-title">Box Cricket Club</h1>
           </div>
           <div className="header-right">
             <span className="user-id">User ID: a1b2c3d4e5f6</span>

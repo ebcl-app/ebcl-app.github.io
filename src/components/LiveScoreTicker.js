@@ -15,12 +15,13 @@ const LiveScoreTicker = () => {
       
       const response = await liveScoresService.fetchLiveScores();
       
-      if (response.success) {
-        setMatches(response.data);
-      } else {
-        setError(response.error);
-        setMatches(response.data); // Fallback to mock data
+      // Now both success:true and success:false return valid data
+      setMatches(response.data);
+      
+      if (response.fallback) {
+        console.info('Using mock live scores data');
       }
+      
     } catch (err) {
       console.error('Error in LiveScoreTicker:', err);
       setError('Failed to load live scores');

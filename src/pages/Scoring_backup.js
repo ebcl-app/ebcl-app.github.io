@@ -1,1 +1,0 @@
-// Backup of current Scoring.js before restructuring
