@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 
 const Signup = () => {
   const [email, setEmail] = useState('');

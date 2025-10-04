@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { createNewMatch } from '../store/slices/matchSlice';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 
 const StartMatch = () => {
   const dispatch = useDispatch();

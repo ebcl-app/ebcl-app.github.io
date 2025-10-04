@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 
 const MatchSetup = () => {
   const [matchData, setMatchData] = useState({

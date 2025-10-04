@@ -80,25 +80,53 @@
 
 /* ==================== BASE CONTAINER ==================== */
 .figma-cricket-app {
-  max-width: 768px;
+  max-width: 100%;
   margin: 0 auto;
   background: var(--figma-light);
   min-height: 100vh;
   font-family: var(--figma-font-family);
   display: flex;
   flex-direction: column;
-  padding-bottom: 100px; /* Space for expanded bottom navigation */
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+@media (min-width: 768px) {
+  .figma-cricket-app {
+    max-width: 768px;
+    padding-bottom: 90px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .figma-cricket-app {
+    max-width: 1200px;
+    padding-bottom: 100px;
+  }
 }
 
 .figma-cricket-improved {
-  max-width: 768px;
+  max-width: 100%;
   margin: 0 auto;
   background: var(--figma-light);
   min-height: 100vh;
   font-family: var(--figma-font-family);
   display: flex;
   flex-direction: column;
-  padding-bottom: 100px; /* Space for expanded bottom navigation */
+  padding-bottom: 80px; /* Space for bottom navigation */
+}
+
+@media (min-width: 768px) {
+  .figma-cricket-improved {
+    max-width: 768px;
+    padding-bottom: 90px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .figma-cricket-improved {
+    max-width: 1200px;
+    padding-bottom: 100px;
+  }
 }
 
 /* ==================== HEADER ==================== */
@@ -1013,4 +1041,215 @@
   color: var(--figma-orange);
 }
 
+/* ==================== RESPONSIVE DESIGN ENHANCEMENTS ==================== */
+
+/* Extra Small Mobile (320px - 374px) */
+@media (max-width: 374px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    padding-bottom: 70px;
+  }
+  
+  .figma-header,
+  .figma-header-improved {
+    padding: var(--figma-space-sm);
+  }
+  
+  .figma-title {
+    font-size: clamp(14px, 4vw, 16px);
+  }
+  
+  .figma-main-layout {
+    padding: var(--figma-space-sm);
+    gap: var(--figma-space-md);
+  }
+  
+  .figma-card {
+    padding: var(--figma-space-md);
+  }
+  
+  .figma-grid-2 {
+    grid-template-columns: 1fr;
+  }
+  
+  .figma-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small Mobile (375px - 479px) */
+@media (min-width: 375px) and (max-width: 479px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    padding-bottom: 75px;
+  }
+}
+
+/* Medium Mobile (480px - 639px) */
+@media (min-width: 480px) and (max-width: 639px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    padding-bottom: 80px;
+  }
+  
+  .figma-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Large Mobile / Small Tablet (640px - 767px) */
+@media (min-width: 640px) and (max-width: 767px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    max-width: 640px;
+    padding-bottom: 85px;
+  }
+  
+  .figma-main-layout {
+    padding: var(--figma-space-lg) var(--figma-space-xl);
+  }
+}
+
+/* Tablet Portrait (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    max-width: 768px;
+    padding-bottom: 90px;
+  }
+  
+  .figma-header,
+  .figma-header-improved {
+    padding: var(--figma-space-md) var(--figma-space-lg);
+  }
+  
+  .figma-main-layout {
+    padding: var(--figma-space-lg) var(--figma-space-xl);
+    gap: var(--figma-space-xl);
+  }
+  
+  .figma-grid-2 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--figma-space-lg);
+  }
+  
+  .figma-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--figma-space-lg);
+  }
+  
+  .figma-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--figma-space-lg);
+  }
+}
+
+/* Tablet Landscape / Small Desktop (1024px - 1279px) */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    max-width: 1024px;
+    padding-bottom: 100px;
+  }
+  
+  .figma-main-layout {
+    padding: var(--figma-space-xl);
+    gap: var(--figma-space-xl);
+  }
+  
+  .figma-card {
+    padding: var(--figma-space-xl);
+  }
+}
+
+/* Desktop (1280px - 1439px) */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    max-width: 1200px;
+    padding-bottom: 100px;
+  }
+}
+
+/* Large Desktop (1440px+) */
+@media (min-width: 1440px) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    max-width: 1400px;
+    padding-bottom: 100px;
+  }
+  
+  .figma-main-layout {
+    padding: var(--figma-space-xl) 48px;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .figma-btn,
+  .figma-theme-toggle,
+  .figma-action-button {
+    min-height: 48px; /* Larger touch targets for mobile */
+    min-width: 48px;
+  }
+  
+  .figma-btn-sm {
+    min-height: 44px;
+  }
+}
+
+/* High DPI / Retina Display Optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .figma-card,
+  .figma-section {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+  
+  .figma-shadow {
+    --figma-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .figma-header,
+  .figma-header-improved,
+  .figma-bottom-nav,
+  .figma-fab,
+  .figma-theme-toggle {
+    display: none !important;
+  }
+  
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    max-width: 100%;
+    padding-bottom: 0;
+  }
+  
+  .figma-card,
+  .figma-section {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* Landscape Orientation for Mobile Devices */
+@media (max-height: 500px) and (orientation: landscape) {
+  .figma-cricket-app,
+  .figma-cricket-improved {
+    padding-bottom: 60px;
+  }
+  
+  .figma-header,
+  .figma-header-improved {
+    padding: var(--figma-space-sm);
+  }
+  
+  .figma-main-layout {
+    padding: var(--figma-space-md);
+  }
+}
+
 /* ==================== END OF FIGMA CRICKET THEME ==================== */
+

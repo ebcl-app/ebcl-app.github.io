@@ -1,6 +1,63 @@
 /* TeamManagement Component Styles - Team-specific styles only */
 /* This file should only contain styles specific to team management that don't override common.css */
 
+/* Team Banner Hero Section */
+.team-banner-hero {
+  position: relative;
+  height: 200px;
+  margin-bottom: var(--figma-space-lg);
+  border-radius: var(--figma-radius-lg);
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #3b82f6 100%);
+  background-image:
+    linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(30, 64, 175, 0.9) 50%, rgba(59, 130, 246, 0.9) 100%),
+    url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: var(--figma-shadow);
+}
+
+.banner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--figma-space-lg);
+}
+
+.banner-content {
+  text-align: center;
+  color: var(--figma-white);
+  max-width: 600px;
+}
+
+.banner-title {
+  font-size: clamp(20px, 4vw, 28px);
+  font-weight: 700;
+  margin-bottom: var(--figma-space-sm);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  color: var(--figma-white);
+}
+
+.banner-subtitle {
+  font-size: clamp(13px, 2.5vw, 16px);
+  font-weight: 400;
+  opacity: 0.95;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  .team-banner-hero {
+    height: 150px;
+  }
+}
+
 /* Team Card Specific Styles */
 .team-card {
   background: var(--card-bg);

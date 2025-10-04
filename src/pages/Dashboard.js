@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import teamService from '../services/teamService';
 import matchService from '../services/matchService';
 import liveScoresService from '../services/liveScoresService';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 
 const Dashboard = () => {
   console.log('🏠 Dashboard component rendered at:', new Date().toISOString());

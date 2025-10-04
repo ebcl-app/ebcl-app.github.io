@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { startMatch, updateMatchDetails } from '../store/slices/matchSlice';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 import '../styles/match-management.css';
 
 const MatchDetails = () => {

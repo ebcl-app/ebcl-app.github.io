@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 
 const BowlingView = () => {
   const { currentMatch } = useSelector(state => state.match);

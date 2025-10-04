@@ -40,6 +40,7 @@ jobs:
       env:
         CI: false
         GENERATE_SOURCEMAP: false
+        REACT_APP_API_BASE_URL: https://charming-stroopwafel-69c009.netlify.app/
 
     - name: Setup Pages
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'

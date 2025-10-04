@@ -237,6 +237,16 @@ function TeamManagement() {
       {/* Main Content */}
       <div className="figma-main-layout">
 
+        {/* Team Banner Image */}
+        <section className="team-banner-hero" aria-label="Team cricket banner">
+          <div className="banner-overlay">
+            <div className="banner-content">
+              <h2 className="banner-title">Build Your Dream Team</h2>
+              <p className="banner-subtitle">Organize players, assign captains, and create winning combinations</p>
+            </div>
+          </div>
+        </section>
+
         {/* Tab Navigation */}
         <div className="figma-tab-navigation">
           <button 

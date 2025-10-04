@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { addPlayerToPool, selectCurrentClub, selectPlayerPool } from '../store/slices/clubSlice';
-import '../styles/cricket.css';
+import '../styles/figma-cricket-theme.css';
 
 const PlayerRegistration = () => {
   const dispatch = useDispatch();
