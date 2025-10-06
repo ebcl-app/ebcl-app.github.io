@@ -97,3 +97,5 @@ export default defineConfig([
   },
 ])
 ```
+
+Copyright (c) 2025 EBCL. All rights reserved.
