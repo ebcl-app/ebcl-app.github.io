@@ -91,34 +91,38 @@ const MatchesManagement: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [matchesData, teamsData] = await Promise.all([
+        const [matchesResponse, teamsResponse] = await Promise.all([
           CricketApiService.getMatches(),
           CricketApiService.getTeams()
         ]);
 
-        // Transform API matches to component format
-        const transformedMatches: Match[] = matchesData.map((apiMatch: ApiMatch) => ({
-          id: apiMatch.numericId,
-          stringId: apiMatch.id,
-          team1: {
-            name: apiMatch.team1?.name || 'Unknown Team',
-            score: apiMatch.team1Score ? `${apiMatch.team1Score}` : undefined,
-          },
-          team2: {
-            name: apiMatch.team2?.name || 'Unknown Team',
-            score: apiMatch.team2Score ? `${apiMatch.team2Score}` : undefined,
-          },
-          date: apiMatch.scheduledDate || '',
-          time: '', // API doesn't provide time separately
-          venue: apiMatch.venue || '',
-          status: (apiMatch.status.charAt(0).toUpperCase() + apiMatch.status.slice(1)) as 'Scheduled' | 'Live' | 'Completed',
-          winner: apiMatch.winner,
-          matchType: apiMatch.matchType || 'T20',
-        }));
+        if (matchesResponse.success && teamsResponse.success) {
+          // Transform API matches to component format
+          const transformedMatches: Match[] = matchesResponse.data.map((apiMatch: ApiMatch) => ({
+            id: apiMatch.numericId,
+            stringId: apiMatch.id,
+            team1: {
+              name: apiMatch.team1?.name || 'Unknown Team',
+              score: apiMatch.team1Score ? `${apiMatch.team1Score}` : undefined,
+            },
+            team2: {
+              name: apiMatch.team2?.name || 'Unknown Team',
+              score: apiMatch.team2Score ? `${apiMatch.team2Score}` : undefined,
+            },
+            date: apiMatch.scheduledDate || '',
+            time: '', // API doesn't provide time separately
+            venue: apiMatch.venue || '',
+            status: (apiMatch.status.charAt(0).toUpperCase() + apiMatch.status.slice(1)) as 'Scheduled' | 'Live' | 'Completed',
+            winner: apiMatch.winner,
+            matchType: apiMatch.matchType || 'T20',
+          }));
 
-        setMatches(transformedMatches);
-        setTeams(teamsData);
-        setError(null);
+          setMatches(transformedMatches);
+          setTeams(teamsResponse.data);
+          setError(null);
+        } else {
+          setError('Failed to load matches and teams data');
+        }
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load matches and teams data');

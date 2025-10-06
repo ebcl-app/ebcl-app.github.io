@@ -4,6 +4,30 @@ export interface ApiResponse<T> {
   success: boolean;
   data: T;
   message?: string;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
 }
 
 // Match interfaces matching API spec
@@ -246,10 +270,19 @@ export class CricketApiService {
   }
 
   // Matches API
-  static async getMatches(status?: string): Promise<ApiMatch[]> {
-    const queryParams = status ? `?status=${status}` : '';
-    const response = await this.request<ApiMatch[]>(`/matches${queryParams}`);
-    return response.success ? response.data : [];
+  static async getMatches(status?: string, pagination?: PaginationParams): Promise<ApiResponse<ApiMatch[]>> {
+    let queryParams = '';
+    const params: string[] = [];
+
+    if (status) params.push(`status=${status}`);
+    if (pagination?.page) params.push(`page=${pagination.page}`);
+    if (pagination?.limit) params.push(`limit=${pagination.limit}`);
+
+    if (params.length > 0) {
+      queryParams = '?' + params.join('&');
+    }
+
+    return await this.request<ApiMatch[]>(`/matches${queryParams}`);
   }
 
   static async getMatch(numericId: number): Promise<ApiMatch | null> {
@@ -263,9 +296,18 @@ export class CricketApiService {
   }
 
   // Players API
-  static async getPlayers(): Promise<ApiPlayer[]> {
-    const response = await this.request<ApiPlayer[]>('/players');
-    return response.success ? response.data : [];
+  static async getPlayers(pagination?: PaginationParams): Promise<ApiResponse<ApiPlayer[]>> {
+    let queryParams = '';
+    const params: string[] = [];
+
+    if (pagination?.page) params.push(`page=${pagination.page}`);
+    if (pagination?.limit) params.push(`limit=${pagination.limit}`);
+
+    if (params.length > 0) {
+      queryParams = '?' + params.join('&');
+    }
+
+    return await this.request<ApiPlayer[]>(`/players${queryParams}`);
   }
 
   static async getPlayer(numericId: number): Promise<ApiPlayer | null> {
@@ -274,9 +316,18 @@ export class CricketApiService {
   }
 
   // Teams API
-  static async getTeams(): Promise<ApiTeam[]> {
-    const response = await this.request<ApiTeam[]>('/teams');
-    return response.success ? response.data : [];
+  static async getTeams(pagination?: PaginationParams): Promise<ApiResponse<ApiTeam[]>> {
+    let queryParams = '';
+    const params: string[] = [];
+
+    if (pagination?.page) params.push(`page=${pagination.page}`);
+    if (pagination?.limit) params.push(`limit=${pagination.limit}`);
+
+    if (params.length > 0) {
+      queryParams = '?' + params.join('&');
+    }
+
+    return await this.request<ApiTeam[]>(`/teams${queryParams}`);
   }
 
   static async getTeam(numericId: number): Promise<ApiTeam | null> {
@@ -285,8 +336,17 @@ export class CricketApiService {
   }
 
   // Live Scores API
-  static async getLiveScores(): Promise<any[]> {
-    const response = await this.request<any[]>('/live-scores');
-    return response.success ? response.data : [];
+  static async getLiveScores(pagination?: PaginationParams): Promise<ApiResponse<any[]>> {
+    let queryParams = '';
+    const params: string[] = [];
+
+    if (pagination?.page) params.push(`page=${pagination.page}`);
+    if (pagination?.limit) params.push(`limit=${pagination.limit}`);
+
+    if (params.length > 0) {
+      queryParams = '?' + params.join('&');
+    }
+
+    return await this.request<any[]>(`/live-scores${queryParams}`);
   }
 }

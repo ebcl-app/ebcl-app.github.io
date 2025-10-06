@@ -15,6 +15,16 @@ import {
   InputLabel,
   Divider,
   Alert,
+  Pagination,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -23,7 +33,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import SportsIcon from '@mui/icons-material/Sports';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { CricketApiService, type ApiMatch, type ApiTeam } from '../api/cricketApi';
+import { CricketApiService, type ApiMatch } from '../api/cricketApi';
 
 interface Match {
   id: number;
@@ -34,12 +44,14 @@ interface Match {
     logo?: string;
     score?: string;
     overs?: string;
+    color?: string;
   };
   team2: {
     name: string;
     logo?: string;
     score?: string;
     overs?: string;
+    color?: string;
   };
   date: string;
   time: string;
@@ -49,6 +61,7 @@ interface Match {
   winner?: string;
   result?: string | { winner: string; margin: string };
   currentInnings?: string;
+  title?: string;
   bestBatsman?: {
     player: {
       id: string;
@@ -75,27 +88,33 @@ interface Match {
 const MatchesList: React.FC = () => {
   const [statusFilter, setStatusFilter] = React.useState<'Live' | 'Upcoming' | 'Completed' | 'All'>('All');
   const [matches, setMatches] = React.useState<Match[]>([]);
-  const [teams, setTeams] = React.useState<ApiTeam[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isFetchingRef = React.useRef(false);
 
-  React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchData = async (page: number = 1) => {
+    // Prevent duplicate API calls
+    if (isFetchingRef.current) return;
+    
+    try {
+      isFetchingRef.current = true;
+      setLoading(true);
+      setError(null);
 
-        // Fetch teams and matches in parallel
-        const [apiTeams, apiMatches] = await Promise.all([
-          CricketApiService.getTeams(),
-          CricketApiService.getMatches()
-        ]);
+      // Fetch only matches - team colors are included in match data
+      const matchesResponse = await CricketApiService.getMatches(
+        statusFilter !== 'All' ? statusFilter.toLowerCase() : undefined,
+        { page, limit: 5 }
+      );
 
-        setTeams(apiTeams);
-
+      if (matchesResponse.success) {
         // Transform API data to component format
-        const transformedMatches: Match[] = apiMatches.map((apiMatch: ApiMatch) => ({
+        const transformedMatches: Match[] = matchesResponse.data.map((apiMatch: ApiMatch) => ({
           id: apiMatch.numericId,
           numericId: apiMatch.numericId,
           stringId: apiMatch.id, // Add string ID for navigation
@@ -103,11 +122,13 @@ const MatchesList: React.FC = () => {
             name: apiMatch.team1?.name || 'Unknown Team',
             score: apiMatch.team1Score ? `${apiMatch.team1Score}` : undefined,
             overs: undefined, // API doesn't provide overs breakdown
+            color: apiMatch.team1?.color,
           },
           team2: {
             name: apiMatch.team2?.name || 'Unknown Team',
             score: apiMatch.team2Score ? `${apiMatch.team2Score}` : undefined,
             overs: undefined,
+            color: apiMatch.team2?.color,
           },
           date: new Date(apiMatch.scheduledDate).toISOString().split('T')[0],
           time: new Date(apiMatch.scheduledDate).toTimeString().slice(0, 5),
@@ -118,19 +139,31 @@ const MatchesList: React.FC = () => {
           winner: apiMatch.winner,
           result: apiMatch.result ? `${apiMatch.result.winner} ${apiMatch.result.margin}`.trim() : undefined,
           currentInnings: apiMatch.currentInnings ? `Innings ${apiMatch.currentInnings}` : undefined,
+          title: apiMatch.title || `${apiMatch.team1?.name || 'Unknown'} vs ${apiMatch.team2?.name || 'Unknown'}`,
         }));
 
         setMatches(transformedMatches);
-      } catch (err) {
-        setError('Failed to load data. Please try again later.');
-        console.error('Error fetching data:', err);
-      } finally {
-        setLoading(false);
+        setTotalPages(matchesResponse.pagination?.totalPages || 1);
+      } else {
+        setError('Failed to load matches. Please try again later.');
       }
-    };
+    } catch (err) {
+      setError('Failed to load data. Please try again later.');
+      console.error('Error fetching data:', err);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
 
-    fetchData();
-  }, []);
+  React.useEffect(() => {
+    fetchData(1);
+  }, [statusFilter]);
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+    fetchData(page);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -158,16 +191,19 @@ const MatchesList: React.FC = () => {
     }
   };
 
-  // Create a team color map from fetched teams data
+  // Create a team color map from current matches data
   const teamColorMap = React.useMemo(() => {
     const map: { [key: string]: string } = {};
-    teams.forEach(team => {
-      if (team.color) {
-        map[team.name] = team.color;
+    matches.forEach(match => {
+      if (match.team1?.name && match.team1.color) {
+        map[match.team1.name] = match.team1.color;
+      }
+      if (match.team2?.name && match.team2.color) {
+        map[match.team2.name] = match.team2.color;
       }
     });
     return map;
-  }, [teams]);
+  }, [matches]);
 
   const getTeamColor = (teamName: string) => {
     return teamColorMap[teamName] || '#6B7280'; // Default gray if no color found
@@ -492,6 +528,96 @@ const MatchesList: React.FC = () => {
     );
   };
 
+  const renderTableView = () => (
+    <TableContainer component={Paper} sx={{ mt: 2 }}>
+      <Table>
+        <TableHead>
+          <TableRow sx={{ bgcolor: '#F9FAFB' }}>
+            <TableCell sx={{ fontWeight: 700 }}>Match</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Teams</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Date & Time</TableCell>
+            <TableCell sx={{ fontWeight: 700 }}>Venue</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Action</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {filteredMatches.map((match) => (
+            <TableRow key={match.id} hover>
+              <TableCell>
+                <Box>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {match.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {match.matchType}
+                  </Typography>
+                </Box>
+              </TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ bgcolor: getTeamColor(match.team1.name), width: 32, height: 32, fontSize: '0.75rem', fontWeight: 700 }}>
+                    {match.team1.name.substring(0, 2).toUpperCase()}
+                  </Avatar>
+                  <Typography variant="body2">
+                    {match.team1.name} vs {match.team2.name}
+                  </Typography>
+                  <Avatar sx={{ bgcolor: getTeamColor(match.team2.name), width: 32, height: 32, fontSize: '0.75rem', fontWeight: 700 }}>
+                    {match.team2.name.substring(0, 2).toUpperCase()}
+                  </Avatar>
+                </Box>
+                {(match.team1.score || match.team2.score) && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                    {match.team1.score || '0'} - {match.team2.score || '0'}
+                  </Typography>
+                )}
+              </TableCell>
+              <TableCell>
+                <Chip
+                  icon={getStatusIcon(match.status)}
+                  label={match.status}
+                  size="small"
+                  color={getStatusColor(match.status)}
+                  sx={{ fontWeight: 600 }}
+                />
+              </TableCell>
+              <TableCell>
+                <Typography variant="body2">
+                  {match.date} at {match.time}
+                </Typography>
+              </TableCell>
+              <TableCell>
+                <Typography variant="body2" color="text.secondary">
+                  {match.venue}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: '#2563EB',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    '&:hover': { textDecoration: 'underline' }
+                  }}
+                  onClick={() => navigate(`/matches/${match.numericId}`)}
+                >
+                  View Details
+                </Typography>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+
+  const renderCardView = () => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {filteredMatches.map((match) => renderMatchCard(match))}
+    </Box>
+  );
+
   // Keep shell; show overlay and inline alerts for consistency
 
   return (
@@ -510,8 +636,17 @@ const MatchesList: React.FC = () => {
         )}
 
         {/* Stats Cards */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-          <Card sx={{ flex: 1, minWidth: 200 }}>
+        <Box sx={{
+          display: 'flex',
+          gap: 2,
+          mb: 3,
+          flexDirection: { xs: 'row', sm: 'row', md: 'row' },
+          overflowX: { xs: 'auto', sm: 'visible' },
+          pb: { xs: 1, sm: 0 },
+          '&::-webkit-scrollbar': { display: 'none' },
+          scrollbarWidth: 'none'
+        }}>
+          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 160, sm: 200 } }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <PlayArrowIcon sx={{ fontSize: 32, color: '#EF4444', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
@@ -522,7 +657,7 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: 1, minWidth: 200 }}>
+          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 160, sm: 200 } }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <ScheduleIcon sx={{ fontSize: 32, color: '#F59E0B', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
@@ -533,7 +668,7 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: 1, minWidth: 200 }}>
+          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 160, sm: 200 } }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <CheckCircleIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
@@ -585,11 +720,9 @@ const MatchesList: React.FC = () => {
           </Box>
         </Card>
 
-        {/* Matches List */}
+        {/* Matches List - Table on desktop, Cards on mobile */}
         {filteredMatches.length > 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {filteredMatches.map((match) => renderMatchCard(match))}
-          </Box>
+          isDesktop ? renderTableView() : renderCardView()
         ) : (
           <Card>
             <CardContent sx={{ textAlign: 'center', py: 8 }}>
@@ -602,6 +735,19 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+            />
+          </Box>
         )}
       </Container>
     </Box>

@@ -24,11 +24,16 @@ import {
   ToggleButton,
   Button,
   Alert,
+  Pagination,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import SportsCricketIcon from '@mui/icons-material/SportsCricket';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
 import BusyOverlay from '../components/BusyOverlay';
 
@@ -54,17 +59,27 @@ const PlayersList: React.FC = () => {
   const [players, setPlayers] = React.useState<Player[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [pagination, setPagination] = React.useState<any>(null);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const isFetchingRef = React.useRef(false);
 
-  React.useEffect(() => {
-    const fetchPlayers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const apiPlayers = await CricketApiService.getPlayers();
+  const fetchPlayers = async (page: number = 1) => {
+    // Prevent duplicate API calls
+    if (isFetchingRef.current) return;
+    
+    try {
+      isFetchingRef.current = true;
+      setLoading(true);
+      setError(null);
+      const response = await CricketApiService.getPlayers({ page, limit: 5 });
 
+      if (response.success) {
         // Transform API data to component format
-        const transformedPlayers: Player[] = apiPlayers.map((apiPlayer: ApiPlayer) => ({
+        const transformedPlayers: Player[] = response.data.map((apiPlayer: ApiPlayer) => ({
           id: apiPlayer.numericId,
           numericId: apiPlayer.numericId,
           stringId: apiPlayer.id, // Add string ID for navigation
@@ -83,16 +98,33 @@ const PlayersList: React.FC = () => {
         }));
 
         setPlayers(transformedPlayers);
-      } catch (err) {
+        setPagination(response.pagination);
+        setTotalPages(response.pagination?.totalPages || 1);
+      } else {
         setError('Failed to load players. Please try again later.');
-        console.error('Error fetching players:', err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      setError('Failed to load players. Please try again later.');
+      console.error('Error fetching players:', err);
+    } finally {
+      setLoading(false);
+      isFetchingRef.current = false;
+    }
+  };
 
-    fetchPlayers();
+  React.useEffect(() => {
+    fetchPlayers(1);
   }, []);
+
+  // Auto-switch view mode based on screen size
+  React.useEffect(() => {
+    setViewMode(isDesktop ? 'table' : 'grid');
+  }, [isDesktop]);
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+    fetchPlayers(page);
+  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -284,6 +316,64 @@ const PlayersList: React.FC = () => {
           Players
         </Typography>
       </Box>
+
+      {/* Stats Cards */}
+      <Box sx={{
+        display: 'flex',
+        gap: 2,
+        mb: 3,
+        flexDirection: { xs: 'row', sm: 'row', md: 'row' },
+        overflowX: { xs: 'auto', sm: 'visible' },
+        pb: { xs: 1, sm: 0 },
+        '&::-webkit-scrollbar': { display: 'none' },
+        scrollbarWidth: 'none'
+      }}>
+        <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <SportsCricketIcon sx={{ fontSize: 32, color: '#4A90E2', mb: 1 }} />
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#4A90E2' }}>
+              {pagination?.total || players.length}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Players
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <TrendingUpIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
+              {players.filter(player => player.status === 'Active').length}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Active Players
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontSize: 24, color: '#F59E0B', mb: 1 }}>🏏</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
+              {players.length > 0 ? Math.round(players.reduce((sum, player) => sum + player.runs, 0) / players.length) : 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Avg Runs
+            </Typography>
+          </CardContent>
+        </Card>
+        <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <CardContent sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontSize: 24, color: '#EF4444', mb: 1 }}>🎯</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
+              {players.length > 0 ? Math.round(players.reduce((sum, player) => sum + player.wickets, 0) / players.length) : 0}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Avg Wickets
+            </Typography>
+          </CardContent>
+        </Card>
+      </Box>
+
       {error && (
         <Alert severity="error" sx={{ mb: 2 }}>
           {error}
@@ -339,6 +429,19 @@ const PlayersList: React.FC = () => {
 
       {/* Content */}
       {viewMode === 'table' ? renderTableView() : renderGridView()}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+          />
+        </Box>
+      )}
 
       {filteredPlayers.length === 0 && (
         <Box sx={{ textAlign: 'center', py: 8 }}>
