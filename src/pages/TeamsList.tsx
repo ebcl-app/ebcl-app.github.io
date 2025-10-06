@@ -11,7 +11,6 @@ import {
   TextField,
   InputAdornment,
   Button,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';

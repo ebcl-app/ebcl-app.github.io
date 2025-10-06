@@ -23,7 +23,6 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Button,
-  CircularProgress,
   Alert,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
