@@ -40,7 +40,7 @@ jobs:
       env:
         CI: false
         GENERATE_SOURCEMAP: false
-        VITE_API_BASE_URL: https://charming-stroopwafel-69c009.netlify.app
+        VITE_API_BASE_URL: https://charming-stroopwafel-69c009.netlify.app/api
 
     - name: Setup Pages
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
@@ -50,7 +50,7 @@ jobs:
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
       uses: actions/upload-pages-artifact@v3
       with:
-        path: ./build
+        path: ./dist
 
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
