@@ -73,7 +73,7 @@ const TeamsList: React.FC = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
   const [pagination, setPagination] = React.useState<any>(null);
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
   const navigate = useNavigate();
   const isFetchingRef = React.useRef(false);
 

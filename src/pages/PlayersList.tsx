@@ -55,7 +55,7 @@ interface Player {
 const PlayersList: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [roleFilter, setRoleFilter] = React.useState('All');
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
   const [players, setPlayers] = React.useState<Player[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -308,7 +308,7 @@ const PlayersList: React.FC = () => {
   // Keep shell; show overlay and inline error
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
       <BusyOverlay open={loading} label="Loading players..." />
       {/* Header */}
       <Box sx={{ textAlign: 'center', mb: 3 }}>

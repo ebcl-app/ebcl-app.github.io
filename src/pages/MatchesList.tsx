@@ -92,7 +92,7 @@ const MatchesList: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
   const navigate = useNavigate();
   const isFetchingRef = React.useRef(false);
 
