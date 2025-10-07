@@ -16,16 +16,7 @@ import {
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
-
-const StatBox: React.FC<{ label: string; value: React.ReactNode; color?: string }>
-  = ({ label, value, color }) => (
-  <Box sx={{ textAlign: 'center', p: 2, bgcolor: '#F9FAFB', borderRadius: 2 }}>
-    <Typography variant="h6" sx={{ fontWeight: 700, color: color || '#111827' }}>{value}</Typography>
-    <Typography variant="caption" color="text.secondary">{label}</Typography>
-  </Box>
-);
 
 const MiniBar: React.FC = () => (
   <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.75, height: 64 }}>
@@ -135,12 +126,101 @@ const PlayerDetails: React.FC = () => {
         </Card>
 
         {/* Key Stats */}
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-          <Box sx={{ flex: '1 1 45%', minWidth: '200px' }}><StatBox label="Matches" value={player.matchesPlayed || 0} /></Box>
-          <Box sx={{ flex: '1 1 45%', minWidth: '200px' }}><StatBox label="Runs" value={player.totalRuns || 0} color="#10B981" /></Box>
-          <Box sx={{ flex: '1 1 45%', minWidth: '200px' }}><StatBox label="Avg" value={player.battingAverage?.toFixed(1) || '0.0'} /></Box>
-          <Box sx={{ flex: '1 1 45%', minWidth: '200px' }}><StatBox label="SR" value={player.battingStrikeRate?.toFixed(1) || '0.0'} /></Box>
-        </Box>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+          Key Statistics
+        </Typography>
+
+        {/* Batting Stats */}
+        {(player.role === 'batsman' || player.role === 'all-rounder' || player.role === 'wicket-keeper') && (
+          <>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#1976d2' }}>
+              Batting Statistics
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, overflowX: 'auto', pb: 1 }}>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#1976d2' }}>
+                    {player.matchesPlayed || 0}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Matches
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                    {player.totalRuns || 0}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Runs
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+                    {player.battingAverage?.toFixed(1) || '0.0'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Average
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+                    {player.battingStrikeRate?.toFixed(1) || '0.0'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Strike Rate
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+          </>
+        )}
+
+        {/* Bowling Stats */}
+        {(player.role === 'bowler' || player.role === 'all-rounder') && (
+          <>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#d32f2f' }}>
+              Bowling Statistics
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, overflowX: 'auto', pb: 1 }}>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+                    {player.totalWickets || 0}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Wickets
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+                    {player.bowlingAverage?.toFixed(1) || '0.0'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Average
+                  </Typography>
+                </CardContent>
+              </Card>
+              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                    {player.bowlingEconomy?.toFixed(1) || '0.0'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Economy
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+          </>
+        )}
 
         {/* Charts */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
@@ -164,16 +244,77 @@ const PlayerDetails: React.FC = () => {
 
         {/* Recent Matches */}
         <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Recent Matches</Typography>
-        <Card sx={{ boxShadow: 1 }}>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 36, height: 36 }}>P</Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>PW vs DD</Typography>
-              <Typography variant="caption" color="text.secondary">Runs: 78 (45) • 20 Jul</Typography>
-            </Box>
-            <Chip size="small" icon={<EmojiEventsIcon sx={{ fontSize: 16 }} />} label="MOM" color="success" />
-          </CardContent>
-        </Card>
+        {player.matchHistory && player.matchHistory.length > 0 ? (
+          player.matchHistory.slice(0, 5).map((match, index) => {
+            // Extract batting and bowling contributions from the match
+            const battingContribution = match.contributions?.find(c => c.type === 'batting');
+            const bowlingContribution = match.contributions?.find(c => c.type === 'bowling');
+            
+            // Format date
+            const matchDate = new Date(match.matchDate).toLocaleDateString('en-US', {
+              day: 'numeric',
+              month: 'short'
+            });
+            
+            return (
+              <Card key={match.matchId || index} sx={{ boxShadow: 1, mb: 1 }}>
+                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ width: 36, height: 36 }}>
+                    {match.team1?.charAt(0) || 'T'}
+                  </Avatar>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                      {match.team1} vs {match.team2}
+                    </Typography>
+                    
+                    {/* Performance Details */}
+                    {(battingContribution || bowlingContribution) ? (
+                      <Box sx={{ mt: 0.5 }}>
+                        {battingContribution && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+                            🏏 Bat: {battingContribution.runs || 0}{(!battingContribution.dismissal || battingContribution.dismissal === 'not out') ? '*' : ''} ({battingContribution.balls || 0})
+                          </Typography>
+                        )}
+                        {bowlingContribution && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            🎯 Bowl: {bowlingContribution.wickets || 0}/{bowlingContribution.runs || 0} ({bowlingContribution.overs || 0})
+                          </Typography>
+                        )}
+                      </Box>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Did not bat/bowl
+                      </Typography>
+                    )}
+                    
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        {matchDate}
+                      </Typography>
+                      {match.result && (
+                        <Chip 
+                          size="small" 
+                          label={`${match.result.winner} won${match.result.margin ? ` by ${match.result.margin}` : ''}`}
+                          color={match.result.winner === match.team1 ? 'success' : 'error'}
+                          variant="outlined"
+                          sx={{ fontSize: '0.7rem', height: '20px' }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            );
+          })
+        ) : (
+          <Card sx={{ boxShadow: 1 }}>
+            <CardContent>
+              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                No recent matches available
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
       </Container>
 
       {/* Floating Action */}

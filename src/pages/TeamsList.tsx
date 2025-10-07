@@ -20,13 +20,17 @@ import {
   TableHead,
   TableRow,
   Paper,
-  useMediaQuery,
-  useTheme,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupIcon from '@mui/icons-material/Group';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import PersonIcon from '@mui/icons-material/Person';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import TimelineIcon from '@mui/icons-material/Timeline';
 import { CricketApiService, type ApiTeam } from '../api/cricketApi';
 import BusyOverlay from '../components/BusyOverlay';
 
@@ -39,6 +43,26 @@ interface Team {
   captain?: string;
   playersCount: number;
   color?: string;
+  statistics?: {
+    totalMatches: number;
+    wins: number;
+    losses: number;
+    draws: number;
+    winPercentage: number;
+    currentStreak: { type: string; count: number };
+    longestWinStreak: number;
+    longestLossStreak: number;
+    recentMatches: Array<{
+      matchId: number;
+      date: string;
+      opponent: string;
+      result: string;
+      winner: string;
+      venue: string;
+      status: string;
+    }>;
+    form: string[];
+  };
 }
 
 const TeamsList: React.FC = () => {
@@ -49,9 +73,8 @@ const TeamsList: React.FC = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
   const [pagination, setPagination] = React.useState<any>(null);
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const isFetchingRef = React.useRef(false);
 
   const fetchTeams = async (page: number = 1) => {
@@ -75,6 +98,7 @@ const TeamsList: React.FC = () => {
           captain: apiTeam.captain?.name,
           playersCount: apiTeam.playersCount || 0,
           color: apiTeam.color,
+          statistics: apiTeam.statistics,
         }));
 
         setTeams(transformedTeams);
@@ -111,6 +135,10 @@ const TeamsList: React.FC = () => {
             <TableCell sx={{ fontWeight: 700 }}>Team</TableCell>
             <TableCell sx={{ fontWeight: 700 }}>Captain</TableCell>
             <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Players</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Matches</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>W-L-D</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Win %</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Streak</TableCell>
             <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Action</TableCell>
           </TableRow>
         </TableHead>
@@ -137,6 +165,22 @@ const TeamsList: React.FC = () => {
                 <Chip icon={<GroupIcon />} label={team.playersCount} size="small" variant="outlined" />
               </TableCell>
               <TableCell sx={{ textAlign: 'center' }}>
+                {team.statistics?.totalMatches || 0}
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>
+                {team.statistics ? `${team.statistics.wins}-${team.statistics.losses}-${team.statistics.draws}` : '0-0-0'}
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>
+                {team.statistics ? `${Math.round(team.statistics.winPercentage)}%` : '0%'}
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>
+                {team.statistics?.currentStreak ? 
+                  `${team.statistics.currentStreak.type === 'win' ? 'W' : 
+                    team.statistics.currentStreak.type === 'loss' ? 'L' : 'D'}${team.statistics.currentStreak.count}` : 
+                  'None'
+                }
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center' }}>
                 <Button size="small" variant="outlined" onClick={() => navigate(`/teams/${team.numericId}`)}>
                   View
                 </Button>
@@ -149,25 +193,69 @@ const TeamsList: React.FC = () => {
   );
 
   const renderGridView = () => (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 2 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2, mt: 2 }}>
       {filtered.map((team) => (
-         <Card key={team.id} sx={{ boxShadow: 2, '&:hover': { boxShadow: 6, transform: 'translateY(-2px)', transition: 'all .2s' }, cursor: 'pointer' }} onClick={() => navigate(`/teams/${team.numericId}`)}>
+        <Card key={team.id} sx={{ '&:hover': { boxShadow: 4 }, cursor: 'pointer' }} onClick={() => navigate(`/teams/${team.numericId}`)}>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1.5 }}>
-              <Avatar sx={{ bgcolor: team.color || '#4A90E2', width: 48, height: 48, fontWeight: 800 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <Avatar sx={{ width: 48, height: 48, bgcolor: team.color || '#4A90E2', fontWeight: 800 }}>
                 {team.shortName}
               </Avatar>
-              <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>{team.name}</Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip icon={<GroupIcon />} label={`${team.playersCount} Players`} size="small" variant="outlined" />
-                  {team.captain && (
-                    <Chip label={`Captain: ${team.captain}`} size="small" variant="outlined" />
-                  )}
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  {team.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {team.playersCount || 0} Players
+                </Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              <Chip
+                label={`Captain: ${(team.captain as any)?.name || 'Not assigned'}`}
+                size="small"
+                variant="outlined"
+              />
+            </Box>
+            {team.statistics && (
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
+                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1F2937' }}>
+                    {team.statistics.totalMatches}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Total Matches
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                    {team.statistics.wins}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Wins
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+                    {team.statistics.losses}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Losses
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+                    {team.statistics.winPercentage?.toFixed(1) || 0}%
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Win %
+                  </Typography>
                 </Box>
               </Box>
-               <Button variant="outlined" size="small" sx={{ textTransform: 'none' }} onClick={(e) => { e.stopPropagation(); navigate(`/teams/${team.numericId}`); }}>View</Button>
-            </Box>
+            )}
+            <Button fullWidth variant="outlined" onClick={(e) => { e.stopPropagation(); navigate(`/teams/${team.numericId}`); }}>
+              View Team
+            </Button>
           </CardContent>
         </Card>
       ))}
@@ -196,7 +284,7 @@ const TeamsList: React.FC = () => {
           '&::-webkit-scrollbar': { display: 'none' },
           scrollbarWidth: 'none'
         }}>
-          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <SportsSoccerIcon sx={{ fontSize: 32, color: '#4A90E2', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#4A90E2' }}>
@@ -207,7 +295,7 @@ const TeamsList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <GroupIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
@@ -218,7 +306,7 @@ const TeamsList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 140, sm: 180 } }}>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <PersonIcon sx={{ fontSize: 32, color: '#F59E0B', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
@@ -226,6 +314,28 @@ const TeamsList: React.FC = () => {
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Teams with Captain
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <TrendingUpIcon sx={{ fontSize: 32, color: '#8B5CF6', mb: 1 }} />
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#8B5CF6' }}>
+                {teams.length > 0 ? Math.round(teams.reduce((sum, team) => sum + (team.statistics?.winPercentage || 0), 0) / teams.filter(t => (t.statistics?.totalMatches || 0) > 0).length) || 0 : 0}%
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Avg Win Rate
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <TimelineIcon sx={{ fontSize: 32, color: '#06B6D4', mb: 1 }} />
+              <Typography variant="h4" sx={{ fontWeight: 700, color: '#06B6D4' }}>
+                {teams.filter(team => team.statistics?.currentStreak?.type === 'win').length}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Teams on Win Streak
               </Typography>
             </CardContent>
           </Card>
@@ -248,12 +358,28 @@ const TeamsList: React.FC = () => {
           />
         </Box>
 
+        {/* View Toggle */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(_, newView) => newView && setViewMode(newView)}
+          >
+            <ToggleButton value="table">
+              <ViewListIcon />
+            </ToggleButton>
+            <ToggleButton value="grid">
+              <ViewModuleIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>
         )}
 
-        {/* Teams content - Table on desktop, Grid on mobile */}
-        {isDesktop ? renderTableView() : renderGridView()}
+        {/* Teams content */}
+        {viewMode === 'table' ? renderTableView() : renderGridView()}
 
         {/* Pagination */}
         {totalPages > 1 && (

@@ -13,7 +13,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Divider,
   Alert,
   Pagination,
   Table,
@@ -23,13 +22,14 @@ import {
   TableHead,
   TableRow,
   Paper,
-  useMediaQuery,
-  useTheme,
+  Button,
+  ToggleButtonGroup,
+  ToggleButton,
 } from '@mui/material';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import SportsIcon from '@mui/icons-material/Sports';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -92,9 +92,8 @@ const MatchesList: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
+  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('table');
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const isFetchingRef = React.useRef(false);
 
   const fetchData = async (page: number = 1) => {
@@ -209,39 +208,6 @@ const MatchesList: React.FC = () => {
     return teamColorMap[teamName] || '#6B7280'; // Default gray if no color found
   };
 
-  const getTeamBoxStyle = (teamName: string, match: Match) => {
-    const isCompleted = match.status === 'Completed';
-    const isWinner = isCompleted && match.winner === teamName;
-
-    if (isWinner) {
-      return {
-        bgcolor: '#D1FAE5', // Light green for winner
-        border: '2px solid #10B981', // Green border
-        borderRadius: 1,
-        position: 'relative' as const,
-        opacity: 1,
-      };
-    }
-
-    if (isCompleted) {
-      return {
-        bgcolor: '#FEF2F2', // Light red/gray for loser
-        border: '1px solid #E5E7EB',
-        borderRadius: 1,
-        position: 'relative' as const,
-        opacity: 0.7, // Slightly muted for loser
-      };
-    }
-
-    return {
-      bgcolor: '#F9FAFB', // Default for upcoming/live matches
-      border: '1px solid transparent',
-      borderRadius: 1,
-      position: 'relative' as const,
-      opacity: 1,
-    };
-  };
-
   const filterMatchesByStatus = (match: Match) => {
     if (statusFilter === 'All') return true;
     return match.status === statusFilter;
@@ -254,275 +220,113 @@ const MatchesList: React.FC = () => {
   const completedMatchesCount = matches.filter((m) => m.status === 'Completed').length;
 
   const renderMatchCard = (match: Match) => {
-    const isLive = match.status === 'Live';
-    const isCompleted = match.status === 'Completed';
-
     return (
       <Card
         key={match.id}
-        sx={{
-          mb: 2,
-          boxShadow: isLive ? 4 : 2,
-          border: isLive ? '2px solid #EF4444' : 'none',
-          position: 'relative',
-          overflow: 'visible',
-          '&:hover': {
-            boxShadow: 6,
-            transform: 'translateY(-2px)',
-            transition: 'all 0.3s ease',
-          },
-        }}
+        sx={{ minWidth: 320, '&:hover': { boxShadow: 4 }, cursor: 'pointer' }}
+        onClick={() => navigate(`/matches/${match.numericId}`)}
       >
-        {isLive && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: -1,
-              left: -1,
-              right: -1,
-              height: 4,
-              bgcolor: '#EF4444',
-              animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-              '@keyframes pulse': {
-                '0%, 100%': { opacity: 1 },
-                '50%': { opacity: 0.5 },
-              },
-            }}
-          />
-        )}
-        <CardContent onClick={() => navigate(`/matches/${match.numericId}`)} sx={{ cursor: 'pointer' }}>
-          {/* Header */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Avatar sx={{ width: 48, height: 48, bgcolor: match.status === 'Completed' ? '#2e7d32' : match.status === 'Live' ? '#d32f2f' : '#ed6c02' }}>
+              {match.matchType === 'T20' ? 'T20' : match.matchType === 'ODI' ? 'ODI' : 'CRIC'}
+            </Avatar>
             <Box>
-              <Chip
-                icon={getStatusIcon(match.status)}
-                label={match.status}
-                size="small"
-                color={getStatusColor(match.status)}
-                sx={{ fontWeight: 600 }}
-              />
-              <Chip
-                label={match.matchType}
-                size="small"
-                variant="outlined"
-                sx={{ ml: 1 }}
-              />
-            </Box>
-            {isLive && (
-              <Typography
-                variant="caption"
-                sx={{
-                  color: '#EF4444',
-                  fontWeight: 700,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    bgcolor: '#EF4444',
-                    animation: 'blink 1s ease-in-out infinite',
-                    '@keyframes blink': {
-                      '0%, 100%': { opacity: 1 },
-                      '50%': { opacity: 0.3 },
-                    },
-                  }}
-                />
-                LIVE
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                {match.team1?.name || 'TBD'} vs {match.team2?.name || 'TBD'}
               </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {match.venue || 'Venue TBD'}
+              </Typography>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+            <Chip
+              label={match.status}
+              size="small"
+              color={
+                match.status === 'Completed' ? 'success' :
+                match.status === 'Live' ? 'error' : 'warning'
+              }
+              variant="outlined"
+            />
+            <Chip
+              label={match.matchType}
+              size="small"
+              variant="outlined"
+            />
+          </Box>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
+            <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
+                {new Date(match.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Date
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
+                {match.time}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Time
+              </Typography>
+            </Box>
+            {match.status === 'Completed' && match.result && typeof match.result === 'object' && (
+              <>
+                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#e8f5e8', borderRadius: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                    {match.result.winner}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Winner
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
+                    {match.result.margin}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Margin
+                  </Typography>
+                </Box>
+              </>
             )}
           </Box>
-
-          {/* Teams */}
-          <Box sx={{ mb: 2 }}>
-            {/* Team 1 */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 1.5,
-                p: 1.5,
-                ...getTeamBoxStyle(match.team1.name, match),
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: getTeamColor(match.team1.name),
-                    width: 40,
-                    height: 40,
-                    fontWeight: 700,
-                  }}
-                >
-                  {match.team1.name.substring(0, 2).toUpperCase()}
-                </Avatar>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {match.team1.name}
-                </Typography>
-              </Box>
-              {match.team1.score && (
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {match.team1.score}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {match.team1.overs} overs
-                  </Typography>
-                </Box>
-              )}
-              {match.status === 'Completed' && match.winner === match.team1.name && (
-                <Typography variant="h6" sx={{ fontSize: '1.5rem', ml: 1 }}>
-                  🏆
-                </Typography>
-              )}
-            </Box>
-
-            {/* VS Divider */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', my: 1 }}>
-              <Divider sx={{ flex: 1 }} />
-              <Typography
-                variant="caption"
-                sx={{
-                  mx: 2,
-                  color: 'text.secondary',
-                  fontWeight: 700,
-                  fontSize: '0.75rem',
-                }}
-              >
-                VS
-              </Typography>
-              <Divider sx={{ flex: 1 }} />
-            </Box>
-
-            {/* Team 2 */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                p: 1.5,
-                ...getTeamBoxStyle(match.team2.name, match),
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1 }}>
-                <Avatar
-                  sx={{
-                    bgcolor: getTeamColor(match.team2.name),
-                    width: 40,
-                    height: 40,
-                    fontWeight: 700,
-                  }}
-                >
-                  {match.team2.name.substring(0, 2).toUpperCase()}
-                </Avatar>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {match.team2.name}
-                </Typography>
-              </Box>
-              {match.team2.score && (
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {match.team2.score}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {match.team2.overs} overs
-                  </Typography>
-                </Box>
-              )}
-              {match.status === 'Completed' && match.winner === match.team2.name && (
-                <Typography variant="h6" sx={{ fontSize: '1.5rem', ml: 1 }}>
-                  🏆
-                </Typography>
-              )}
-            </Box>
-          </Box>
-
-          {/* Match Status/Result */}
-          {isLive && match.currentInnings && (
-            <Box
-              sx={{
-                p: 1.5,
-                bgcolor: '#FEF3C7',
-                borderRadius: 1,
-                border: '1px solid #FCD34D',
-                mb: 2,
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 500, color: '#92400E' }}>
-                {match.currentInnings}
-              </Typography>
-            </Box>
-          )}
-
-          {isCompleted && (
-            <Box sx={{ mb: 2 }}>
-              {match.winner && (
-                <Box
-                  sx={{
-                    p: 1.5,
-                    bgcolor: '#D1FAE5',
-                    borderRadius: 1,
-                    border: '1px solid #6EE7B7',
-                    mb: 1,
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#065F46', textAlign: 'center' }}>
-                    🏆 {match.winner} Won{typeof match.result === 'object' && match.result?.margin ? ` by ${match.result.margin}` : ''}
-                  </Typography>
-                </Box>
-              )}
+          {match.status === 'Completed' && (match.bestBatsman || match.bestBowler) && (
+            <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto', pb: 1 }}>
               {match.bestBatsman && (
-                <Box
-                  sx={{
-                    p: 1,
-                    bgcolor: '#F0F9FF',
-                    borderRadius: 1,
-                    border: '1px solid #0EA5E9',
-                    mb: 1,
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 500, color: '#0C4A6E', textAlign: 'center' }}>
-                    🏏 Best Batsman: {match.bestBatsman.player?.name} ({match.bestBatsman.runs} runs)
+                <Box sx={{ minWidth: 120, textAlign: 'center', p: 1, bgcolor: '#e3f2fd', borderRadius: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Best Batsman
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                    {match.bestBatsman.player.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {match.bestBatsman.runs} runs
                   </Typography>
                 </Box>
               )}
               {match.bestBowler && (
-                <Box
-                  sx={{
-                    p: 1,
-                    bgcolor: '#FEF3C7',
-                    borderRadius: 1,
-                    border: '1px solid #F59E0B',
-                  }}
-                >
-                  <Typography variant="body2" sx={{ fontWeight: 500, color: '#92400E', textAlign: 'center' }}>
-                    🎯 Best Bowler: {match.bestBowler.player?.name} ({match.bestBowler.wickets} wickets)
+                <Box sx={{ minWidth: 120, textAlign: 'center', p: 1, bgcolor: '#ffebee', borderRadius: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Best Bowler
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                    {match.bestBowler.player.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {match.bestBowler.wickets} wickets
                   </Typography>
                 </Box>
               )}
             </Box>
           )}
-
-          {/* Match Info */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <CalendarTodayIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {match.date} at {match.time}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <LocationOnIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography variant="body2" color="text.secondary">
-                {match.venue}
-              </Typography>
-            </Box>
-          </Box>
+          <Button fullWidth variant="outlined" onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/matches/${match.numericId}`); }}>
+            View Match
+          </Button>
         </CardContent>
       </Card>
     );
@@ -613,7 +417,7 @@ const MatchesList: React.FC = () => {
   );
 
   const renderCardView = () => (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 2 }}>
       {filteredMatches.map((match) => renderMatchCard(match))}
     </Box>
   );
@@ -646,7 +450,7 @@ const MatchesList: React.FC = () => {
           '&::-webkit-scrollbar': { display: 'none' },
           scrollbarWidth: 'none'
         }}>
-          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 160, sm: 200 } }}>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <PlayArrowIcon sx={{ fontSize: 32, color: '#EF4444', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
@@ -657,7 +461,7 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 160, sm: 200 } }}>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <ScheduleIcon sx={{ fontSize: 32, color: '#F59E0B', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
@@ -668,7 +472,7 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', minWidth: { xs: 160, sm: 200 } }}>
+          <Card sx={{ flex: '0 0 auto', width: 140 }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <CheckCircleIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
@@ -717,12 +521,27 @@ const MatchesList: React.FC = () => {
                 <MenuItem value="Completed">Completed Matches ({completedMatchesCount})</MenuItem>
               </Select>
             </FormControl>
+
+            {/* View Toggle */}
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(_, newView) => newView && setViewMode(newView)}
+              sx={{ ml: 'auto' }}
+            >
+              <ToggleButton value="table">
+                <ViewListIcon />
+              </ToggleButton>
+              <ToggleButton value="grid">
+                <ViewModuleIcon />
+              </ToggleButton>
+            </ToggleButtonGroup>
           </Box>
         </Card>
 
-        {/* Matches List - Table on desktop, Cards on mobile */}
+        {/* Matches List */}
         {filteredMatches.length > 0 ? (
-          isDesktop ? renderTableView() : renderCardView()
+          viewMode === 'table' ? renderTableView() : renderCardView()
         ) : (
           <Card>
             <CardContent sx={{ textAlign: 'center', py: 8 }}>

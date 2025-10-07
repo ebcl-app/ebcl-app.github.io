@@ -133,6 +133,53 @@ const TeamDetails: React.FC = () => {
           <Chip label={`Last Updated: ${new Date(team.updatedAt).toLocaleDateString()}`} size="small" />
         </Box>
 
+        {/* Team Statistics */}
+        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
+          Team Statistics
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, mb: 2, overflowX: 'auto', pb: 1 }}>
+          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1976d2' }}>
+                {team.statistics?.totalMatches || 0}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Total Matches
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+                {team.statistics?.wins || 0}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Wins
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+                {team.statistics?.losses || 0}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Losses
+              </Typography>
+            </CardContent>
+          </Card>
+          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+                {team.statistics?.winPercentage?.toFixed(1) || '0.0'}%
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Win %
+              </Typography>
+            </CardContent>
+          </Card>
+        </Box>
+
         {/* Squad */}
         <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
           Squad
@@ -161,113 +208,6 @@ const TeamDetails: React.FC = () => {
           )}
         </Box>
 
-        {/* Team Players with Statistics */}
-        {team.teamPlayers && team.teamPlayers.length > 0 && (
-          <>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-              Team Players & Statistics
-            </Typography>
-            <Box sx={{ mb: 2 }}>
-              {team.teamPlayers.map((player) => (
-                <Card key={player.id} sx={{ mb: 2, boxShadow: 1 }}>
-                  <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                      <Avatar sx={{ bgcolor: '#4A90E2' }}>
-                        {player.name.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                          {player.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {player.role} • {player.teamStats.matchesPlayed} matches played
-                        </Typography>
-                      </Box>
-                      <Button 
-                        variant="outlined" 
-                        size="small"
-                        onClick={() => navigate(`/players/${player.numericId}`)}
-                      >
-                        View Profile
-                      </Button>
-                    </Box>
-
-                    {/* Batting Statistics */}
-                    {player.teamStats.batting.battingInnings > 0 && (
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#1976d2' }}>
-                          Batting Statistics
-                        </Typography>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 1 }}>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                              {player.teamStats.batting.totalRuns}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Runs</Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                              {player.teamStats.batting.battingAverage}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Average</Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                              {player.teamStats.batting.strikeRate}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Strike Rate</Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                              {player.teamStats.batting.highestScore}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">HS</Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-                    )}
-
-                    {/* Bowling Statistics */}
-                    {player.teamStats.bowling.bowlingInnings > 0 && (
-                      <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#d32f2f' }}>
-                          Bowling Statistics
-                        </Typography>
-                        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 1 }}>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#ffebee', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-                              {player.teamStats.bowling.totalWickets}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Wickets</Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#ffebee', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-                              {player.teamStats.bowling.bowlingAverage}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Average</Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#ffebee', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-                              {player.teamStats.bowling.economy}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Economy</Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#ffebee', borderRadius: 1 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-                              {player.teamStats.bowling.bowlingInnings}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">Innings</Typography>
-                          </Box>
-                        </Box>
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </>
-        )}
-
         {/* Match History */}
         {team.matchHistory && team.matchHistory.length > 0 && (
           <>
@@ -276,31 +216,27 @@ const TeamDetails: React.FC = () => {
             </Typography>
             <Box sx={{ mb: 2 }}>
               {team.matchHistory.map((match) => (
-                <Card 
-                  key={match.id} 
-                  sx={{ mb: 1, boxShadow: 1, cursor: 'pointer' }} 
+                <Card
+                  key={match.id}
+                  sx={{ mb: 2, boxShadow: 1, cursor: 'pointer' }}
                   onClick={() => navigate(`/matches/${match.numericId}`)}
                 >
-                  <CardContent sx={{ py: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                            vs {match.opponent?.name || 'Unknown Team'}
-                          </Typography>
-                          <Chip 
-                            label={match.status} 
-                            size="small" 
-                            color={
-                              match.status === 'completed' ? 'success' :
-                              match.status === 'live' ? 'error' : 'info'
-                            }
-                            variant="outlined"
-                          />
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                          {new Date(match.scheduledDate).toLocaleDateString()} • {match.venue}
+                  <CardContent sx={{ p: 2 }}>
+                    {/* Match Header */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          vs {match.opponent?.name || 'Unknown Team'}
                         </Typography>
+                        <Chip
+                          label={match.status}
+                          size="small"
+                          color={
+                            match.status === 'completed' ? 'success' :
+                            match.status === 'live' ? 'error' : 'info'
+                          }
+                          variant="outlined"
+                        />
                       </Box>
                       <Box sx={{ textAlign: 'right' }}>
                         {match.status === 'completed' && match.result && (
@@ -320,59 +256,102 @@ const TeamDetails: React.FC = () => {
                         )}
                       </Box>
                     </Box>
+
+                    {/* Match Information Cards */}
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto', pb: 1 }}>
+                      {/* Date */}
+                      <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#f5f5f5' }}>
+                        <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            Date
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                            {new Date(match.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+
+                      {/* Match Type */}
+                      <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#f5f5f5' }}>
+                        <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            Type
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                            {match.matchType || 'T20'}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+
+                      {/* Ground */}
+                      <Card sx={{ minWidth: 120, boxShadow: 0, bgcolor: '#f5f5f5' }}>
+                        <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            Ground
+                          </Typography>
+                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                            {match.venue || 'TBD'}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Box>
+
+                    {/* Additional Match Details */}
+                    {match.status === 'completed' && (
+                      <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
+                        {/* Toss */}
+                        <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#e3f2fd' }}>
+                          <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                              Toss
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                              {match.toss ? `${match.toss.winner} won` : 'N/A'}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+
+                        {/* Best Batsman */}
+                        {match.bestBatsman && (
+                          <Card sx={{ minWidth: 140, boxShadow: 0, bgcolor: '#e8f5e8' }}>
+                            <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                Best Batsman
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                                {match.bestBatsman.player.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {match.bestBatsman.runs} runs
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Best Bowler */}
+                        {match.bestBowler && (
+                          <Card sx={{ minWidth: 140, boxShadow: 0, bgcolor: '#ffebee' }}>
+                            <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                Best Bowler
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                                {match.bestBowler.player.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {match.bestBowler.wickets} wickets
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </Box>
+                    )}
                   </CardContent>
                 </Card>
               ))}
             </Box>
           </>
         )}
-
-        {/* Team Statistics */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          Team Statistics
-        </Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(4, 1fr)' }, gap: 2, mb: 2 }}>
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1976d2' }}>
-                {team.statistics?.totalMatches || 0}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Total Matches
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
-                {team.statistics?.wins || 0}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Wins
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
-                {team.statistics?.losses || 0}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Losses
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
-                {team.statistics?.winPercentage?.toFixed(1) || '0.0'}%
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Win %
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
 
         {/* Best Players */}
         {(team.bestPlayers?.batsman || team.bestPlayers?.bowler) && (
@@ -392,7 +371,7 @@ const TeamDetails: React.FC = () => {
                         {team.bestPlayers.batsman.name.charAt(0).toUpperCase()}
                       </Avatar>
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
                           {team.bestPlayers.batsman.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -414,7 +393,7 @@ const TeamDetails: React.FC = () => {
                         {team.bestPlayers.bowler.name.charAt(0).toUpperCase()}
                       </Avatar>
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
                           {team.bestPlayers.bowler.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -428,25 +407,6 @@ const TeamDetails: React.FC = () => {
             </Box>
           </>
         )}
-
-        {/* Match History */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          Match History
-        </Typography>
-        <Card sx={{ boxShadow: 1 }}>
-          <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 40, height: 40 }}>P</Avatar>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                Pune Warriors vs Delhi Darevills
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Won by 15 runs • 20 Jul 1:30PM
-              </Typography>
-            </Box>
-            <Chip label="Result" size="small" variant="outlined" />
-          </CardContent>
-        </Card>
       </Container>
 
       {/* Floating Add Player action */}

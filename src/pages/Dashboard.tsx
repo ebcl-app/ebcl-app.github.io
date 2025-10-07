@@ -88,7 +88,7 @@ const Dashboard: React.FC = () => {
           display: { xs: 'block', md: 'none' },
           backgroundColor: '#ffffff',
           width: '100%',
-          height: { xs: '150px', sm: '180px' },
+          height: { xs: '80px', sm: '100px' }, // Reduced height for better mobile fit
         }}
       />
 
@@ -116,25 +116,25 @@ const Dashboard: React.FC = () => {
       <Box sx={{ 
         width: '100%', 
         backgroundColor: '#ffffff', 
-        mt: { xs: -12, md: 0 }, 
+        mt: { xs: -8, md: 0 }, // Reduced negative margin for mobile
         position: 'relative', 
         zIndex: 10,
         borderRadius: { xs: '24px 24px 0 0', md: 0 },
-        pb: { xs: 12, md: 0 },
+        pb: { xs: 8, md: 0 }, // Reduced bottom padding for mobile
         boxShadow: { xs: '0 -4px 20px rgba(0,0,0,0.1)', md: 'none' },
       }}>
-        <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 }, px: { xs: 3, sm: 3, md: 4 } }}>
+        <Container maxWidth="lg" sx={{ py: { xs: 3, md: 6 }, px: { xs: 3, sm: 3, md: 4 } }}> {/* Reduced top padding for mobile */}
           <Box sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
-            gap: { xs: 3, md: 6 }, 
+            gap: { xs: 2, md: 6 }, // Reduced gap for mobile
             alignItems: 'center', 
             width: '100%', 
             margin: '0 auto',
             textAlign: 'center',
           }}>
           {/* Main Content - Enhanced Typography */}
-          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: { xs: 1.5, md: 2 } }}> {/* Reduced gap for mobile */}
             <Typography
               variant="h2"
               sx={{
@@ -165,7 +165,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             
             {/* CTA Button */}
-            <Box sx={{ mt: 2, mb: { xs: 8, md: 0 } }}>
+            <Box sx={{ mt: 2, mb: { xs: 4, md: 0 } }}> {/* Reduced bottom margin for mobile */}
               <Button
                 variant="contained"
                 size="large"

@@ -98,6 +98,33 @@ export interface ApiPlayer {
   bowlingAverage?: number;
   battingStrikeRate?: number;
   bowlingEconomy?: number;
+  matchHistory?: Array<{
+    matchId: string;
+    matchDate: string;
+    team1: string;
+    team2: string;
+    venue: string;
+    result: {
+      winner: string;
+      margin: string;
+    };
+    contributions: Array<{
+      type: 'batting' | 'bowling';
+      inningNumber: number;
+      // Batting fields
+      runs?: number;
+      balls?: number;
+      fours?: number;
+      sixes?: number;
+      dismissal?: string;
+      strikeRate?: string;
+      // Bowling fields
+      overs?: string;
+      maidens?: number;
+      wickets?: number;
+      economy?: string;
+    }>;
+  }>;
   createdAt: string;
   updatedAt: string;
 }
@@ -136,6 +163,19 @@ export interface ApiTeam {
     losses: number;
     draws: number;
     winPercentage: number;
+    currentStreak: { type: string; count: number };
+    longestWinStreak: number;
+    longestLossStreak: number;
+    recentMatches: Array<{
+      matchId: number;
+      date: string;
+      opponent: string;
+      result: string;
+      winner: string;
+      venue: string;
+      status: string;
+    }>;
+    form: string[];
   };
   bestPlayers?: {
     batsman?: {
@@ -190,6 +230,7 @@ export interface ApiTeam {
     displayId: string;
     title: string;
     status: 'scheduled' | 'live' | 'completed';
+    matchType?: string;
     scheduledDate: string;
     venue: string;
     opponent?: {
@@ -203,6 +244,31 @@ export interface ApiTeam {
     };
     team1Score?: number;
     team2Score?: number;
+    toss?: {
+      winner: string;
+      decision: 'bat' | 'bowl';
+    };
+    bestBatsman?: {
+      player: {
+        id: string;
+        name: string;
+      };
+      runs: number;
+      balls: number;
+      fours: number;
+      sixes: number;
+      strikeRate: number;
+    };
+    bestBowler?: {
+      player: {
+        id: string;
+        name: string;
+      };
+      wickets: number;
+      runs: number;
+      overs: number;
+      economy: number;
+    };
   }>;
   logo?: string;
   color?: string;
