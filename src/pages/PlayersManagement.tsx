@@ -39,6 +39,7 @@ import SportsIcon from '@mui/icons-material/Sports';
 import StarIcon from '@mui/icons-material/Star';
 import GroupIcon from '@mui/icons-material/Group';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Player {
   id: number;
@@ -59,6 +60,17 @@ interface Player {
 }
 
 const PlayersManagement: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Access denied. Please log in as an administrator.
+        </Typography>
+      </Box>
+    );
+  }
   const [players, setPlayers] = React.useState<Player[]>([
     {
       id: 1,

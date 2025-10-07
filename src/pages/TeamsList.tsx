@@ -275,16 +275,12 @@ const TeamsList: React.FC = () => {
 
         {/* Stats Cards */}
         <Box sx={{
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
           gap: 2,
-          mb: 3,
-          flexDirection: { xs: 'row', sm: 'row', md: 'row' },
-          overflowX: { xs: 'auto', sm: 'visible' },
-          pb: { xs: 1, sm: 0 },
-          '&::-webkit-scrollbar': { display: 'none' },
-          scrollbarWidth: 'none'
+          mb: 3
         }}>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <SportsSoccerIcon sx={{ fontSize: 32, color: '#4A90E2', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#4A90E2' }}>
@@ -295,7 +291,7 @@ const TeamsList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <GroupIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
@@ -306,7 +302,7 @@ const TeamsList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <PersonIcon sx={{ fontSize: 32, color: '#F59E0B', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
@@ -317,7 +313,7 @@ const TeamsList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <TrendingUpIcon sx={{ fontSize: 32, color: '#8B5CF6', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#8B5CF6' }}>
@@ -328,7 +324,7 @@ const TeamsList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <TimelineIcon sx={{ fontSize: 32, color: '#06B6D4', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#06B6D4' }}>

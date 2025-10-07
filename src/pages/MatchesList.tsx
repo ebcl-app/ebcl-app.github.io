@@ -93,6 +93,9 @@ const MatchesList: React.FC = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [totalPages, setTotalPages] = React.useState(1);
   const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
+  const [liveMatchesCount, setLiveMatchesCount] = React.useState(0);
+  const [upcomingMatchesCount, setUpcomingMatchesCount] = React.useState(0);
+  const [completedMatchesCount, setCompletedMatchesCount] = React.useState(0);
   const navigate = useNavigate();
   const isFetchingRef = React.useRef(false);
 
@@ -129,20 +132,32 @@ const MatchesList: React.FC = () => {
             overs: undefined,
             color: apiMatch.team2?.color,
           },
-          date: new Date(apiMatch.scheduledDate).toISOString().split('T')[0],
-          time: new Date(apiMatch.scheduledDate).toTimeString().slice(0, 5),
+          date: apiMatch.scheduledDate ? new Date(apiMatch.scheduledDate).toISOString().split('T')[0] : '',
+          time: apiMatch.scheduledDate ? new Date(apiMatch.scheduledDate).toTimeString().slice(0, 5) : '',
           venue: apiMatch.venue,
           status: apiMatch.status === 'live' ? 'Live' :
                   apiMatch.status === 'scheduled' ? 'Upcoming' : 'Completed',
           matchType: apiMatch.matchType,
-          winner: apiMatch.winner,
-          result: apiMatch.result ? `${apiMatch.result.winner} ${apiMatch.result.margin}`.trim() : undefined,
+          winner: apiMatch.winner || apiMatch.result?.winner,
+          result: apiMatch.result,
           currentInnings: apiMatch.currentInnings ? `Innings ${apiMatch.currentInnings}` : undefined,
           title: apiMatch.title || `${apiMatch.team1?.name || 'Unknown'} vs ${apiMatch.team2?.name || 'Unknown'}`,
+          bestBatsman: apiMatch.bestBatsman,
+          bestBowler: apiMatch.bestBowler,
         }));
 
         setMatches(transformedMatches);
         setTotalPages(matchesResponse.pagination?.totalPages || 1);
+
+        // Use total counts from the main API response instead of separate calls
+        if (matchesResponse.totalCounts) {
+          setLiveMatchesCount(matchesResponse.totalCounts.live || 0);
+          setUpcomingMatchesCount(matchesResponse.totalCounts.scheduled || 0);
+          setCompletedMatchesCount(matchesResponse.totalCounts.completed || 0);
+        } else {
+          // Fallback to separate calls if totalCounts not available
+          await fetchTotalCounts();
+        }
       } else {
         setError('Failed to load matches. Please try again later.');
       }
@@ -152,6 +167,16 @@ const MatchesList: React.FC = () => {
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
+    }
+  };
+
+  const fetchTotalCounts = async () => {
+    try {
+      // This function is now deprecated - total counts come from main API response
+      // Keeping for backward compatibility if needed
+      console.warn('fetchTotalCounts is deprecated - using totalCounts from main API response');
+    } catch (error) {
+      console.error('Error in deprecated fetchTotalCounts:', error);
     }
   };
 
@@ -215,10 +240,6 @@ const MatchesList: React.FC = () => {
 
   const filteredMatches = matches.filter(filterMatchesByStatus);
 
-  const liveMatchesCount = matches.filter((m) => m.status === 'Live').length;
-  const upcomingMatchesCount = matches.filter((m) => m.status === 'Upcoming').length;
-  const completedMatchesCount = matches.filter((m) => m.status === 'Completed').length;
-
   const renderMatchCard = (match: Match) => {
     return (
       <Card
@@ -259,7 +280,7 @@ const MatchesList: React.FC = () => {
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
             <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
               <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                {new Date(match.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {match.date ? new Date(match.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
               </Typography>
               <Typography variant="caption" color="text.secondary">
                 Date
@@ -273,7 +294,7 @@ const MatchesList: React.FC = () => {
                 Time
               </Typography>
             </Box>
-            {match.status === 'Completed' && match.result && typeof match.result === 'object' && (
+            {match.status === 'Completed' && match.result && typeof match.result === 'object' && match.result.winner && match.result.margin && (
               <>
                 <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#e8f5e8', borderRadius: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 700, color: '#2e7d32' }}>
@@ -441,16 +462,12 @@ const MatchesList: React.FC = () => {
 
         {/* Stats Cards */}
         <Box sx={{
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
           gap: 2,
-          mb: 3,
-          flexDirection: { xs: 'row', sm: 'row', md: 'row' },
-          overflowX: { xs: 'auto', sm: 'visible' },
-          pb: { xs: 1, sm: 0 },
-          '&::-webkit-scrollbar': { display: 'none' },
-          scrollbarWidth: 'none'
+          mb: 3
         }}>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <PlayArrowIcon sx={{ fontSize: 32, color: '#EF4444', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
@@ -461,7 +478,7 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <ScheduleIcon sx={{ fontSize: 32, color: '#F59E0B', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
@@ -472,7 +489,7 @@ const MatchesList: React.FC = () => {
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ flex: '0 0 auto', width: 140 }}>
+          <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <CheckCircleIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
               <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>

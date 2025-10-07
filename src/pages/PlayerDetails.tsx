@@ -260,43 +260,121 @@ const PlayerDetails: React.FC = () => {
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#1976d2' }}>
               Batting Statistics
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, overflowX: 'auto', pb: 1 }}>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#1976d2' }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)', // 2 columns on mobile
+                  sm: 'repeat(4, 1fr)', // 4 columns on small screens and up
+                },
+                gap: { xs: 1.5, sm: 2 },
+                mb: 2,
+              }}
+            >
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#1976d2',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.matchesPlayed || 0}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Matches
                   </Typography>
                 </CardContent>
               </Card>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#2e7d32',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.totalRuns || 0}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Runs
                   </Typography>
                 </CardContent>
               </Card>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#ed6c02',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.battingAverage?.toFixed(1) || '0.0'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Average
                   </Typography>
                 </CardContent>
               </Card>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#d32f2f',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.battingStrikeRate?.toFixed(1) || '0.0'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Strike Rate
                   </Typography>
                 </CardContent>
@@ -311,33 +389,94 @@ const PlayerDetails: React.FC = () => {
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#d32f2f' }}>
               Bowling Statistics
             </Typography>
-            <Box sx={{ display: 'flex', gap: 2, mb: 2, overflowX: 'auto', pb: 1 }}>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'repeat(2, 1fr)', // 2 columns on mobile
+                  sm: 'repeat(3, 1fr)', // 3 columns on small screens and up (since there are only 3 stats)
+                },
+                gap: { xs: 1.5, sm: 2 },
+                mb: 2,
+              }}
+            >
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#d32f2f',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.totalWickets || 0}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Wickets
                   </Typography>
                 </CardContent>
               </Card>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#ed6c02',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.bowlingAverage?.toFixed(1) || '0.0'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Average
                   </Typography>
                 </CardContent>
               </Card>
-              <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#2e7d32',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
                     {player.bowlingEconomy?.toFixed(1) || '0.0'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
                     Economy
                   </Typography>
                 </CardContent>

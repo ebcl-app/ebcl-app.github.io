@@ -41,6 +41,7 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { CricketApiService, type ApiMatch, type ApiTeam } from '../api/cricketApi';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Match {
   id: number;
@@ -64,6 +65,17 @@ interface Match {
 }
 
 const MatchesManagement: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Access denied. Please log in as an administrator.
+        </Typography>
+      </Box>
+    );
+  }
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [teams, setTeams] = React.useState<ApiTeam[]>([]);
   const [loading, setLoading] = React.useState(true);

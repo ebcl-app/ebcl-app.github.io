@@ -319,16 +319,12 @@ const PlayersList: React.FC = () => {
 
       {/* Stats Cards */}
       <Box sx={{
-        display: 'flex',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
         gap: 2,
-        mb: 3,
-        flexDirection: { xs: 'row', sm: 'row', md: 'row' },
-        overflowX: { xs: 'auto', sm: 'visible' },
-        pb: { xs: 1, sm: 0 },
-        '&::-webkit-scrollbar': { display: 'none' },
-        scrollbarWidth: 'none'
+        mb: 3
       }}>
-        <Card sx={{ flex: '0 0 auto', width: 140 }}>
+        <Card>
           <CardContent sx={{ textAlign: 'center' }}>
             <SportsCricketIcon sx={{ fontSize: 32, color: '#4A90E2', mb: 1 }} />
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#4A90E2' }}>
@@ -339,7 +335,7 @@ const PlayersList: React.FC = () => {
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ flex: '0 0 auto', width: 140 }}>
+        <Card>
           <CardContent sx={{ textAlign: 'center' }}>
             <TrendingUpIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
@@ -350,7 +346,7 @@ const PlayersList: React.FC = () => {
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ flex: '0 0 auto', width: 140 }}>
+        <Card>
           <CardContent sx={{ textAlign: 'center' }}>
             <Typography variant="h6" sx={{ fontSize: 24, color: '#F59E0B', mb: 1 }}>🏏</Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
@@ -361,7 +357,7 @@ const PlayersList: React.FC = () => {
             </Typography>
           </CardContent>
         </Card>
-        <Card sx={{ flex: '0 0 auto', width: 140 }}>
+        <Card>
           <CardContent sx={{ textAlign: 'center' }}>
             <Typography variant="h6" sx={{ fontSize: 24, color: '#EF4444', mb: 1 }}>🎯</Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>

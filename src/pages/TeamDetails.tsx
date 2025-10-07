@@ -20,10 +20,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/Group';
 import { CricketApiService, type ApiTeam } from '../api/cricketApi';
+import { useAuth } from '../contexts/AuthContext';
 
 const TeamDetails: React.FC = () => {
   const navigate = useNavigate();
   const { teamId } = useParams();
+  const { isAuthenticated } = useAuth();
   const [team, setTeam] = React.useState<ApiTeam | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -120,9 +122,11 @@ const TeamDetails: React.FC = () => {
                   <Chip icon={<GroupIcon />} label={`${team.playersCount || 0} Players`} size="small" variant="outlined" />
                 </Box>
               </Box>
-              <Button variant="contained" startIcon={<EditIcon />} sx={{ textTransform: 'none' }}>
-                Edit Team
-              </Button>
+              {isAuthenticated && (
+                <Button variant="contained" startIcon={<EditIcon />} sx={{ textTransform: 'none' }}>
+                  Edit Team
+                </Button>
+              )}
             </Stack>
           </CardContent>
         </Card>
@@ -137,43 +141,121 @@ const TeamDetails: React.FC = () => {
         <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
           Team Statistics
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, overflowX: 'auto', pb: 1 }}>
-          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#1976d2' }}>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: {
+              xs: 'repeat(2, 1fr)', // 2 columns on mobile
+              sm: 'repeat(4, 1fr)', // 4 columns on small screens and up
+            },
+            gap: { xs: 1.5, sm: 2 },
+            mb: 2,
+          }}
+        >
+          <Card sx={{
+            boxShadow: 1,
+            minHeight: { xs: 80, sm: 100 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  color: '#1976d2',
+                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                }}
+              >
                 {team.statistics?.totalMatches || 0}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+              >
                 Total Matches
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#2e7d32' }}>
+          <Card sx={{
+            boxShadow: 1,
+            minHeight: { xs: 80, sm: 100 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  color: '#2e7d32',
+                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                }}
+              >
                 {team.statistics?.wins || 0}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+              >
                 Wins
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#d32f2f' }}>
+          <Card sx={{
+            boxShadow: 1,
+            minHeight: { xs: 80, sm: 100 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  color: '#d32f2f',
+                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                }}
+              >
                 {team.statistics?.losses || 0}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+              >
                 Losses
               </Typography>
             </CardContent>
           </Card>
-          <Card sx={{ boxShadow: 1, minWidth: 120, flex: 1 }}>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: '#ed6c02' }}>
+          <Card sx={{
+            boxShadow: 1,
+            minHeight: { xs: 80, sm: 100 },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 700,
+                  color: '#ed6c02',
+                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                }}
+              >
                 {team.statistics?.winPercentage?.toFixed(1) || '0.0'}%
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+              >
                 Win %
               </Typography>
             </CardContent>
@@ -409,27 +491,29 @@ const TeamDetails: React.FC = () => {
         )}
       </Container>
 
-      {/* Floating Add Player action */}
-      <Paper
-        sx={{
-          position: 'fixed',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          bottom: 72,
-          px: 2,
-          py: 1,
-          borderRadius: 999,
-          boxShadow: 4,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-        }}
-      >
-        <Avatar sx={{ bgcolor: '#4A90E2', width: 44, height: 44 }}>
-          <AddIcon />
-        </Avatar>
-        <Typography sx={{ fontWeight: 700 }}>Add Player</Typography>
-      </Paper>
+      {/* Floating Add Player action - only show for authenticated users */}
+      {isAuthenticated && (
+        <Paper
+          sx={{
+            position: 'fixed',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            bottom: 72,
+            px: 2,
+            py: 1,
+            borderRadius: 999,
+            boxShadow: 4,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+          }}
+        >
+          <Avatar sx={{ bgcolor: '#4A90E2', width: 44, height: 44 }}>
+            <AddIcon />
+          </Avatar>
+          <Typography sx={{ fontWeight: 700 }}>Add Player</Typography>
+        </Paper>
+      )}
     </Box>
   );
 };

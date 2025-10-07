@@ -28,6 +28,12 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     hasNext: boolean;
     hasPrev: boolean;
   };
+  totalCounts?: {
+    live: number;
+    scheduled: number;
+    completed: number;
+    all: number;
+  };
 }
 
 // Match interfaces matching API spec
@@ -77,6 +83,7 @@ export interface ApiMatch {
     overs: number;
     economy: number;
   };
+  innings?: ApiInning[];
 }
 
 // Player interfaces matching API spec
@@ -298,7 +305,7 @@ export interface ApiInning {
     sixes: number;
     status: string;
   }>;
-  bowlers: Array<{
+  bowling: Array<{
     player?: {
       id: string;
       name: string;
@@ -311,12 +318,14 @@ export interface ApiInning {
     overs: number;
   }>;
   fallOfWickets?: Array<{
-    wicket: number;
-    player: string;
+    wicketNumber: number;
+    wicket?: number;
+    player?: string;
     playerName?: string;
-    batsmanName?: string;
+    batsmanName: string;
     score: number;
-    over: string;
+    overs: string;
+    over?: string;
   }>;
 }
 
@@ -336,7 +345,7 @@ export class CricketApiService {
   }
 
   // Matches API
-  static async getMatches(status?: string, pagination?: PaginationParams): Promise<ApiResponse<ApiMatch[]>> {
+  static async getMatches(status?: string, pagination?: PaginationParams): Promise<PaginatedResponse<ApiMatch>> {
     let queryParams = '';
     const params: string[] = [];
 
@@ -348,7 +357,7 @@ export class CricketApiService {
       queryParams = '?' + params.join('&');
     }
 
-    return await this.request<ApiMatch[]>(`/matches${queryParams}`);
+    return await this.request<ApiMatch[]>(`/matches${queryParams}`) as unknown as PaginatedResponse<ApiMatch>;
   }
 
   static async getMatch(numericId: number): Promise<ApiMatch | null> {

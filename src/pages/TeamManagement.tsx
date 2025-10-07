@@ -31,6 +31,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Team {
   id: number;
@@ -45,6 +46,17 @@ interface Team {
 }
 
 const TeamManagement: React.FC = () => {
+  const { isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Access denied. Please log in as an administrator.
+        </Typography>
+      </Box>
+    );
+  }
   const [teams, setTeams] = React.useState<Team[]>([
     { id: 1, name: 'Thunder Strikers', captain: 'Rajesh Kumar', players: 15, matches: 24, wins: 18, losses: 6, status: 'Active' },
     { id: 2, name: 'Lightning Bolts', captain: 'Amit Singh', players: 14, matches: 22, wins: 14, losses: 8, status: 'Active' },

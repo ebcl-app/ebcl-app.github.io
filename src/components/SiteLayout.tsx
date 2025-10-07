@@ -14,6 +14,7 @@ import SportsIcon from '@mui/icons-material/Sports';
 import PeopleIcon from '@mui/icons-material/People';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { useAuth } from '../contexts/AuthContext';
 
 const navIndexForPath = (pathname: string): number => {
   if (pathname.startsWith('/matches')) return 1;
@@ -26,6 +27,7 @@ const navIndexForPath = (pathname: string): number => {
 const SiteLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isAuthenticated, logout } = useAuth();
   const bottomValue = navIndexForPath(location.pathname);
 
   return (
@@ -49,26 +51,156 @@ const SiteLayout: React.FC = () => {
                 CRICK HEROES
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: { xs: 1, md: 3 }, alignItems: 'center', flexWrap: 'wrap' }}>
-              <Button onClick={() => navigate('/')} sx={{ color: '#333', textTransform: 'none', fontWeight: 500, fontSize: { xs: '0.85rem', md: '1rem' }, minWidth: 'auto' }}>Home</Button>
-              <Button onClick={() => navigate('/matches')} sx={{ color: '#333', textTransform: 'none', fontWeight: 500, fontSize: { xs: '0.85rem', md: '1rem' }, minWidth: 'auto' }}>Matches</Button>
-              <Button onClick={() => navigate('/teams')} sx={{ color: '#333', textTransform: 'none', fontWeight: 500, fontSize: { xs: '0.85rem', md: '1rem' }, minWidth: 'auto', display: { xs: 'none', sm: 'inline-flex' } }}>Teams</Button>
-              <Button onClick={() => navigate('/players')} sx={{ color: '#333', textTransform: 'none', fontWeight: 500, fontSize: { xs: '0.85rem', md: '1rem' }, minWidth: 'auto', display: { xs: 'none', sm: 'inline-flex' } }}>Players</Button>
-              <Button sx={{ color: '#333', textTransform: 'none', fontWeight: 500, fontSize: { xs: '0.85rem', md: '1rem' }, minWidth: 'auto', display: { xs: 'none', sm: 'inline-flex' } }}>News</Button>
-              <Button
-                variant="contained"
-                onClick={() => navigate('/admin')}
-                sx={{
-                  backgroundColor: '#FF7A59',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  px: { xs: 2, md: 3 },
-                  fontSize: { xs: '0.85rem', md: '1rem' },
-                  '&:hover': { backgroundColor: '#FF6347' },
+            <Box sx={{ display: 'flex', gap: { xs: 1, md: 2 }, alignItems: 'center', flexWrap: 'wrap' }}>
+              <Button 
+                onClick={() => navigate('/')} 
+                variant="text"
+                sx={{ 
+                  color: '#333', 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.85rem', md: '1rem' }, 
+                  minWidth: 'auto',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                    color: '#4A90E2'
+                  }
                 }}
               >
-                Login
+                Home
               </Button>
+              <Button 
+                onClick={() => navigate('/matches')} 
+                variant="text"
+                sx={{ 
+                  color: '#333', 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.85rem', md: '1rem' }, 
+                  minWidth: 'auto',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                    color: '#4A90E2'
+                  }
+                }}
+              >
+                Matches
+              </Button>
+              <Button 
+                onClick={() => navigate('/teams')} 
+                variant="text"
+                sx={{ 
+                  color: '#333', 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.85rem', md: '1rem' }, 
+                  minWidth: 'auto',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  '&:hover': {
+                    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                    color: '#4A90E2'
+                  }
+                }}
+              >
+                Teams
+              </Button>
+              <Button 
+                onClick={() => navigate('/players')} 
+                variant="text"
+                sx={{ 
+                  color: '#333', 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.85rem', md: '1rem' }, 
+                  minWidth: 'auto',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  '&:hover': {
+                    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                    color: '#4A90E2'
+                  }
+                }}
+              >
+                Players
+              </Button>
+              <Button 
+                variant="text"
+                sx={{ 
+                  color: '#333', 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.85rem', md: '1rem' }, 
+                  minWidth: 'auto',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  display: { xs: 'none', sm: 'inline-flex' },
+                  '&:hover': {
+                    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                    color: '#4A90E2'
+                  }
+                }}
+              >
+                News
+              </Button>
+              <Button
+                variant="contained"
+                onClick={isAuthenticated ? () => navigate('/admin') : () => navigate('/login')}
+                sx={{
+                  backgroundColor: '#4A90E2',
+                  color: 'white',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: { xs: 3, md: 4 },
+                  py: 1.5,
+                  fontSize: { xs: '0.85rem', md: '1rem' },
+                  borderRadius: 2,
+                  boxShadow: '0 2px 8px rgba(74, 144, 226, 0.3)',
+                  '&:hover': {
+                    backgroundColor: '#357ABD',
+                    boxShadow: '0 4px 12px rgba(74, 144, 226, 0.4)'
+                  },
+                }}
+              >
+                {isAuthenticated ? 'Admin Panel' : 'Login'}
+              </Button>
+              {isAuthenticated && (
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    logout();
+                    navigate('/');
+                  }}
+                  sx={{
+                    color: '#4A90E2',
+                    borderColor: '#4A90E2',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    px: { xs: 2, md: 3 },
+                    py: 1.5,
+                    fontSize: { xs: '0.85rem', md: '1rem' },
+                    borderRadius: 2,
+                    ml: 1,
+                    '&:hover': {
+                      backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                      borderColor: '#357ABD'
+                    },
+                  }}
+                >
+                  Logout
+                </Button>
+              )}
             </Box>
           </Box>
         </Container>
@@ -89,8 +221,10 @@ const SiteLayout: React.FC = () => {
           display: { xs: 'block', md: 'none' },
           zIndex: 1000,
           borderTop: '1px solid #e0e0e0',
+          borderRadius: '16px 16px 0 0',
+          overflow: 'hidden',
         }}
-        elevation={3}
+        elevation={8}
       >
         <BottomNavigation
           value={bottomValue}
@@ -104,25 +238,53 @@ const SiteLayout: React.FC = () => {
           showLabels
           sx={{
             backgroundColor: '#ffffff',
+            height: 72,
             '& .MuiBottomNavigationAction-root': {
               color: '#6b7280',
               minWidth: 'auto',
-              padding: '6px 0',
+              padding: '8px 0 6px 0',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                backgroundColor: 'rgba(74, 144, 226, 0.04)',
+              },
             },
             '& .MuiBottomNavigationAction-root.Mui-selected': {
               color: '#4A90E2',
+              '& .MuiBottomNavigationAction-label': {
+                fontWeight: 600,
+              },
             },
             '& .MuiBottomNavigationAction-label': {
               fontSize: '0.75rem',
+              fontWeight: 500,
               marginTop: '4px',
+              transition: 'all 0.2s ease',
+            },
+            '& .MuiBottomNavigationAction-label.Mui-selected': {
+              fontSize: '0.75rem',
             },
           }}
         >
-          <BottomNavigationAction label="Home" icon={<HomeIcon />} />
-          <BottomNavigationAction label="Matches" icon={<SportsIcon />} />
-          <BottomNavigationAction label="Teams" icon={<GroupsIcon />} />
-          <BottomNavigationAction label="Players" icon={<PeopleIcon />} />
-          <BottomNavigationAction label="More" icon={<MoreHorizIcon />} />
+          <BottomNavigationAction 
+            label="Home" 
+            icon={<HomeIcon sx={{ fontSize: 24 }} />} 
+          />
+          <BottomNavigationAction 
+            label="Matches" 
+            icon={<SportsIcon sx={{ fontSize: 24 }} />} 
+          />
+          <BottomNavigationAction 
+            label="Teams" 
+            icon={<GroupsIcon sx={{ fontSize: 24 }} />} 
+          />
+          <BottomNavigationAction 
+            label="Players" 
+            icon={<PeopleIcon sx={{ fontSize: 24 }} />} 
+          />
+          <BottomNavigationAction 
+            label="More" 
+            icon={<MoreHorizIcon sx={{ fontSize: 24 }} />} 
+          />
         </BottomNavigation>
       </Paper>
     </Box>
