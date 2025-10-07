@@ -219,16 +219,11 @@ const PlayerDetails: React.FC = () => {
         {/* Summary Card */}
         <Card sx={{ mb: 2, boxShadow: 2 }}>
           <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: analysis ? 1 : 0 }}>
               <Avatar sx={{ width: 64, height: 64, border: '3px solid #4A90E2' }}>A</Avatar>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>{player.name}</Typography>
                 <Typography variant="body2" color="text.secondary">{player.role}</Typography>
-                {analysis && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1, fontStyle: 'italic' }}>
-                    {analysis.playerDescription}
-                  </Typography>
-                )}
                 <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                   <Chip label={player.role} color="primary" variant="outlined" size="small" />
                   {player.battingStyle && <Chip label={player.battingStyle} size="small" variant="outlined" />}
@@ -237,6 +232,20 @@ const PlayerDetails: React.FC = () => {
               </Box>
               <Button variant="contained" startIcon={<SportsCricketIcon />} sx={{ textTransform: 'none' }}>Follow</Button>
             </Box>
+            {analysis && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  mt: 1,
+                  fontStyle: 'italic',
+                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                  lineHeight: { xs: 1.3, sm: 1.4 }
+                }}
+              >
+                {analysis.playerDescription}
+              </Typography>
+            )}
           </CardContent>
         </Card>
 
