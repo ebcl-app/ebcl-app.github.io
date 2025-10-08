@@ -10,17 +10,20 @@ import {
   BottomNavigationAction,
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import SportsIcon from '@mui/icons-material/Sports';
 import PeopleIcon from '@mui/icons-material/People';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import GroupsIcon from '@mui/icons-material/Groups';
+import LoginIcon from '@mui/icons-material/Login';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useAuth } from '../contexts/AuthContext';
 
 const navIndexForPath = (pathname: string): number => {
-  if (pathname.startsWith('/matches')) return 1;
-  if (pathname.startsWith('/players')) return 3;
-  if (pathname.startsWith('/teams')) return 2;
-  if (pathname.startsWith('/admin')) return 4;
+  if (pathname.startsWith('/leaderboard')) return 1;
+  if (pathname.startsWith('/matches')) return 2;
+  if (pathname.startsWith('/players')) return 4;
+  if (pathname.startsWith('/teams')) return 3;
+  if (pathname.startsWith('/admin')) return 5;
   return 0;
 };
 
@@ -71,6 +74,26 @@ const SiteLayout: React.FC = () => {
                 }}
               >
                 Home
+              </Button>
+              <Button 
+                onClick={() => navigate('/leaderboard')} 
+                variant="text"
+                sx={{ 
+                  color: '#333', 
+                  textTransform: 'none', 
+                  fontWeight: 600, 
+                  fontSize: { xs: '0.85rem', md: '1rem' }, 
+                  minWidth: 'auto',
+                  borderRadius: 2,
+                  px: 2,
+                  py: 1,
+                  '&:hover': {
+                    backgroundColor: 'rgba(74, 144, 226, 0.08)',
+                    color: '#4A90E2'
+                  }
+                }}
+              >
+                Leaderboard
               </Button>
               <Button 
                 onClick={() => navigate('/matches')} 
@@ -229,10 +252,18 @@ const SiteLayout: React.FC = () => {
         <BottomNavigation
           value={bottomValue}
           onChange={(_event, newValue) => {
-            if (newValue === 1) navigate('/matches');
-            else if (newValue === 2) navigate('/teams');
-            else if (newValue === 3) navigate('/players');
-            else if (newValue === 4) navigate('/admin');
+            if (newValue === 1) navigate('/leaderboard');
+            else if (newValue === 2) navigate('/matches');
+            else if (newValue === 3) navigate('/teams');
+            else if (newValue === 4) navigate('/players');
+            else if (newValue === 5) {
+              if (isAuthenticated) {
+                navigate('/admin');
+              } else {
+                // Navigate to login page - you'll need to implement this route
+                navigate('/login');
+              }
+            }
             else navigate('/');
           }}
           showLabels
@@ -270,6 +301,10 @@ const SiteLayout: React.FC = () => {
             icon={<HomeIcon sx={{ fontSize: 24 }} />} 
           />
           <BottomNavigationAction 
+            label="Leaderboard" 
+            icon={<EmojiEventsIcon sx={{ fontSize: 24 }} />} 
+          />
+          <BottomNavigationAction 
             label="Matches" 
             icon={<SportsIcon sx={{ fontSize: 24 }} />} 
           />
@@ -282,8 +317,8 @@ const SiteLayout: React.FC = () => {
             icon={<PeopleIcon sx={{ fontSize: 24 }} />} 
           />
           <BottomNavigationAction 
-            label="More" 
-            icon={<MoreHorizIcon sx={{ fontSize: 24 }} />} 
+            label={isAuthenticated ? "Admin" : "Login"} 
+            icon={isAuthenticated ? <AdminPanelSettingsIcon sx={{ fontSize: 24 }} /> : <LoginIcon sx={{ fontSize: 24 }} />} 
           />
         </BottomNavigation>
       </Paper>

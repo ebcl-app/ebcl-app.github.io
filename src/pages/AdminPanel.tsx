@@ -11,6 +11,9 @@ import {
   Tabs,
   Tab,
   Pagination,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsIcon from '@mui/icons-material/Sports';
@@ -18,6 +21,13 @@ import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SportsCricketIcon from '@mui/icons-material/SportsCricket';
+import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
+import StarIcon from '@mui/icons-material/Star';
+import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { useNavigate } from 'react-router-dom';
 import TeamManagement from './TeamManagement';
 import MatchesManagement from './MatchesManagement';
@@ -65,7 +75,6 @@ const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = React.useState(0);
   const [matchesPage, setMatchesPage] = React.useState(1);
-  const [playersPage, setPlayersPage] = React.useState(1);
   const [dashboardStats, setDashboardStats] = React.useState({
     totalMatches: 0,
     activeTeams: 0,
@@ -75,24 +84,60 @@ const AdminPanel: React.FC = () => {
     error: null as string | null,
   });
   const [recentMatches, setRecentMatches] = React.useState<any[]>([]);
-  const [topPlayers, setTopPlayers] = React.useState<any[]>([]);
+  const [topBatsmen, setTopBatsmen] = React.useState<any[]>([]);
+  const [topBowlers, setTopBowlers] = React.useState<any[]>([]);
+  const [topFielders, setTopFielders] = React.useState<any[]>([]);
+  const [topImpactPlayers, setTopImpactPlayers] = React.useState<any[]>([]);
+  const [expandedAccordion, setExpandedAccordion] = React.useState<string | false>('batsmen');
+  const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
 
   // Pagination constants
   const MATCHES_PER_PAGE = 10;
-  const PLAYERS_PER_PAGE = 10;
+
+  const handleAccordionChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedAccordion(isExpanded ? panel : false);
+  };
+
+  const renderPlayerList = (players: any[], metric: string, icon: React.ReactNode) => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+      {players.slice(0, 5).map((player: any, index: number) => (
+        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, minWidth: '24px' }}>
+            #{player.rank}
+          </Typography>
+          <Avatar sx={{ bgcolor: '#4A90E2', width: 32, height: 32, fontSize: '0.875rem' }}>
+            {player.avatar}
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              {player.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {metric}: {player[metric.toLowerCase()] || player.impactScore}
+            </Typography>
+          </Box>
+          {icon}
+        </Box>
+      ))}
+    </Box>
+  );
 
   // Fetch dashboard statistics
   React.useEffect(() => {
+    let isMounted = true;
+
     const fetchDashboardStats = async () => {
       try {
         setDashboardStats(prev => ({ ...prev, loading: true, error: null }));
 
         // Fetch all data in parallel with high limits for dashboard
         const [matchesResponse, teamsResponse, playersResponse] = await Promise.all([
-          CricketApiService.getMatches(undefined, { page: 1, limit: 1000 }),
-          CricketApiService.getTeams({ page: 1, limit: 1000 }),
-          CricketApiService.getPlayers({ page: 1, limit: 1000 }),
+          CricketApiService.getMatches(undefined, { page: 1, limit: 10 }),
+          CricketApiService.getTeams({ page: 1, limit: 10 }),
+          CricketApiService.getPlayers({ page: 1, limit: 1000 }), // Fetch more players for ranking
         ]);
+
+        if (!isMounted) return; // Prevent state update if component unmounted
 
         if (matchesResponse.success && teamsResponse.success && playersResponse.success) {
           const matches = matchesResponse.data;
@@ -124,34 +169,86 @@ const AdminPanel: React.FC = () => {
           }));
           setRecentMatches(recentMatchesData);
 
-          // Set top players (by total runs, all players)
-          const sortedPlayers = players
-            .filter((player: any) => player.totalRuns)
+          // Set top players by category
+          const topBatsmenData = players
+            .filter((player: any) => player.totalRuns && player.role === 'batsman')
             .sort((a: any, b: any) => (b.totalRuns || 0) - (a.totalRuns || 0))
-            .map((player: any) => ({
+            .slice(0, 10)
+            .map((player: any, index: number) => ({
               name: player.name,
               runs: player.totalRuns?.toLocaleString() || '0',
+              average: player.battingAverage ? player.battingAverage.toFixed(2) : '0.00',
               avatar: player.name.charAt(0),
+              rank: index + 1,
             }));
-          setTopPlayers(sortedPlayers);
+          setTopBatsmen(topBatsmenData);
+
+          const topBowlersData = players
+            .filter((player: any) => player.totalWickets && player.role === 'bowler')
+            .sort((a: any, b: any) => (b.totalWickets || 0) - (a.totalWickets || 0))
+            .slice(0, 10)
+            .map((player: any, index: number) => ({
+              name: player.name,
+              wickets: player.totalWickets?.toLocaleString() || '0',
+              economy: player.bowlingEconomy ? player.bowlingEconomy.toFixed(2) : '0.00',
+              avatar: player.name.charAt(0),
+              rank: index + 1,
+            }));
+          setTopBowlers(topBowlersData);
+
+          const topFieldersData = players
+            .filter((player: any) => player.totalCatches || player.totalRunOuts)
+            .sort((a: any, b: any) => ((b.totalCatches || 0) + (b.totalRunOuts || 0)) - ((a.totalCatches || 0) + (a.totalRunOuts || 0)))
+            .slice(0, 10)
+            .map((player: any, index: number) => ({
+              name: player.name,
+              catches: (player.totalCatches || 0) + (player.totalRunOuts || 0),
+              avatar: player.name.charAt(0),
+              rank: index + 1,
+            }));
+          setTopFielders(topFieldersData);
+
+          // Top impact players (combination of runs, wickets, catches)
+          const topImpactData = players
+            .map((player: any) => ({
+              ...player,
+              impactScore: (player.totalRuns || 0) * 1 + (player.totalWickets || 0) * 25 + ((player.totalCatches || 0) + (player.totalRunOuts || 0)) * 10
+            }))
+            .sort((a: any, b: any) => b.impactScore - a.impactScore)
+            .slice(0, 10)
+            .map((player: any, index: number) => ({
+              name: player.name,
+              impactScore: player.impactScore,
+              avatar: player.name.charAt(0),
+              rank: index + 1,
+            }));
+          setTopImpactPlayers(topImpactData);
         } else {
+          if (isMounted) {
+            setDashboardStats(prev => ({
+              ...prev,
+              loading: false,
+              error: 'Failed to load dashboard data',
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        if (isMounted) {
           setDashboardStats(prev => ({
             ...prev,
             loading: false,
             error: 'Failed to load dashboard data',
           }));
         }
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
-        setDashboardStats(prev => ({
-          ...prev,
-          loading: false,
-          error: 'Failed to load dashboard data',
-        }));
       }
     };
 
     fetchDashboardStats();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -162,21 +259,48 @@ const AdminPanel: React.FC = () => {
     setMatchesPage(page);
   };
 
-  const handlePlayersPageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    setPlayersPage(page);
-  };
-
   return (
     <Box sx={{ bgcolor: '#F5F7FA', minHeight: '100vh', pb: 12 }}>
       <Container maxWidth="lg" sx={{ pt: 2 }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
-            <ArrowBackIosNewIcon fontSize="small" />
-          </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Admin Panel
-          </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+              <ArrowBackIosNewIcon fontSize="small" />
+            </IconButton>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Admin Panel
+            </Typography>
+          </Box>
+          
+          {/* View Toggle */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="body2" color="text.secondary">
+              View:
+            </Typography>
+            <IconButton 
+              onClick={() => setViewMode('list')} 
+              size="small"
+              sx={{ 
+                color: viewMode === 'list' ? 'primary.main' : 'text.secondary',
+                bgcolor: viewMode === 'list' ? 'primary.light' : 'transparent',
+                '&:hover': { bgcolor: viewMode === 'list' ? 'primary.main' : 'action.hover' }
+              }}
+            >
+              <ViewListIcon fontSize="small" />
+            </IconButton>
+            <IconButton 
+              onClick={() => setViewMode('grid')} 
+              size="small"
+              sx={{ 
+                color: viewMode === 'grid' ? 'primary.main' : 'text.secondary',
+                bgcolor: viewMode === 'grid' ? 'primary.light' : 'transparent',
+                '&:hover': { bgcolor: viewMode === 'grid' ? 'primary.main' : 'action.hover' }
+              }}
+            >
+              <ViewModuleIcon fontSize="small" />
+            </IconButton>
+          </Box>
         </Box>
 
         {/* Navigation Tabs */}
@@ -244,7 +368,12 @@ const AdminPanel: React.FC = () => {
                     <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                       Recent Matches
                     </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ 
+                      display: viewMode === 'grid' ? 'grid' : 'flex', 
+                      flexDirection: 'column', 
+                      gap: 2,
+                      gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(280px, 1fr))' : undefined
+                    }}>
                       {dashboardStats.loading ? (
                         <Typography>Loading recent matches...</Typography>
                       ) : (() => {
@@ -254,35 +383,62 @@ const AdminPanel: React.FC = () => {
                         
                         return paginatedMatches.length > 0 ? (
                           <>
-                            {paginatedMatches.map((match, index) => (
-                              <Box
-                                key={startIndex + index}
-                                sx={{
-                                  display: 'flex',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                  p: 2,
-                                  bgcolor: '#F9FAFB',
-                                  borderRadius: 1,
-                                }}
-                              >
-                                <Box>
-                                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                                    {match.team1} vs {match.team2}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    {match.score}
-                                  </Typography>
+                            {paginatedMatches.map((match: any, index: number) => (
+                              viewMode === 'grid' ? (
+                                <Card key={startIndex + index} sx={{ boxShadow: 1 }}>
+                                  <CardContent sx={{ p: 2 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                      <Box sx={{ flex: 1 }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                          {match.team1} vs {match.team2}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                          {match.score}
+                                        </Typography>
+                                      </Box>
+                                      <Chip
+                                        label={match.status}
+                                        size="small"
+                                        color={match.status === 'Live' ? 'error' : 'success'}
+                                      />
+                                    </Box>
+                                  </CardContent>
+                                </Card>
+                              ) : (
+                                <Box
+                                  key={startIndex + index}
+                                  sx={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    p: 2,
+                                    bgcolor: '#F9FAFB',
+                                    borderRadius: 1,
+                                  }}
+                                >
+                                  <Box>
+                                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                      {match.team1} vs {match.team2}
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                      {match.score}
+                                    </Typography>
+                                  </Box>
+                                  <Chip
+                                    label={match.status}
+                                    size="small"
+                                    color={match.status === 'Live' ? 'error' : 'success'}
+                                  />
                                 </Box>
-                                <Chip
-                                  label={match.status}
-                                  size="small"
-                                  color={match.status === 'Live' ? 'error' : 'success'}
-                                />
-                              </Box>
+                              )
                             ))}
                             {recentMatches.length > MATCHES_PER_PAGE && (
-                              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                              <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                mt: 2,
+                                gridColumn: viewMode === 'grid' ? '1 / -1' : undefined
+                              }}>
                                 <Pagination
                                   count={Math.ceil(recentMatches.length / MATCHES_PER_PAGE)}
                                   page={matchesPage}
@@ -296,64 +452,6 @@ const AdminPanel: React.FC = () => {
                         ) : (
                           <Typography variant="body2" color="text.secondary">
                             No recent matches available
-                          </Typography>
-                        );
-                      })()}
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Box>
-
-              <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.33% - 12px)' }, minWidth: 0 }}>
-                <Card sx={{ boxShadow: 2 }}>
-                  <CardContent>
-                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                      Top Players
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {dashboardStats.loading ? (
-                        <Typography>Loading top players...</Typography>
-                      ) : (() => {
-                        const startIndex = (playersPage - 1) * PLAYERS_PER_PAGE;
-                        const endIndex = startIndex + PLAYERS_PER_PAGE;
-                        const paginatedPlayers = topPlayers.slice(startIndex, endIndex);
-                        
-                        return paginatedPlayers.length > 0 ? (
-                          <>
-                            {paginatedPlayers.map((player, index) => (
-                              <Box
-                                key={startIndex + index}
-                                sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
-                              >
-                                <Avatar sx={{ bgcolor: '#4A90E2' }}>{player.avatar}</Avatar>
-                                <Box sx={{ flex: 1 }}>
-                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                                    {player.name}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {player.runs} runs
-                                  </Typography>
-                                </Box>
-                                <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                                  #{startIndex + index + 1}
-                                </Typography>
-                              </Box>
-                            ))}
-                            {topPlayers.length > PLAYERS_PER_PAGE && (
-                              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                                <Pagination
-                                  count={Math.ceil(topPlayers.length / PLAYERS_PER_PAGE)}
-                                  page={playersPage}
-                                  onChange={handlePlayersPageChange}
-                                  size="small"
-                                  color="primary"
-                                />
-                              </Box>
-                            )}
-                          </>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            No player data available
                           </Typography>
                         );
                       })()}

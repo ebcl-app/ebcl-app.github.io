@@ -83,6 +83,36 @@ export interface ApiMatchHistoryEntry {
     economy: number;
   };
 }
+export interface ApiPlayerPerformance {
+  player: {
+    id: string | number;
+    name: string;
+  };
+  impactScore: number;
+  batting: {
+    runs: number;
+    balls: number;
+    fours: number;
+    sixes: number;
+    notOuts: number;
+    strikeRate: string;
+  };
+  bowling: {
+    wickets: number;
+    runs: number;
+    overs: string;
+    maidens: number;
+    dots: number;
+    fours: number;
+    sixes: number;
+    economy: string;
+  };
+  fielding: {
+    catches: number;
+    runOuts: number;
+    stumpings: number;
+  };
+}
 export interface ApiMatch {
   id: string;
   numericId: number;
@@ -100,6 +130,9 @@ export interface ApiMatch {
     winner: string;
     decision: 'bat' | 'bowl';
   };
+  totalOvers?: number;
+  team1PlayingMembers?: string[];
+  team2PlayingMembers?: string[];
   currentInnings?: number;
   team1Score?: number;
   team2Score?: number;
@@ -134,6 +167,7 @@ export interface ApiMatch {
       stumpings: number;
     };
   };
+  playerPerformances?: ApiPlayerPerformance[];
   innings?: ApiInning[];
 }
 

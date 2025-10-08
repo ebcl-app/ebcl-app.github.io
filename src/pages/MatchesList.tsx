@@ -25,6 +25,7 @@ import {
   Button,
   ToggleButtonGroup,
   ToggleButton,
+  IconButton,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -33,6 +34,7 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import SportsIcon from '@mui/icons-material/Sports';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { CricketApiService, type ApiMatch } from '../api/cricketApi';
 
 interface Match {
@@ -484,7 +486,10 @@ const MatchesList: React.FC = () => {
       <BusyOverlay open={loading} label="Loading matches..." />
       <Container maxWidth="md">
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+            <ArrowBackIosNewIcon fontSize="small" />
+          </IconButton>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>Matches</Typography>
         </Box>
 

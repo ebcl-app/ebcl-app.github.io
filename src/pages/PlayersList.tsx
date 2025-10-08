@@ -27,6 +27,7 @@ import {
   Pagination,
   useMediaQuery,
   useTheme,
+  IconButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -36,6 +37,9 @@ import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
 import BusyOverlay from '../components/BusyOverlay';
 
@@ -57,6 +61,8 @@ interface Player {
 const PlayersList: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [roleFilter, setRoleFilter] = React.useState('All');
+  const [letterFilter, setLetterFilter] = React.useState<string>('All');
+  const [showLetterFilter, setShowLetterFilter] = React.useState(false);
   const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
   const [players, setPlayers] = React.useState<Player[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -175,7 +181,8 @@ const PlayersList: React.FC = () => {
   const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = roleFilter === 'All' || player.role === roleFilter;
-    return matchesSearch && matchesRole;
+    const matchesLetter = letterFilter === 'All' || player.name.toLowerCase().startsWith(letterFilter.toLowerCase());
+    return matchesSearch && matchesRole && matchesLetter;
   });
 
   const renderTableView = () => (
@@ -368,7 +375,10 @@ const PlayersList: React.FC = () => {
     <Container maxWidth="md" sx={{ py: 4 }}>
       <BusyOverlay open={loading} label="Loading players..." />
       {/* Header */}
-      <Box sx={{ textAlign: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+          <ArrowBackIosNewIcon fontSize="small" />
+        </IconButton>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>
           Players
         </Typography>
@@ -477,6 +487,37 @@ const PlayersList: React.FC = () => {
               <ViewModuleIcon />
             </ToggleButton>
           </ToggleButtonGroup>
+        </Box>
+
+        {/* Alphabetical filtering */}
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Filter by Name: {letterFilter !== 'All' && `(${letterFilter})`}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setShowLetterFilter(!showLetterFilter)}
+              sx={{ ml: 1 }}
+            >
+              {showLetterFilter ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+          {showLetterFilter && (
+            <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {['All', ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))].map((letter) => (
+                <Button
+                  key={letter}
+                  variant={letterFilter === letter ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => setLetterFilter(letter)}
+                  sx={{ minWidth: '36px', height: '36px', p: 0 }}
+                >
+                  {letter}
+                </Button>
+              ))}
+            </Box>
+          )}
         </Box>
       </Box>
 

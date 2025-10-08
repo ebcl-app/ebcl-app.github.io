@@ -1,16 +1,14 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Box, Container, Typography, Button } from '@mui/material';
-// useMediaQuery removed - responsive handled via sx
-// icons removed; header/footer provided by SiteLayout
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Button,
+} from '@mui/material';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
-  // responsive layout handled via MUI sx breakpoints
-
-  // features removed from home page
-
-  // Unified layout for all screen sizes - mobile-specific adjustments handled via responsive styles
 
   return (
     <Box sx={{ 

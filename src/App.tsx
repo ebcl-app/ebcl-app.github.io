@@ -6,6 +6,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import LandingPage from './components/LandingPage';
 import MobileSplash from './components/MobileSplash';
 import Dashboard from './pages/Dashboard';
+import Leaderboard from './pages/Leaderboard';
 import AdminPanel from './pages/AdminPanel';
 import MatchesList from './pages/MatchesList';
 import MatchDetails from './pages/MatchDetails';
@@ -58,6 +59,7 @@ function App() {
               />
               <Route path="/matches" element={<MatchesList />} />
               <Route path="/matches/:matchId" element={<MatchDetails />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
               <Route path="/teams" element={<TeamsList />} />
               <Route path="/teams/:teamId" element={<TeamDetails />} />
               <Route path="/players" element={<PlayersList />} />

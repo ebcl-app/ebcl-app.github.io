@@ -22,6 +22,7 @@ import {
   Paper,
   ToggleButtonGroup,
   ToggleButton,
+  IconButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import GroupIcon from '@mui/icons-material/Group';
@@ -31,6 +32,7 @@ import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import TimelineIcon from '@mui/icons-material/Timeline';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { CricketApiService, type ApiTeam } from '../api/cricketApi';
 import BusyOverlay from '../components/BusyOverlay';
 
@@ -269,7 +271,10 @@ const TeamsList: React.FC = () => {
       <BusyOverlay open={loading} label="Loading teams..." />
       <Container maxWidth="md">
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+          <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+            <ArrowBackIosNewIcon fontSize="small" />
+          </IconButton>
           <Typography variant="h5" sx={{ fontWeight: 700 }}>Teams</Typography>
         </Box>
 

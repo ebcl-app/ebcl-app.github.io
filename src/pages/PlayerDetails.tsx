@@ -144,14 +144,14 @@ const calculateWinPercentage = (matchHistory: any[]): number => {
       totalMatches++;
 
       // Determine player's team
-      let playerTeam = match.team1;
+      let playerTeam = (match.team1 as any)?.name || match.team1;
       const hasBattingInning1 = match.contributions?.some((c: any) => c.type === 'batting' && c.inningNumber === 1);
       const hasBowlingInning1 = match.contributions?.some((c: any) => c.type === 'bowling' && c.inningNumber === 1);
 
       if (hasBattingInning1) {
-        playerTeam = match.team1;
+        playerTeam = (match.team1 as any)?.name || match.team1;
       } else if (hasBowlingInning1) {
-        playerTeam = match.team2;
+        playerTeam = (match.team2 as any)?.name || match.team2;
       }
 
       if (match.result.winner === playerTeam) {
@@ -1343,29 +1343,30 @@ const PlayerDetails: React.FC = () => {
                         });
 
                         // Determine if player was on winning or losing team
-                        let playerTeam = match.team1; // Default assumption
+                        let playerTeam = (match.team1 as any)?.name || match.team1; // Handle both object and string formats
                         const hasBattingInning1 = match.contributions?.some(c => c.type === 'batting' && c.inningNumber === 1);
                         const hasBowlingInning1 = match.contributions?.some(c => c.type === 'bowling' && c.inningNumber === 1);
 
                         if (hasBattingInning1) {
-                          playerTeam = match.team1; // Batted in inning 1, so on team1
+                          playerTeam = (match.team1 as any)?.name || match.team1; // Batted in inning 1, so on team1
                         } else if (hasBowlingInning1) {
-                          playerTeam = match.team2; // Bowled in inning 1, so on team2
+                          playerTeam = (match.team2 as any)?.name || match.team2; // Bowled in inning 1, so on team2
                         }
 
-                        const isWinner = match.result && match.result.winner === playerTeam;
-                        const isLoser = match.result && match.result.winner !== playerTeam && match.result.winner !== 'N/A';
+                        const winnerName = (match.result?.winner as any)?.name || match.result?.winner;
+                        const isWinner = match.result && winnerName === playerTeam;
+                        const isLoser = match.result && winnerName !== playerTeam && winnerName !== 'N/A';
 
                         return (
                           <TableRow key={match.matchId || index} hover>
                             <TableCell>
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Avatar sx={{ width: 32, height: 32 }}>
-                                  {match.team1?.charAt(0) || 'T'}
+                                  {((match.team1 as any)?.name || (match.team1 as any)?.shortName || 'T').charAt(0)}
                                 </Avatar>
                                 <Box>
                                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                    {match.team1} vs {match.team2}
+                                    {(match.team1 as any)?.name || match.team1} vs {(match.team2 as any)?.name || match.team2}
                                   </Typography>
                                 </Box>
                               </Box>
@@ -1404,8 +1405,9 @@ const PlayerDetails: React.FC = () => {
                                   <Chip
                                     size="small"
                                     label={`${match.result.winner} won${match.result.margin ? ` by ${match.result.margin}` : ''}`}
-                                    color={match.result.winner === match.team1 ? 'success' : 'error'}
+                                    color={match.result.winner === ((match.team1 as any)?.name || match.team1) ? 'success' : 'error'}
                                     variant="outlined"
+                                    clickable={false}
                                     sx={{ fontSize: '0.7rem', height: '20px' }}
                                   />
                                   <Chip
@@ -1413,6 +1415,7 @@ const PlayerDetails: React.FC = () => {
                                     label={isWinner ? 'Won' : isLoser ? 'Lost' : 'N/A'}
                                     color={isWinner ? 'success' : isLoser ? 'error' : 'default'}
                                     variant="filled"
+                                    clickable={false}
                                     sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
                                   />
                                 </Box>
@@ -1460,14 +1463,14 @@ const PlayerDetails: React.FC = () => {
                     });
 
                     // Determine if player was on winning or losing team
-                    let playerTeam = match.team1; // Default assumption
+                    let playerTeam = (match.team1 as any)?.name || match.team1; // Default assumption
                     const hasBattingInning1 = match.contributions?.some(c => c.type === 'batting' && c.inningNumber === 1);
                     const hasBowlingInning1 = match.contributions?.some(c => c.type === 'bowling' && c.inningNumber === 1);
 
                     if (hasBattingInning1) {
-                      playerTeam = match.team1; // Batted in inning 1, so on team1
+                      playerTeam = (match.team1 as any)?.name || match.team1; // Batted in inning 1, so on team1
                     } else if (hasBowlingInning1) {
-                      playerTeam = match.team2; // Bowled in inning 1, so on team2
+                      playerTeam = (match.team2 as any)?.name || match.team2; // Bowled in inning 1, so on team2
                     }
 
                     const isWinner = match.result && match.result.winner === playerTeam;
@@ -1477,11 +1480,11 @@ const PlayerDetails: React.FC = () => {
                       <Card key={match.matchId || index} sx={{ boxShadow: 1 }}>
                         <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                           <Avatar sx={{ width: 36, height: 36 }}>
-                            {match.team1?.charAt(0) || 'T'}
+                            {((match.team1 as any)?.name || (match.team1 as any)?.shortName || 'T').charAt(0)}
                           </Avatar>
                           <Box sx={{ flex: 1 }}>
                             <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              {match.team1} vs {match.team2}
+                              {(match.team1 as any)?.name || match.team1} vs {(match.team2 as any)?.name || match.team2}
                             </Typography>
 
                             {/* Performance Details */}
@@ -1524,8 +1527,9 @@ const PlayerDetails: React.FC = () => {
                                   <Chip
                                     size="small"
                                     label={`${match.result.winner} won${match.result.margin ? ` by ${match.result.margin}` : ''}`}
-                                    color={match.result.winner === match.team1 ? 'success' : 'error'}
+                                    color={match.result.winner === ((match.team1 as any)?.name || match.team1) ? 'success' : 'error'}
                                     variant="outlined"
+                                    clickable={false}
                                     sx={{ fontSize: '0.7rem', height: '20px' }}
                                   />
                                 )}
@@ -1536,6 +1540,7 @@ const PlayerDetails: React.FC = () => {
                                     label={isWinner ? 'Won' : isLoser ? 'Lost' : 'N/A'}
                                     color={isWinner ? 'success' : isLoser ? 'error' : 'default'}
                                     variant="filled"
+                                    clickable={false}
                                     sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
                                   />
                                 )}
@@ -1546,6 +1551,7 @@ const PlayerDetails: React.FC = () => {
                                     label={`Impact: ${calculateImpactScore(match.contributions)}`}
                                     color="primary"
                                     variant="filled"
+                                    clickable={false}
                                     sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
                                   />
                                 )}

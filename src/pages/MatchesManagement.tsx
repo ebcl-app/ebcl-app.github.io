@@ -45,6 +45,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { CricketApiService, type ApiMatch, type ApiTeam } from '../api/cricketApi';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -88,13 +89,13 @@ const MatchesManagement: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [matchesPagination, setMatchesPagination] = React.useState({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
   const [teamsPagination, setTeamsPagination] = React.useState({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
@@ -400,10 +401,20 @@ const MatchesManagement: React.FC = () => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box>
+      {/* Header with Back Navigation */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+          <ArrowBackIosNewIcon fontSize="small" />
+        </IconButton>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          Matches Management
+        </Typography>
+      </Box>
+
       {/* Header with Stats */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-          Matches Management
+          Matches Overview
         </Typography>
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
@@ -607,6 +618,12 @@ const MatchesManagement: React.FC = () => {
           <MenuItem onClick={() => navigate(`/admin/matches/${menuMatch!.id}/score`)}>
             <PlayArrowIcon sx={{ mr: 1, fontSize: 20 }} />
             Start Match
+          </MenuItem>
+        )}
+        {(menuMatch?.status === 'Scheduled' || menuMatch?.status === 'Live') && (
+          <MenuItem onClick={() => navigate(`/admin/matches/${menuMatch!.id}/score`)}>
+            <SportsIcon sx={{ mr: 1, fontSize: 20 }} />
+            Resume Scoring
           </MenuItem>
         )}
         {menuMatch?.status === 'Live' && (

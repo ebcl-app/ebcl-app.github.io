@@ -29,7 +29,6 @@ import GroupIcon from '@mui/icons-material/Group';
 import StarIcon from '@mui/icons-material/Star';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { CricketApiService, type ApiMatch } from '../api/cricketApi';
-import { calculateAggregatedImpactScore } from '../utils/impactCalculation';
 
 interface MatchAnalysis {
   matchSummary: string;
@@ -264,6 +263,44 @@ const getWicketMarkers = (inning: any) => {
   }));
 };
 
+// Calculate player impacts using API-provided aggregated data
+const calculatePlayerImpactsFromApi = (playerPerformances: any[]) => {
+  const impacts = [];
+
+  for (const perf of playerPerformances) {
+    // Use the impact score directly from the API (calculated by backend)
+    const netImpact = perf.impactScore;
+
+    impacts.push({
+      player: perf.player,
+      netImpact: netImpact,
+      batting: {
+        runs: perf.batting.runs,
+        balls: perf.batting.balls,
+        fours: perf.batting.fours,
+        sixes: perf.batting.sixes,
+        strikeRate: perf.batting.strikeRate
+      },
+      bowling: {
+        wickets: perf.bowling.wickets,
+        runs: perf.bowling.runs,
+        overs: perf.bowling.overs,
+        economy: perf.bowling.economy
+      },
+      fielding: {
+        catches: perf.fielding.catches,
+        runOuts: perf.fielding.runOuts,
+        stumpings: perf.fielding.stumpings
+      }
+    });
+  }
+
+  // Sort by net impact (highest first) and return top 3
+  return impacts
+    .sort((a, b) => b.netImpact - a.netImpact)
+    .slice(0, 3);
+};
+
 // Calculate player impacts using the common impact calculation formula
 const calculatePlayerImpacts = (innings: any[]) => {
   const playerPerformances = new Map();
@@ -349,7 +386,8 @@ const calculatePlayerImpacts = (innings: any[]) => {
   // Calculate net impact for each player using the common formula
   const impacts = [];
   for (const [_playerId, perf] of playerPerformances) {
-    const netImpact = calculateAggregatedImpactScore(perf);
+    // Simple fallback calculation when API doesn't provide impactScore
+    const netImpact = (perf.batting.runs * 1.0) + (perf.bowling.wickets * 25) + (perf.fielding.catches * 10) + (perf.fielding.runOuts * 10) + (perf.fielding.stumpings * 15);
 
     impacts.push({
       player: perf.player,
@@ -440,8 +478,12 @@ const MatchDetails: React.FC = () => {
         setInnings(matchData.innings || []);
         setLoading(false);
 
-        // Calculate player impacts
-        if (matchData.innings && matchData.innings.length > 0) {
+        // Use player performances from API instead of calculating locally
+        if (matchData.playerPerformances && matchData.playerPerformances.length > 0) {
+          const impacts = calculatePlayerImpactsFromApi(matchData.playerPerformances);
+          setPlayerImpacts(impacts);
+        } else if (matchData.innings && matchData.innings.length > 0) {
+          // Fallback to local calculation if API doesn't have playerPerformances
           const impacts = calculatePlayerImpacts(matchData.innings);
           setPlayerImpacts(impacts);
         }

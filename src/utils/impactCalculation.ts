@@ -46,6 +46,9 @@ export interface AggregatedPerformance {
  */
 export const calculateMatchImpactScore = (contributions: PlayerContribution[]): number => {
   let totalImpact = 0;
+  let totalCatches = 0;
+  let totalRunOuts = 0;
+  let totalStumpings = 0;
 
   contributions.forEach(contribution => {
     if (contribution.type === 'batting') {
@@ -80,21 +83,22 @@ export const calculateMatchImpactScore = (contributions: PlayerContribution[]): 
       const action = contribution.action || '';
       const count = contribution.count || 0;
 
-      // Fielding impact: catches and run-outs are valuable
+      // Accumulate fielding stats for centralized calculation
       if (action === 'catch') {
-        totalImpact += count * 15; // Catches are worth 15 points each
+        totalCatches += count;
       } else if (action === 'run out') {
-        totalImpact += count * 10; // Run-outs are worth 10 points each
+        totalRunOuts += count;
       } else if (action === 'stumping') {
-        totalImpact += count * 12; // Stumpings are worth 12 points each
+        totalStumpings += count;
       }
-      // Add bonus for multiple fielding efforts in one match
-      if (count > 1) totalImpact += 5; // Multi-fielding bonus
     }
   });
 
+  // Add fielding impact using centralized calculation
+  totalImpact += calculateFieldingContribution(totalCatches, totalRunOuts, totalStumpings);
+
   // Ensure impact score doesn't go below 0 for poor performances
-  return Math.max(0, Math.round(totalImpact * 100) / 100); // Round to 2 decimal places, minimum 0
+  return Math.max(0, Math.round(totalImpact)); // Round to whole number, minimum 0
 };
 
 /**
@@ -121,21 +125,122 @@ export const calculateAggregatedImpactScore = (performance: AggregatedPerformanc
   // Calculate fielding impact (if available)
   let fieldingImpact = 0;
   if (performance.fielding) {
-    fieldingImpact += performance.fielding.catches * 15;
-    fieldingImpact += performance.fielding.runOuts * 10;
-    fieldingImpact += performance.fielding.stumpings * 12;
-    if ((performance.fielding.catches + performance.fielding.runOuts + performance.fielding.stumpings) > 1) {
-      fieldingImpact += 5; // Multi-fielding bonus
-    }
+    fieldingImpact = calculateFieldingContribution(
+      performance.fielding.catches,
+      performance.fielding.runOuts,
+      performance.fielding.stumpings
+    );
   }
 
   // Net impact
   const netImpact = battingImpact + bowlingImpact + fieldingImpact;
 
-  return Math.max(0, parseFloat(netImpact.toFixed(2))); // Ensure non-negative
+  return Math.max(0, Math.round(netImpact)); // Ensure non-negative whole number
 };
 
 /**
  * Legacy function for backward compatibility with PlayerDetails
  */
 export const calculateImpactScore = calculateMatchImpactScore;
+
+/**
+ * Helper function to calculate fielding impact from different data formats
+ * Centralizes fielding logic to avoid duplication
+ */
+const calculateFieldingContribution = (catches: number, runOuts: number, stumpings: number): number => {
+  // Ensure valid numbers
+  catches = Math.max(0, catches || 0);
+  runOuts = Math.max(0, runOuts || 0);
+  stumpings = Math.max(0, stumpings || 0);
+
+  let impact = catches * 15; // Catches are most valuable
+  impact += runOuts * 10; // Run-outs are valuable
+  impact += stumpings * 12; // Stumpings are specialized
+
+  // Multi-fielding bonus (matches backend logic)
+  const totalFielding = catches + runOuts + stumpings;
+  if (totalFielding > 1) impact += 5;
+
+  return impact;
+};
+
+/**
+ * Calculate batting-specific impact score for leaderboard rankings
+ * Focuses on batting performance metrics
+ */
+export const calculateBattingImpactScore = (player: any): number => {
+  if (!player) return 0;
+
+  const runs = player.totalRuns || 0;
+  const balls = player.totalBalls || 0;
+  const fours = player.totalFours || 0;
+  const sixes = player.totalSixes || 0;
+  const notOuts = player.totalNotOuts || 0;
+
+  // Strike rate calculation
+  const strikeRate = balls > 0 ? (runs / balls) * 100 : 0;
+
+  // Boundaries (6s worth double)
+  const boundaries = fours + (sixes * 2);
+
+  // Not out bonus
+  const notOutBonus = notOuts * 10;
+
+  // Impact formula: runs + strike rate adjustment + boundaries + not out bonus
+  const impact = runs + (strikeRate - 100) * 0.1 + boundaries + notOutBonus;
+
+  return Math.max(0, Math.round(impact * 100) / 100); // Round to 2 decimal places
+};
+
+/**
+ * Calculate bowling-specific impact score for leaderboard rankings
+ * Focuses on bowling performance metrics
+ */
+export const calculateBowlingImpactScore = (player: any): number => {
+  if (!player) return 0;
+
+  const wickets = player.totalWickets || 0;
+  const overs = player.totalOvers || 0;
+  const runs = player.totalRunsConceded || 0;
+
+  // Economy rate calculation
+  const economy = overs > 0 ? runs / overs : 0;
+
+  // Impact formula: (wickets * 25) - (economy - 6) * 2 + overs bonus
+  let impact = (wickets * 25) - (economy - 6) * 2;
+
+  // Overs bonus (experience/reliability)
+  if (overs >= 3) impact += Math.floor(overs) * 2;
+
+  return Math.max(0, Math.round(impact * 100) / 100); // Round to 2 decimal places
+};
+
+/**
+ * Calculate fielding-specific impact score for leaderboard rankings
+ * Focuses on fielding performance metrics
+ */
+export const calculateFieldingImpactScore = (player: any): number => {
+  if (!player) return 0;
+
+  const catches = player.totalCatches || 0;
+  const runOuts = player.totalRunOuts || 0;
+  const stumpings = player.totalStumpings || 0;
+
+  const impact = calculateFieldingContribution(catches, runOuts, stumpings);
+
+  return Math.max(0, Math.round(impact * 100) / 100); // Round to 2 decimal places
+};
+
+/**
+ * Calculate overall impact score combining all aspects
+ * Used for Rising Stars and general rankings
+ */
+export const calculateOverallImpactScore = (player: any): number => {
+  if (!player) return 0;
+
+  const battingImpact = calculateBattingImpactScore(player);
+  const bowlingImpact = calculateBowlingImpactScore(player);
+  const fieldingImpact = calculateFieldingImpactScore(player);
+
+  return Math.round((battingImpact + bowlingImpact + fieldingImpact) * 100) / 100; // Round to 2 decimal places
+};

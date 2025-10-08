@@ -42,11 +42,16 @@ import SportsIcon from '@mui/icons-material/Sports';
 import StarIcon from '@mui/icons-material/Star';
 import GroupIcon from '@mui/icons-material/Group';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { CricketApiService, type ApiPlayer, type ApiTeam } from '../api/cricketApi';
 
 const PlayersManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated) {
     return (
@@ -64,13 +69,13 @@ const PlayersManagement: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [playersPagination, setPlayersPagination] = React.useState({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
   const [teamsPagination, setTeamsPagination] = React.useState({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
@@ -118,6 +123,8 @@ const PlayersManagement: React.FC = () => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [menuPlayer, setMenuPlayer] = React.useState<ApiPlayer | null>(null);
   const [tabValue, setTabValue] = React.useState(0);
+  const [letterFilter, setLetterFilter] = React.useState<string>('All');
+  const [showLetterFilter, setShowLetterFilter] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
     name: '',
@@ -283,6 +290,10 @@ const PlayersManagement: React.FC = () => {
 
   const filteredPlayers = players
     .filter(filterPlayersByTab)
+    .filter((player) => {
+      if (letterFilter === 'All') return true;
+      return player.name.toLowerCase().startsWith(letterFilter.toLowerCase());
+    })
     .filter(
       (player) =>
         player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -312,10 +323,20 @@ const PlayersManagement: React.FC = () => {
 
   return (
     <Box>
+      {/* Header with Back Navigation */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+          <ArrowBackIosNewIcon fontSize="small" />
+        </IconButton>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          Players Management
+        </Typography>
+      </Box>
+
       {/* Header with Stats */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-          Players Management
+          Players Overview
         </Typography>
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
@@ -445,6 +466,39 @@ const PlayersManagement: React.FC = () => {
           <Tab label="All-rounders" />
           <Tab label="Wicket-keepers" />
         </Tabs>
+      </Card>
+
+      {/* Alphabetical filtering */}
+      <Card sx={{ mb: 3 }}>
+        <CardContent sx={{ pb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              Filter by Name: {letterFilter !== 'All' && `(${letterFilter})`}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setShowLetterFilter(!showLetterFilter)}
+              sx={{ ml: 1 }}
+            >
+              {showLetterFilter ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+          {showLetterFilter && (
+            <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {['All', ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))].map((letter) => (
+                <Button
+                  key={letter}
+                  variant={letterFilter === letter ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => setLetterFilter(letter)}
+                  sx={{ minWidth: '36px', height: '36px', p: 0 }}
+                >
+                  {letter}
+                </Button>
+              ))}
+            </Box>
+          )}
+        </CardContent>
       </Card>
 
       {/* Players Table */}

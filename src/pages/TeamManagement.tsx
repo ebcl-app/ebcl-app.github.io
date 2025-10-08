@@ -34,11 +34,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { CricketApiService, type ApiTeam } from '../api/cricketApi';
 
 const TeamManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated) {
     return (
@@ -55,13 +58,13 @@ const TeamManagement: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [teamsPagination, setTeamsPagination] = React.useState({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
   const [playersPagination, setPlayersPagination] = React.useState({
     page: 1,
-    limit: 50,
+    limit: 10,
     total: 0,
     totalPages: 0,
   });
@@ -232,10 +235,20 @@ const TeamManagement: React.FC = () => {
 
   return (
     <Box>
+      {/* Header with Back Navigation */}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+          <ArrowBackIosNewIcon fontSize="small" />
+        </IconButton>
+        <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          Team Management
+        </Typography>
+      </Box>
+
       {/* Header with Stats */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-          Team Management
+          Teams Overview
         </Typography>
 
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3 }}>
