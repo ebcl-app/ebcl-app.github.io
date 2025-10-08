@@ -84,6 +84,7 @@ const AdminPanel: React.FC = () => {
     setExpandedAccordion(isExpanded ? panel : false);
   };
 
+  return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {players.slice(0, 5).map((player: any, index: number) => (
         <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
