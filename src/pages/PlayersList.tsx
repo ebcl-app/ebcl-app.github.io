@@ -33,6 +33,8 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
+import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
+import ShuffleIcon from '@mui/icons-material/Shuffle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
 import BusyOverlay from '../components/BusyOverlay';
@@ -75,7 +77,7 @@ const PlayersList: React.FC = () => {
       isFetchingRef.current = true;
       setLoading(true);
       setError(null);
-      const response = await CricketApiService.getPlayers({ page, limit: 5 });
+      const response = await CricketApiService.getPlayers({ page, limit: 4 });
 
       if (response.success) {
         // Transform API data to component format
@@ -141,6 +143,22 @@ const PlayersList: React.FC = () => {
     }
   };
 
+  // Helper function to get player icon based on role
+  const getPlayerIcon = (role: string) => {
+    switch (role) {
+      case 'Batsman':
+        return <SportsCricketIcon />;
+      case 'Bowler':
+        return <SportsBaseballIcon />;
+      case 'All-rounder':
+        return <ShuffleIcon />;
+      case 'Wicket-keeper':
+        return <SportsCricketIcon />;
+      default:
+        return <SportsCricketIcon />;
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
@@ -183,7 +201,7 @@ const PlayersList: React.FC = () => {
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Avatar sx={{ width: 32, height: 32, bgcolor: getRoleColor(player.role) }}>
-                    {player.name.substring(0, 2).toUpperCase()}
+                    {getPlayerIcon(player.role)}
                   </Avatar>
                   <Typography variant="body2" sx={{ fontWeight: 600 }}>
                     {player.name}
@@ -234,7 +252,7 @@ const PlayersList: React.FC = () => {
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
               <Avatar sx={{ width: 48, height: 48, bgcolor: getRoleColor(player.role) }}>
-                {player.name.substring(0, 2).toUpperCase()}
+                {getPlayerIcon(player.role)}
               </Avatar>
               <Box>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>

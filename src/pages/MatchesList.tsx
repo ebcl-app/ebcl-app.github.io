@@ -58,30 +58,30 @@ interface Match {
   venue: string;
   status: 'Live' | 'Upcoming' | 'Completed';
   matchType: string;
-  winner?: string;
-  result?: string | { winner: string; margin: string };
+  winner?: string | { id: number; name: string; shortName?: string };
+  result?: string | { winner: string | { id: number; name: string; shortName?: string }; margin: string };
   currentInnings?: string;
   title?: string;
-  bestBatsman?: {
+  manOfTheMatch?: {
     player: {
-      id: string;
+      id: string | number;
       name: string;
+      teamName?: string;
     };
-    runs: number;
-    balls: number;
-    fours: number;
-    sixes: number;
-    strikeRate: number;
-  };
-  bestBowler?: {
-    player: {
-      id: string;
-      name: string;
+    netImpact: number;
+    batting: {
+      runs: number;
+      balls: number;
+      fours: number;
+      sixes: number;
+      strikeRate: string;
     };
-    wickets: number;
-    runs: number;
-    overs: number;
-    economy: number;
+    bowling: {
+      wickets: number;
+      runs: number;
+      overs: string;
+      economy: string;
+    };
   };
 }
 
@@ -111,7 +111,7 @@ const MatchesList: React.FC = () => {
       // Fetch only matches - team colors are included in match data
       const matchesResponse = await CricketApiService.getMatches(
         statusFilter !== 'All' ? statusFilter.toLowerCase() : undefined,
-        { page, limit: 5 }
+        { page, limit: 4 }
       );
 
       if (matchesResponse.success) {
@@ -119,7 +119,7 @@ const MatchesList: React.FC = () => {
         const transformedMatches: Match[] = matchesResponse.data.map((apiMatch: ApiMatch) => ({
           id: apiMatch.numericId,
           numericId: apiMatch.numericId,
-          stringId: apiMatch.id, // Add string ID for navigation
+          stringId: apiMatch.displayId, // Use displayId for navigation
           team1: {
             name: apiMatch.team1?.name || 'Unknown Team',
             score: apiMatch.team1Score ? `${apiMatch.team1Score}` : undefined,
@@ -142,8 +142,7 @@ const MatchesList: React.FC = () => {
           result: apiMatch.result,
           currentInnings: apiMatch.currentInnings ? `Innings ${apiMatch.currentInnings}` : undefined,
           title: apiMatch.title || `${apiMatch.team1?.name || 'Unknown'} vs ${apiMatch.team2?.name || 'Unknown'}`,
-          bestBatsman: apiMatch.bestBatsman,
-          bestBowler: apiMatch.bestBowler,
+          manOfTheMatch: apiMatch.manOfTheMatch,
         }));
 
         setMatches(transformedMatches);
@@ -298,7 +297,7 @@ const MatchesList: React.FC = () => {
               <>
                 <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#e8f5e8', borderRadius: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 700, color: '#2e7d32' }}>
-                    {match.result.winner}
+                    {typeof match.result.winner === 'object' && match.result.winner?.name ? match.result.winner.name : match.result.winner}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Winner
@@ -315,36 +314,47 @@ const MatchesList: React.FC = () => {
               </>
             )}
           </Box>
-          {match.status === 'Completed' && (match.bestBatsman || match.bestBowler) && (
-            <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto', pb: 1 }}>
-              {match.bestBatsman && (
-                <Box sx={{ minWidth: 120, textAlign: 'center', p: 1, bgcolor: '#e3f2fd', borderRadius: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Best Batsman
+          {match.status === 'Completed' && match.manOfTheMatch && (() => {
+            const mom = match.manOfTheMatch;
+            const hasBatting = mom.batting.runs > 0 || mom.batting.balls > 0;
+            const hasBowling = mom.bowling.wickets > 0 || parseFloat(mom.bowling.overs) > 0;
+
+            let performance = '';
+            let bgColor = '#e3f2fd';
+
+            if (hasBatting && hasBowling) {
+              // All-rounder performance
+              performance = `${mom.batting.runs} runs & ${mom.bowling.wickets} wickets`;
+              bgColor = '#f3e5f5';
+            } else if (hasBatting) {
+              // Batting performance
+              performance = `${mom.batting.runs} runs (${mom.batting.strikeRate} SR)`;
+              bgColor = '#e3f2fd';
+            } else if (hasBowling) {
+              // Bowling performance
+              performance = `${mom.bowling.wickets} wickets (${mom.bowling.economy} econ)`;
+              bgColor = '#ffebee';
+            }
+
+            return (
+              <Box sx={{ mb: 2 }}>
+                <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: bgColor, borderRadius: 1, border: '2px solid #1976d2' }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600, mb: 0.5 }}>
+                    🏆 Man of the Match
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                    {match.bestBatsman.player.name}
+                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#1a237e', fontSize: '1rem' }}>
+                    {mom.player.name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {match.bestBatsman.runs} runs
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    {performance}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
+                    Net Impact: {mom.netImpact}
                   </Typography>
                 </Box>
-              )}
-              {match.bestBowler && (
-                <Box sx={{ minWidth: 120, textAlign: 'center', p: 1, bgcolor: '#ffebee', borderRadius: 1 }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Best Bowler
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                    {match.bestBowler.player.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {match.bestBowler.wickets} wickets
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          )}
+              </Box>
+            );
+          })()}
           <Button fullWidth variant="outlined" onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/matches/${match.numericId}`); }}>
             View Match
           </Button>

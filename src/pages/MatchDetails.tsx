@@ -168,6 +168,104 @@ const getWicketMarkers = (inning: any) => {
   }));
 };
 
+// Calculate player impacts using the same formula as Man of the Match
+const calculatePlayerImpacts = (innings: any[]) => {
+  const playerPerformances = new Map();
+
+  // Collect all player performances from all innings
+  for (const inning of innings) {
+    // Process batsmen
+    if (inning.batsmen && Array.isArray(inning.batsmen)) {
+      for (const batsman of inning.batsmen) {
+        if (batsman.player && batsman.runs !== undefined) {
+          const playerId = typeof batsman.player === 'object' ? batsman.player.id : batsman.player;
+
+          if (!playerPerformances.has(playerId)) {
+            playerPerformances.set(playerId, {
+              player: batsman.player,
+              batting: { runs: 0, balls: 0, fours: 0, sixes: 0 },
+              bowling: { wickets: 0, runs: 0, overs: 0 }
+            });
+          }
+
+          const perf = playerPerformances.get(playerId);
+          perf.batting.runs += batsman.runs || 0;
+          perf.batting.balls += batsman.balls || 0;
+          perf.batting.fours += batsman.fours || 0;
+          perf.batting.sixes += batsman.sixes || 0;
+        }
+      }
+    }
+
+    // Process bowlers
+    if (inning.bowling && Array.isArray(inning.bowling)) {
+      for (const bowler of inning.bowling) {
+        if (bowler.player) {
+          const playerId = typeof bowler.player === 'object' ? bowler.player.id : bowler.player;
+
+          if (!playerPerformances.has(playerId)) {
+            playerPerformances.set(playerId, {
+              player: bowler.player,
+              batting: { runs: 0, balls: 0, fours: 0, sixes: 0 },
+              bowling: { wickets: 0, runs: 0, overs: 0 }
+            });
+          }
+
+          const perf = playerPerformances.get(playerId);
+          perf.bowling.wickets += bowler.wickets || 0;
+          perf.bowling.runs += bowler.runs || 0;
+          perf.bowling.overs += parseFloat(bowler.overs) || 0;
+        }
+      }
+    }
+  }
+
+  // Calculate net impact for each player
+  const impacts = [];
+  for (const [_playerId, perf] of playerPerformances) {
+    // Calculate batting impact
+    const battingRuns = perf.batting.runs;
+    const battingBalls = perf.batting.balls;
+    const strikeRate = battingBalls > 0 ? (battingRuns / battingBalls) * 100 : 0;
+    const boundaries = perf.batting.fours + (perf.batting.sixes * 2); // 6s worth double
+
+    const battingImpact = battingRuns + (strikeRate - 100) * 0.1 + boundaries;
+
+    // Calculate bowling impact
+    const bowlingWickets = perf.bowling.wickets;
+    const bowlingOvers = perf.bowling.overs;
+    const economy = bowlingOvers > 0 ? perf.bowling.runs / bowlingOvers : 0;
+
+    const bowlingImpact = (bowlingWickets * 25) - (economy - 6) * 2;
+
+    // Net impact
+    const netImpact = battingImpact + bowlingImpact;
+
+    impacts.push({
+      player: perf.player,
+      netImpact: parseFloat(netImpact.toFixed(2)),
+      batting: {
+        runs: battingRuns,
+        balls: battingBalls,
+        fours: perf.batting.fours,
+        sixes: perf.batting.sixes,
+        strikeRate: strikeRate.toFixed(2)
+      },
+      bowling: {
+        wickets: bowlingWickets,
+        runs: perf.bowling.runs,
+        overs: bowlingOvers.toFixed(1),
+        economy: economy.toFixed(2)
+      }
+    });
+  }
+
+  // Sort by net impact (highest first) and return top 3
+  return impacts
+    .sort((a, b) => b.netImpact - a.netImpact)
+    .slice(0, 3);
+};
+
 const MatchDetails: React.FC = () => {
   const navigate = useNavigate();
   const { matchId } = useParams();
@@ -178,6 +276,7 @@ const MatchDetails: React.FC = () => {
   const [error, setError] = React.useState<string | null>(null);
   const [analysis, setAnalysis] = React.useState<MatchAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
+  const [playerImpacts, setPlayerImpacts] = React.useState<any[]>([]);
   
   // Refs to prevent duplicate API calls
   const dataLoadedRef = React.useRef(false);
@@ -220,15 +319,42 @@ const MatchDetails: React.FC = () => {
         setInnings(matchData.innings || []);
         setLoading(false);
 
+        // Calculate player impacts
+        if (matchData.innings && matchData.innings.length > 0) {
+          const impacts = calculatePlayerImpacts(matchData.innings);
+          setPlayerImpacts(impacts);
+        }
+
         // Fetch analysis data
         try {
           setAnalysisLoading(true);
+          
+          // Preprocess matchData for analysis - convert winner objects to strings
+          const analysisMatchData = {
+            ...matchData,
+            winner: typeof matchData.winner === 'object' && matchData.winner?.name 
+              ? matchData.winner.name 
+              : matchData.winner,
+            result: matchData.result ? {
+              ...matchData.result,
+              winner: typeof matchData.result.winner === 'object' && matchData.result.winner?.name
+                ? matchData.result.winner.name
+                : matchData.result.winner
+            } : matchData.result,
+            toss: matchData.toss ? {
+              ...matchData.toss,
+              winner: matchData.toss.winner && typeof matchData.toss.winner === 'object' && (matchData.toss.winner as any)?.name
+                ? (matchData.toss.winner as any).name
+                : matchData.toss.winner
+            } : matchData.toss
+          };
+          
           const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/match-analysis`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ matchData: matchData }),
+            body: JSON.stringify({ matchData: analysisMatchData }),
           });
 
           if (!response.ok) {
@@ -470,7 +596,7 @@ const MatchDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {match.winner || 'N/A'}
+                    {typeof match.winner === 'object' && match.winner?.name ? match.winner.name : match.winner || 'N/A'}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -533,6 +659,78 @@ const MatchDetails: React.FC = () => {
                 </Card>
               </Box>
             </Box>
+
+            {/* Player Impact Rankings */}
+            {playerImpacts.length > 0 && (
+              <>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1, mt: 3 }}>
+                  Player Impact Rankings
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 2 }}>
+                  {playerImpacts.map((impact, index) => {
+                    const rank = index + 1;
+                    const hasBatting = impact.batting.runs > 0 || impact.batting.balls > 0;
+                    const hasBowling = impact.bowling.wickets > 0 || parseFloat(impact.bowling.overs) > 0;
+
+                    let performance = '';
+                    let bgColor = '#e3f2fd';
+
+                    if (hasBatting && hasBowling) {
+                      performance = `${impact.batting.runs} runs & ${impact.bowling.wickets} wickets`;
+                      bgColor = '#f3e5f5';
+                    } else if (hasBatting) {
+                      performance = `${impact.batting.runs} runs (${impact.batting.strikeRate} SR)`;
+                      bgColor = '#e3f2fd';
+                    } else if (hasBowling) {
+                      performance = `${impact.bowling.wickets} wickets (${impact.bowling.economy} econ)`;
+                      bgColor = '#ffebee';
+                    }
+
+                    return (
+                      <Card key={typeof impact.player === 'object' ? impact.player.id : impact.player} sx={{ 
+                        border: rank === 1 ? '2px solid #FFD700' : rank === 2 ? '2px solid #C0C0C0' : '2px solid #CD7F32',
+                        bgcolor: bgColor
+                      }}>
+                        <CardContent sx={{ py: 1.5, px: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Box sx={{ 
+                              width: 32, 
+                              height: 32, 
+                              borderRadius: '50%', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              justifyContent: 'center',
+                              bgcolor: rank === 1 ? '#FFD700' : rank === 2 ? '#C0C0C0' : '#CD7F32',
+                              color: 'white',
+                              fontWeight: 'bold',
+                              fontSize: '1.1rem'
+                            }}>
+                              {rank}
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '1rem' }}>
+                                {typeof impact.player === 'object' ? impact.player.name : impact.player}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                                {performance}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ textAlign: 'right' }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                                {impact.netImpact}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Impact Score
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              </>
+            )}
 
             {/* AI Match Analysis Section */}
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
@@ -935,7 +1133,7 @@ const MatchDetails: React.FC = () => {
             {(match.winner || match.result?.winner) && (
               <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                 <Chip 
-                  label={`${match.winner || match.result?.winner} won${match.result?.margin ? ` by ${match.result.margin}` : ''}`} 
+                  label={`${typeof match.winner === 'object' && match.winner?.name ? match.winner.name : match.winner || match.result?.winner} won${match.result?.margin ? ` by ${match.result.margin}` : ''}`} 
                   color="success" 
                   variant="filled" 
                   sx={{ 
@@ -972,7 +1170,7 @@ const MatchDetails: React.FC = () => {
                     </Typography>
                     <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                        {inning.battingTeam}
+                        {inning.battingTeam?.name || inning.battingTeam || 'Unknown Team'}
                       </Typography>
                       <Chip
                         label={`${inning.totalRuns}/${inning.totalWickets} (${inning.totalOvers} overs)`}
@@ -1000,7 +1198,7 @@ const MatchDetails: React.FC = () => {
                         fontSize: '0.9rem'
                       }}>
                         <SportsCricketIcon fontSize="small" />
-                        {inning.battingTeam} Batting
+                        {inning.battingTeam?.name || inning.battingTeam || 'Unknown Team'} Batting
                       </Typography>
                       <Box sx={{
                         bgcolor: '#f8f9fa',
@@ -1097,7 +1295,7 @@ const MatchDetails: React.FC = () => {
                         fontSize: '0.9rem'
                       }}>
                         <SportsBaseballIcon fontSize="small" />
-                        {inning.bowlingTeam} Bowling
+                        {inning.bowlingTeam?.name || inning.bowlingTeam || 'Unknown Team'} Bowling
                       </Typography>
                       <Box sx={{
                         bgcolor: '#f8f9fa',

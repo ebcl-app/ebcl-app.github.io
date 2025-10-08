@@ -36,31 +36,30 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   };
 }
 
-// Match interfaces matching API spec
-export interface ApiMatch {
+// Match history entry for team backreferences
+export interface ApiMatchHistoryEntry {
   id: string;
   numericId: number;
   displayId: string;
   title: string;
   status: 'scheduled' | 'live' | 'completed';
-  matchType: string;
-  venue: string;
+  matchType?: string;
   scheduledDate: string;
-  createdAt: string;
-  updatedAt: string;
-  team1: ApiTeam | null;
-  team2: ApiTeam | null;
-  toss?: {
-    winner: string;
-    decision: 'bat' | 'bowl';
+  venue: string;
+  opponent?: {
+    name: string;
+    shortName?: string;
   };
-  currentInnings?: number;
-  team1Score?: number;
-  team2Score?: number;
   winner?: string;
   result?: {
     winner: string;
     margin: string;
+  };
+  team1Score?: number;
+  team2Score?: number;
+  toss?: {
+    winner: string;
+    decision: 'bat' | 'bowl';
   };
   bestBatsman?: {
     player: {
@@ -82,6 +81,53 @@ export interface ApiMatch {
     runs: number;
     overs: number;
     economy: number;
+  };
+}
+export interface ApiMatch {
+  id: string;
+  numericId: number;
+  displayId: string;
+  title: string;
+  status: 'scheduled' | 'live' | 'completed';
+  matchType: string;
+  venue: string;
+  scheduledDate: string;
+  createdAt: string;
+  updatedAt: string;
+  team1: ApiTeam | null;
+  team2: ApiTeam | null;
+  toss?: {
+    winner: string;
+    decision: 'bat' | 'bowl';
+  };
+  currentInnings?: number;
+  team1Score?: number;
+  team2Score?: number;
+  winner?: string | { id: number; name: string; shortName?: string };
+  result?: {
+    winner: string | { id: number; name: string; shortName?: string };
+    margin: string;
+  };
+  manOfTheMatch?: {
+    player: {
+      id: string | number;
+      name: string;
+      teamName?: string;
+    };
+    netImpact: number;
+    batting: {
+      runs: number;
+      balls: number;
+      fours: number;
+      sixes: number;
+      strikeRate: string;
+    };
+    bowling: {
+      wickets: number;
+      runs: number;
+      overs: string;
+      economy: string;
+    };
   };
   innings?: ApiInning[];
 }
@@ -231,52 +277,7 @@ export interface ApiTeam {
       };
     };
   }>;
-  matchHistory?: Array<{
-    id: string;
-    numericId: number;
-    displayId: string;
-    title: string;
-    status: 'scheduled' | 'live' | 'completed';
-    matchType?: string;
-    scheduledDate: string;
-    venue: string;
-    opponent?: {
-      name: string;
-      shortName?: string;
-    };
-    winner?: string;
-    result?: {
-      winner: string;
-      margin: string;
-    };
-    team1Score?: number;
-    team2Score?: number;
-    toss?: {
-      winner: string;
-      decision: 'bat' | 'bowl';
-    };
-    bestBatsman?: {
-      player: {
-        id: string;
-        name: string;
-      };
-      runs: number;
-      balls: number;
-      fours: number;
-      sixes: number;
-      strikeRate: number;
-    };
-    bestBowler?: {
-      player: {
-        id: string;
-        name: string;
-      };
-      wickets: number;
-      runs: number;
-      overs: number;
-      economy: number;
-    };
-  }>;
+  matchHistory?: ApiMatchHistoryEntry[];
   logo?: string;
   color?: string;
   homeGround?: string;
@@ -408,6 +409,10 @@ export class CricketApiService {
   static async getTeam(numericId: number): Promise<ApiTeam | null> {
     const response = await this.request<ApiTeam>(`/teams/${numericId}`);
     return response.success ? response.data : null;
+  }
+
+  static async getTeamMatches(teamNumericId: number): Promise<ApiResponse<ApiMatch[]>> {
+    return await this.request<ApiMatch[]>(`/teams/${teamNumericId}/matches`);
   }
 
   // Live Scores API

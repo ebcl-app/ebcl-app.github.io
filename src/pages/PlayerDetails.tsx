@@ -23,6 +23,8 @@ import {
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
+import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
+import ShuffleIcon from '@mui/icons-material/Shuffle';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -107,6 +109,34 @@ const PlayerDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<PlayerAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  // Helper function to get player icon based on role
+  const getPlayerIcon = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'batsman':
+        return <SportsCricketIcon />;
+      case 'bowler':
+        return <SportsBaseballIcon />;
+      case 'all-rounder':
+        return <ShuffleIcon />;
+      default:
+        return <SportsCricketIcon />;
+    }
+  };
+
+  // Helper function to get player icon color based on role
+  const getPlayerIconColor = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'batsman':
+        return '#2E7D32'; // Green for batsman
+      case 'bowler':
+        return '#1976D2'; // Blue for bowler
+      case 'all-rounder':
+        return '#ED6C02'; // Orange for all-rounder
+      default:
+        return '#757575'; // Grey for unknown
+    }
+  };
 
   useEffect(() => {
     const fetchPlayer = async () => {
@@ -220,7 +250,14 @@ const PlayerDetails: React.FC = () => {
         <Card sx={{ mb: 2, boxShadow: 2 }}>
           <CardContent>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: analysis ? 1 : 0 }}>
-              <Avatar sx={{ width: 64, height: 64, border: '3px solid #4A90E2' }}>A</Avatar>
+              <Avatar sx={{ 
+                width: 64, 
+                height: 64, 
+                border: '3px solid #4A90E2',
+                bgcolor: getPlayerIconColor(player.role)
+              }}>
+                {getPlayerIcon(player.role)}
+              </Avatar>
               <Box sx={{ flex: 1 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700 }}>{player.name}</Typography>
                 <Typography variant="body2" color="text.secondary">{player.role}</Typography>

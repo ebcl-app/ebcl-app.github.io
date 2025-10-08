@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 interface User {
   id: string;
   username: string;
@@ -37,7 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Check for existing session on app load
     const checkAuth = async () => {
       try {
-        const response = await fetch('/.netlify/functions/auth-check');
+        const response = await fetch(`${API_BASE_URL}/auth-check`);
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
@@ -54,7 +56,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch('/.netlify/functions/auth-login', {
+      const response = await fetch(`${API_BASE_URL}/auth-login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +78,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
-      await fetch('/.netlify/functions/auth-logout', {
+      await fetch(`${API_BASE_URL}/auth-logout`, {
         method: 'POST',
       });
     } catch (error) {

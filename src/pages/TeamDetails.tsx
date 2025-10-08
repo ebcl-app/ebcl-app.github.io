@@ -19,7 +19,10 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import GroupIcon from '@mui/icons-material/Group';
-import { CricketApiService, type ApiTeam } from '../api/cricketApi';
+import SportsCricketIcon from '@mui/icons-material/SportsCricket';
+import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
+import ShuffleIcon from '@mui/icons-material/Shuffle';
+import { CricketApiService, type ApiTeam, type ApiMatchHistoryEntry } from '../api/cricketApi';
 import { useAuth } from '../contexts/AuthContext';
 
 const TeamDetails: React.FC = () => {
@@ -27,6 +30,35 @@ const TeamDetails: React.FC = () => {
   const { teamId } = useParams();
   const { isAuthenticated } = useAuth();
   const [team, setTeam] = React.useState<ApiTeam | null>(null);
+  const [teamMatches, setTeamMatches] = React.useState<ApiMatchHistoryEntry[]>([]);
+
+  // Helper function to get player icon based on role
+  const getPlayerIcon = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'batsman':
+        return <SportsCricketIcon />;
+      case 'bowler':
+        return <SportsBaseballIcon />;
+      case 'all-rounder':
+        return <ShuffleIcon />;
+      default:
+        return <SportsCricketIcon />;
+    }
+  };
+
+  // Helper function to get player icon color based on role
+  const getPlayerIconColor = (role: string) => {
+    switch (role?.toLowerCase()) {
+      case 'batsman':
+        return '#2E7D32'; // Green for batsman
+      case 'bowler':
+        return '#1976D2'; // Blue for bowler
+      case 'all-rounder':
+        return '#ED6C02'; // Orange for all-rounder
+      default:
+        return '#757575'; // Grey for unknown
+    }
+  };
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -48,14 +80,18 @@ const TeamDetails: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        const teamData = await CricketApiService.getTeam(numericTeamId);
         
-        if (!teamData) {
+        // Fetch team details (now includes match history)
+        const teamResponse = await CricketApiService.getTeam(numericTeamId);
+        
+        if (!teamResponse) {
           setError('Team not found');
           return;
         }
 
-        setTeam(teamData);
+        setTeam(teamResponse);
+        // Use matchHistory from team data instead of separate API call
+        setTeamMatches(teamResponse.matchHistory || []);
       } catch (err) {
         setError('Failed to load team details. Please try again later.');
         console.error('Error fetching team details:', err);
@@ -269,10 +305,16 @@ const TeamDetails: React.FC = () => {
         <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, mb: 2 }}>
           {team.players && team.players.length > 0 ? (
             team.players.map((player) => (
-              <Card key={player.id} sx={{ minWidth: 140, boxShadow: 1, cursor: 'pointer' }} onClick={() => navigate(`/players/${player.numericId}`)}>
+              <Card key={player.numericId} sx={{ minWidth: 140, boxShadow: 1, cursor: 'pointer' }} onClick={() => navigate(`/players/${player.numericId}`)}>
                 <CardContent sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 2 }}>
-                  <Avatar sx={{ width: 56, height: 56, mb: 1, border: '2px solid #4A90E2' }}>
-                    {player.name.charAt(0).toUpperCase()}
+                  <Avatar sx={{ 
+                    width: 56, 
+                    height: 56, 
+                    mb: 1, 
+                    border: '2px solid #4A90E2',
+                    bgcolor: getPlayerIconColor(player.role)
+                  }}>
+                    {getPlayerIcon(player.role)}
                   </Avatar>
                   <Typography variant="body2" sx={{ fontWeight: 600, textAlign: 'center' }}>
                     {player.name}
@@ -291,146 +333,164 @@ const TeamDetails: React.FC = () => {
         </Box>
 
         {/* Match History */}
-        {team.matchHistory && team.matchHistory.length > 0 && (
+        {teamMatches && teamMatches.length > 0 && (
           <>
             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
               Match History
             </Typography>
             <Box sx={{ mb: 2 }}>
-              {team.matchHistory.map((match) => (
-                <Card
-                  key={match.id}
-                  sx={{ mb: 2, boxShadow: 1, cursor: 'pointer' }}
-                  onClick={() => navigate(`/matches/${match.numericId}`)}
-                >
-                  <CardContent sx={{ p: 2 }}>
-                    {/* Match Header */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                          vs {match.opponent?.name || 'Unknown Team'}
-                        </Typography>
-                        <Chip
-                          label={match.status}
-                          size="small"
-                          color={
-                            match.status === 'completed' ? 'success' :
-                            match.status === 'live' ? 'error' : 'info'
-                          }
-                          variant="outlined"
-                        />
+              {teamMatches.map((match) => {
+                // Opponent is already provided in the matchHistory entry
+                const opponent = match.opponent;
+
+                // Determine match result for this team
+                let resultText = '';
+                let resultColor: 'success' | 'error' | 'default' = 'default';
+
+                if (match.status === 'completed' && match.result) {
+                  const isWinner = match.result.winner === team.name;
+                  resultText = isWinner ? 'Won' : 'Lost';
+                  resultColor = isWinner ? 'success' : 'error';
+                  if (match.result.margin) {
+                    resultText += ` by ${match.result.margin}`;
+                  }
+                }
+
+                return (
+                  <Card
+                    key={match.id}
+                    sx={{ mb: 2, boxShadow: 1, cursor: 'pointer' }}
+                    onClick={() => navigate(`/matches/${match.numericId}`)}
+                  >
+                    <CardContent sx={{ p: 2 }}>
+                      {/* Match Header */}
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                            vs {opponent?.name || 'Unknown Team'}
+                          </Typography>
+                          <Chip
+                            label={match.status}
+                            size="small"
+                            color={
+                              match.status === 'completed' ? 'success' :
+                              match.status === 'live' ? 'error' : 'info'
+                            }
+                            variant="outlined"
+                          />
+                        </Box>
+                        <Box sx={{ textAlign: 'right' }}>
+                          {match.status === 'completed' && resultText && (
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: `${resultColor}.main` }}>
+                              {resultText}
+                            </Typography>
+                          )}
+                          {match.status === 'scheduled' && (
+                            <Typography variant="body2" color="text.secondary">
+                              Scheduled
+                            </Typography>
+                          )}
+                          {match.status === 'live' && (
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
+                              Live
+                            </Typography>
+                          )}
+                        </Box>
                       </Box>
-                      <Box sx={{ textAlign: 'right' }}>
-                        {match.status === 'completed' && match.result && (
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                            {match.result.winner === team.name ? 'Won' : 'Lost'} {match.result.margin ? `by ${match.result.margin}` : ''}
-                          </Typography>
-                        )}
-                        {match.status === 'scheduled' && (
-                          <Typography variant="body2" color="text.secondary">
-                            Scheduled
-                          </Typography>
-                        )}
-                        {match.status === 'live' && (
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: 'error.main' }}>
-                            Live
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
 
-                    {/* Match Information Cards */}
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto', pb: 1 }}>
-                      {/* Date */}
-                      <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#f5f5f5' }}>
-                        <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            Date
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                            {new Date(match.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-
-                      {/* Match Type */}
-                      <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#f5f5f5' }}>
-                        <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            Type
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                            {match.matchType || 'T20'}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-
-                      {/* Ground */}
-                      <Card sx={{ minWidth: 120, boxShadow: 0, bgcolor: '#f5f5f5' }}>
-                        <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            Ground
-                          </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                            {match.venue || 'TBD'}
-                          </Typography>
-                        </CardContent>
-                      </Card>
-                    </Box>
-
-                    {/* Additional Match Details */}
-                    {match.status === 'completed' && (
-                      <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
-                        {/* Toss */}
-                        <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#e3f2fd' }}>
+                      {/* Match Information Cards */}
+                      <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto', pb: 1 }}>
+                        {/* Date */}
+                        <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#f5f5f5' }}>
                           <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                              Toss
+                              Date
                             </Typography>
                             <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                              {match.toss ? `${match.toss.winner} won` : 'N/A'}
+                              {new Date(match.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </Typography>
                           </CardContent>
                         </Card>
 
-                        {/* Best Batsman */}
-                        {match.bestBatsman && (
-                          <Card sx={{ minWidth: 140, boxShadow: 0, bgcolor: '#e8f5e8' }}>
-                            <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                Best Batsman
-                              </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                                {match.bestBatsman.player.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {match.bestBatsman.runs} runs
-                              </Typography>
-                            </CardContent>
-                          </Card>
-                        )}
+                        {/* Match Type */}
+                        <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#f5f5f5' }}>
+                          <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                              Type
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                              {match.matchType || 'T20'}
+                            </Typography>
+                          </CardContent>
+                        </Card>
 
-                        {/* Best Bowler */}
-                        {match.bestBowler && (
-                          <Card sx={{ minWidth: 140, boxShadow: 0, bgcolor: '#ffebee' }}>
+                        {/* Ground */}
+                        <Card sx={{ minWidth: 120, boxShadow: 0, bgcolor: '#f5f5f5' }}>
+                          <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                              Ground
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                              {match.venue || 'TBD'}
+                            </Typography>
+                          </CardContent>
+                        </Card>
+                      </Box>
+
+                      {/* Additional Match Details */}
+                      {match.status === 'completed' && (
+                        <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1 }}>
+                          {/* Toss */}
+                          <Card sx={{ minWidth: 100, boxShadow: 0, bgcolor: '#e3f2fd' }}>
                             <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
                               <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                Best Bowler
+                                Toss
                               </Typography>
                               <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
-                                {match.bestBowler.player.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {match.bestBowler.wickets} wickets
+                                {match.toss ? `${match.toss.winner} won` : 'N/A'}
                               </Typography>
                             </CardContent>
                           </Card>
-                        )}
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+
+                          {/* Best Batsman */}
+                          {match.bestBatsman && (
+                            <Card sx={{ minWidth: 140, boxShadow: 0, bgcolor: '#e8f5e8' }}>
+                              <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                  Best Batsman
+                                </Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                                  {match.bestBatsman.player.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {match.bestBatsman.runs} runs
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          )}
+
+                          {/* Best Bowler */}
+                          {match.bestBowler && (
+                            <Card sx={{ minWidth: 140, boxShadow: 0, bgcolor: '#ffebee' }}>
+                              <CardContent sx={{ p: 1.5, textAlign: 'center' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                  Best Bowler
+                                </Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a237e' }}>
+                                  {match.bestBowler.player.name}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {match.bestBowler.wickets} wickets
+                                </Typography>
+                              </CardContent>
+                            </Card>
+                          )}
+                        </Box>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </Box>
           </>
         )}

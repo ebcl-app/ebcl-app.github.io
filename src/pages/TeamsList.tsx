@@ -85,7 +85,7 @@ const TeamsList: React.FC = () => {
       isFetchingRef.current = true;
       setLoading(true);
       setError(null);
-      const response = await CricketApiService.getTeams({ page, limit: 5 });
+      const response = await CricketApiService.getTeams({ page, limit: 4 });
 
       if (response.success) {
         // Transform API data to component format
