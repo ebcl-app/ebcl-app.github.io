@@ -75,12 +75,6 @@ const AdminPanel: React.FC = () => {
     loading: true,
     error: null as string | null,
   });
-  const [recentMatches, setRecentMatches] = React.useState<any[]>([]);
-  const [topBatsmen, setTopBatsmen] = React.useState<any[]>([]);
-  const [topBowlers, setTopBowlers] = React.useState<any[]>([]);
-  const [topFielders, setTopFielders] = React.useState<any[]>([]);
-  const [topImpactPlayers, setTopImpactPlayers] = React.useState<any[]>([]);
-  const [expandedAccordion, setExpandedAccordion] = React.useState<string | false>('batsmen');
   const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
 
   // Pagination constants
@@ -90,7 +84,6 @@ const AdminPanel: React.FC = () => {
     setExpandedAccordion(isExpanded ? panel : false);
   };
 
-  const renderPlayerList = (players: any[], metric: string, icon: React.ReactNode) => (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       {players.slice(0, 5).map((player: any, index: number) => (
         <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
