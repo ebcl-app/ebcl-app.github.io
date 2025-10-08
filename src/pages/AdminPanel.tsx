@@ -76,37 +76,10 @@ const AdminPanel: React.FC = () => {
     error: null as string | null,
   });
   const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
-
+  const [recentMatches, setRecentMatches] = React.useState<any[]>([]);
   // Pagination constants
   const MATCHES_PER_PAGE = 10;
 
-  const handleAccordionChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
-    setExpandedAccordion(isExpanded ? panel : false);
-  };
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-      {players.slice(0, 5).map((player: any, index: number) => (
-        <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, p: 1, borderRadius: 1, '&:hover': { bgcolor: 'action.hover' } }}>
-          <Typography variant="body2" sx={{ fontWeight: 600, minWidth: '24px' }}>
-            #{player.rank}
-          </Typography>
-          <Avatar sx={{ bgcolor: '#4A90E2', width: 32, height: 32, fontSize: '0.875rem' }}>
-            {player.avatar}
-          </Avatar>
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-              {player.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {metric}: {player[metric.toLowerCase()] || player.impactScore}
-            </Typography>
-          </Box>
-          {icon}
-        </Box>
-      ))}
-    </Box>
-  );
 
   // Fetch dashboard statistics
   React.useEffect(() => {
