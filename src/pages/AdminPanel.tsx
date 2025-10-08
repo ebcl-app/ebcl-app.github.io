@@ -100,7 +100,6 @@ const AdminPanel: React.FC = () => {
 
         if (matchesResponse.success && teamsResponse.success && playersResponse.success) {
           const matches = matchesResponse.data;
-          const players = playersResponse.data;
 
           // Calculate statistics using pagination totals
           const totalMatches = matchesResponse.pagination.total;
@@ -127,61 +126,6 @@ const AdminPanel: React.FC = () => {
             status: match.status.charAt(0).toUpperCase() + match.status.slice(1),
           }));
           setRecentMatches(recentMatchesData);
-
-          // Set top players by category
-          const topBatsmenData = players
-            .filter((player: any) => player.totalRuns && player.role === 'batsman')
-            .sort((a: any, b: any) => (b.totalRuns || 0) - (a.totalRuns || 0))
-            .slice(0, 10)
-            .map((player: any, index: number) => ({
-              name: player.name,
-              runs: player.totalRuns?.toLocaleString() || '0',
-              average: player.battingAverage ? player.battingAverage.toFixed(2) : '0.00',
-              avatar: player.name.charAt(0),
-              rank: index + 1,
-            }));
-          setTopBatsmen(topBatsmenData);
-
-          const topBowlersData = players
-            .filter((player: any) => player.totalWickets && player.role === 'bowler')
-            .sort((a: any, b: any) => (b.totalWickets || 0) - (a.totalWickets || 0))
-            .slice(0, 10)
-            .map((player: any, index: number) => ({
-              name: player.name,
-              wickets: player.totalWickets?.toLocaleString() || '0',
-              economy: player.bowlingEconomy ? player.bowlingEconomy.toFixed(2) : '0.00',
-              avatar: player.name.charAt(0),
-              rank: index + 1,
-            }));
-          setTopBowlers(topBowlersData);
-
-          const topFieldersData = players
-            .filter((player: any) => player.totalCatches || player.totalRunOuts)
-            .sort((a: any, b: any) => ((b.totalCatches || 0) + (b.totalRunOuts || 0)) - ((a.totalCatches || 0) + (a.totalRunOuts || 0)))
-            .slice(0, 10)
-            .map((player: any, index: number) => ({
-              name: player.name,
-              catches: (player.totalCatches || 0) + (player.totalRunOuts || 0),
-              avatar: player.name.charAt(0),
-              rank: index + 1,
-            }));
-          setTopFielders(topFieldersData);
-
-          // Top impact players (combination of runs, wickets, catches)
-          const topImpactData = players
-            .map((player: any) => ({
-              ...player,
-              impactScore: (player.totalRuns || 0) * 1 + (player.totalWickets || 0) * 25 + ((player.totalCatches || 0) + (player.totalRunOuts || 0)) * 10
-            }))
-            .sort((a: any, b: any) => b.impactScore - a.impactScore)
-            .slice(0, 10)
-            .map((player: any, index: number) => ({
-              name: player.name,
-              impactScore: player.impactScore,
-              avatar: player.name.charAt(0),
-              rank: index + 1,
-            }));
-          setTopImpactPlayers(topImpactData);
         } else {
           if (isMounted) {
             setDashboardStats(prev => ({
