@@ -46,9 +46,9 @@ const SiteLayout: React.FC = () => {
         <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3, md: 4 } }}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box component="img" src="/logo.png" alt="Crick Heroes" sx={{ height: 28, width: 'auto' }} />
+              <Box component="img" src="/logo.png" alt="Box Cricket" sx={{ height: 28, width: 'auto' }} />
               <Typography variant="h6" sx={{ fontWeight: 800, color: '#4A90E2', fontSize: { xs: '1.2rem', md: '1.5rem' } }}>
-                CRICK HEROES
+                Box Cricket
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', gap: { xs: 1, md: 2 }, alignItems: 'center', flexWrap: 'wrap' }}>

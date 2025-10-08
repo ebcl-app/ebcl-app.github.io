@@ -332,20 +332,20 @@ const MatchDetails: React.FC = () => {
           // Preprocess matchData for analysis - convert winner objects to strings
           const analysisMatchData = {
             ...matchData,
-            winner: typeof matchData.winner === 'object' && matchData.winner?.name 
-              ? matchData.winner.name 
-              : matchData.winner,
+            winner: typeof matchData.winner === 'object' 
+              ? (matchData.winner?.name || matchData.winner?.shortName || `Team ${matchData.winner?.id || 'Unknown'}`)
+              : (matchData.winner || 'N/A'),
             result: matchData.result ? {
               ...matchData.result,
-              winner: typeof matchData.result.winner === 'object' && matchData.result.winner?.name
-                ? matchData.result.winner.name
-                : matchData.result.winner
+              winner: typeof matchData.result.winner === 'object'
+                ? (matchData.result.winner?.name || matchData.result.winner?.shortName || `Team ${matchData.result.winner?.id || 'Unknown'}`)
+                : (matchData.result.winner || 'N/A')
             } : matchData.result,
             toss: matchData.toss ? {
               ...matchData.toss,
-              winner: matchData.toss.winner && typeof matchData.toss.winner === 'object' && (matchData.toss.winner as any)?.name
-                ? (matchData.toss.winner as any).name
-                : matchData.toss.winner
+              winner: typeof matchData.toss.winner === 'object'
+                ? ((matchData.toss.winner as any)?.name || (matchData.toss.winner as any)?.shortName || `Team ${(matchData.toss.winner as any)?.id || 'Unknown'}`)
+                : (matchData.toss.winner || 'N/A')
             } : matchData.toss
           };
           

@@ -91,7 +91,7 @@ const AdminPanel: React.FC = () => {
     <Box>
       <Toolbar sx={{ bgcolor: '#4A90E2', color: 'white' }}>
         <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
-          CRICK HEROES
+          Box Cricket
         </Typography>
       </Toolbar>
       <Divider />
