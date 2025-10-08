@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import MatchesList from './pages/MatchesList';
 import MatchDetails from './pages/MatchDetails';
+import MatchesManagement from './pages/MatchesManagement';
+import MatchScoring from './pages/MatchScoring';
 import PlayersList from './pages/PlayersList';
 import TeamsList from './pages/TeamsList';
 import TeamDetails from './pages/TeamDetails';
@@ -35,6 +37,22 @@ function App() {
                 element={
                   <ProtectedRoute requireAdmin>
                     <AdminPanel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/matches"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <MatchesManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/matches/:matchId/score"
+                element={
+                  <ProtectedRoute requireAdmin>
+                    <MatchScoring />
                   </ProtectedRoute>
                 }
               />

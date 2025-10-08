@@ -179,37 +179,41 @@ const PlayersList: React.FC = () => {
   });
 
   const renderTableView = () => (
-    <TableContainer component={Paper} sx={{ mt: 2 }}>
-      <Table>
+    <TableContainer component={Paper} sx={{ mt: 2, overflowX: 'auto', maxWidth: '100%' }}>
+      <Table sx={{ minWidth: { xs: 600, sm: 800 } }}>
         <TableHead>
           <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-            <TableCell sx={{ fontWeight: 700 }}>Player</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Team</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Role</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Matches</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Runs</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Wickets</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Average</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Strike Rate</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Status</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Action</TableCell>
+            <TableCell sx={{ fontWeight: 700, minWidth: { xs: 120, sm: 150 }, py: 1.5 }}>Player</TableCell>
+            <TableCell sx={{ fontWeight: 700, minWidth: { xs: 60, sm: 80 }, py: 1.5, display: { xs: 'none', sm: 'table-cell' } }}>Team</TableCell>
+            <TableCell sx={{ fontWeight: 700, minWidth: { xs: 60, sm: 80 }, py: 1.5 }}>Role</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Matches</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Runs</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Wickets</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>Average</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 60, sm: 80 }, py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>Strike Rate</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Status</TableCell>
+            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 70, sm: 90 }, py: 1.5 }}>Action</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
            {filteredPlayers.map((player) => (
             <TableRow key={player.id} hover>
-              <TableCell>
+              <TableCell sx={{ py: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Avatar sx={{ width: 32, height: 32, bgcolor: getRoleColor(player.role) }}>
                     {getPlayerIcon(player.role)}
                   </Avatar>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                     {player.name}
                   </Typography>
                 </Box>
               </TableCell>
-              <TableCell>{player.team}</TableCell>
-              <TableCell>
+              <TableCell sx={{ py: 1, display: { xs: 'none', sm: 'table-cell' } }}>
+                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {player.team}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ py: 1 }}>
                 <Chip
                   label={player.role}
                   size="small"
@@ -217,25 +221,60 @@ const PlayersList: React.FC = () => {
                     bgcolor: getRoleColor(player.role),
                     color: 'white',
                     fontWeight: 600,
+                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                    height: { xs: 20, sm: 24 }
                   }}
                 />
               </TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{player.matches}</TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{player.runs}</TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{player.wickets}</TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{player.average}</TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>{player.strikeRate}</TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>
+              <TableCell sx={{ textAlign: 'center', py: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {player.matches}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center', py: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {player.runs}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center', py: 1 }}>
+                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {player.wickets}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center', py: 1, display: { xs: 'none', md: 'table-cell' } }}>
+                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {player.average}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center', py: 1, display: { xs: 'none', md: 'table-cell' } }}>
+                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                  {player.strikeRate}
+                </Typography>
+              </TableCell>
+              <TableCell sx={{ textAlign: 'center', py: 1 }}>
                 <Chip
                   label={player.status}
                   size="small"
                   color={getStatusColor(player.status)}
                   variant="outlined"
+                  sx={{
+                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                    height: { xs: 20, sm: 24 }
+                  }}
                 />
               </TableCell>
-               <TableCell sx={{ textAlign: 'center' }}>
-                 <Button size="small" variant="outlined" onClick={() => navigate(`/players/${player.numericId}`)}>
-                   View Profile
+               <TableCell sx={{ textAlign: 'center', py: 1 }}>
+                 <Button
+                   size="small"
+                   variant="outlined"
+                   onClick={() => navigate(`/players/${player.numericId}`)}
+                   sx={{
+                     fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                     minWidth: { xs: 'auto', sm: '64px' },
+                     px: { xs: 1, sm: 2 }
+                   }}
+                 >
+                   View
                  </Button>
               </TableCell>
             </TableRow>

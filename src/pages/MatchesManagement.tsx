@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -28,7 +29,11 @@ import {
   InputLabel,
   Tabs,
   Tab,
+  Pagination,
 } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
@@ -66,6 +71,7 @@ interface Match {
 
 const MatchesManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   if (!isAuthenticated) {
     return (
@@ -80,6 +86,18 @@ const MatchesManagement: React.FC = () => {
   const [teams, setTeams] = React.useState<ApiTeam[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [matchesPagination, setMatchesPagination] = React.useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+  });
+  const [teamsPagination, setTeamsPagination] = React.useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+  });
 
   const [openDialog, setOpenDialog] = React.useState(false);
   const [selectedMatch, setSelectedMatch] = React.useState<Match | null>(null);
@@ -104,8 +122,8 @@ const MatchesManagement: React.FC = () => {
       try {
         setLoading(true);
         const [matchesResponse, teamsResponse] = await Promise.all([
-          CricketApiService.getMatches(),
-          CricketApiService.getTeams()
+          CricketApiService.getMatches(undefined, { page: matchesPagination.page, limit: matchesPagination.limit }),
+          CricketApiService.getTeams({ page: teamsPagination.page, limit: teamsPagination.limit })
         ]);
 
         if (matchesResponse.success && teamsResponse.success) {
@@ -125,12 +143,24 @@ const MatchesManagement: React.FC = () => {
             time: '', // API doesn't provide time separately
             venue: apiMatch.venue || '',
             status: (apiMatch.status.charAt(0).toUpperCase() + apiMatch.status.slice(1)) as 'Scheduled' | 'Live' | 'Completed',
-            winner: apiMatch.winner,
+            winner: typeof apiMatch.winner === 'object' 
+              ? (apiMatch.winner?.name || apiMatch.winner?.shortName || `Team ${apiMatch.winner?.id || 'Unknown'}`)
+              : (apiMatch.winner || undefined),
             matchType: apiMatch.matchType || 'T20',
           }));
 
           setMatches(transformedMatches);
           setTeams(teamsResponse.data);
+          setMatchesPagination(prev => ({
+            ...prev,
+            total: matchesResponse.pagination.total,
+            totalPages: matchesResponse.pagination.totalPages,
+          }));
+          setTeamsPagination(prev => ({
+            ...prev,
+            total: teamsResponse.pagination.total,
+            totalPages: teamsResponse.pagination.totalPages,
+          }));
           setError(null);
         } else {
           setError('Failed to load matches and teams data');
@@ -144,7 +174,7 @@ const MatchesManagement: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [matchesPagination.page, teamsPagination.page]);
 
   const handleOpenDialog = (match?: Match) => {
     if (match) {
@@ -184,57 +214,112 @@ const MatchesManagement: React.FC = () => {
     });
   };
 
-  const handleSaveMatch = () => {
-    if (selectedMatch) {
-      // Update existing match
-      setMatches(
-        matches.map((match) =>
-          match.id === selectedMatch.id
-            ? {
-                ...match,
-                team1: {
-                  name: formData.team1,
-                  score: match.team1.score,
-                },
-                team2: {
-                  name: formData.team2,
-                  score: match.team2.score,
-                },
-                date: formData.date,
-                time: formData.time,
-                venue: formData.venue,
-                matchType: formData.matchType,
-              }
-            : match
-        )
-      );
-    } else {
-      // Create new match
-      const newMatch: Match = {
-        id: Math.max(...matches.map((m) => m.id)) + 1,
-        stringId: `match_${Math.max(...matches.map((m) => m.id)) + 1}`,
-        team1: {
-          name: formData.team1,
-        },
-        team2: {
-          name: formData.team2,
-        },
-        date: formData.date,
-        time: formData.time,
-        venue: formData.venue,
-        matchType: formData.matchType,
-        status: 'Scheduled',
-      };
-      setMatches([...matches, newMatch]);
+  const handleSaveMatch = async () => {
+    try {
+      if (selectedMatch) {
+        // Update existing match
+        // Find team objects by name to get their IDs (in case teams were changed)
+        const team1Obj = teams.find(team => team.name === formData.team1);
+        const team2Obj = teams.find(team => team.name === formData.team2);
+
+        const updateData: any = {
+          title: `${formData.team1} vs ${formData.team2}`,
+          scheduledDate: formData.date,
+          venue: formData.venue,
+          matchType: formData.matchType,
+        };
+
+        // Only include team IDs if teams were actually changed
+        if (team1Obj && team1Obj.name !== selectedMatch.team1.name) {
+          updateData.team1Id = team1Obj.numericId;
+        }
+        if (team2Obj && team2Obj.name !== selectedMatch.team2.name) {
+          updateData.team2Id = team2Obj.numericId;
+        }
+
+        const response = await CricketApiService.updateMatch(selectedMatch.id, updateData);
+
+        if (response.success) {
+          // Update the local state with the new match data
+          setMatches(matches.map(match => 
+            match.id === selectedMatch.id ? {
+              ...match,
+              team1: { name: formData.team1, score: match.team1.score },
+              team2: { name: formData.team2, score: match.team2.score },
+              date: formData.date,
+              time: formData.time,
+              venue: formData.venue,
+              matchType: formData.matchType,
+            } : match
+          ));
+          handleCloseDialog();
+        } else {
+          alert(`Failed to update match: ${response.message || 'Unknown error'}`);
+        }
+      } else {
+        // Create new match
+        // Find team objects by name to get their IDs
+        const team1Obj = teams.find(team => team.name === formData.team1);
+        const team2Obj = teams.find(team => team.name === formData.team2);
+
+        if (!team1Obj || !team2Obj) {
+          alert('Selected teams not found');
+          return;
+        }
+
+        const response = await CricketApiService.createMatch({
+          title: `${formData.team1} vs ${formData.team2}`,
+          team1Id: team1Obj.numericId,
+          team2Id: team2Obj.numericId,
+          scheduledDate: formData.date,
+          venue: formData.venue,
+          matchType: formData.matchType,
+          status: 'scheduled',
+        } as any);
+
+        if (response.success) {
+          // Transform API response to component format
+          const newMatch: Match = {
+            id: response.data.numericId,
+            stringId: response.data.id,
+            team1: { name: formData.team1 },
+            team2: { name: formData.team2 },
+            date: formData.date,
+            time: formData.time,
+            venue: formData.venue,
+            matchType: formData.matchType,
+            status: 'Scheduled',
+          };
+          setMatches([...matches, newMatch]);
+          handleCloseDialog();
+        } else {
+          alert(`Failed to create match: ${response.message || 'Unknown error'}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error saving match:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to save match: ${errorMessage}`);
     }
-    handleCloseDialog();
   };
 
-  const handleDeleteMatch = (matchId: number) => {
-    if (window.confirm('Are you sure you want to delete this match?')) {
-      setMatches(matches.filter((match) => match.id !== matchId));
+  const handleDeleteMatch = async (matchId: number) => {
+    if (!window.confirm('Are you sure you want to delete this match?')) {
+      return;
     }
-    handleCloseMenu();
+
+    try {
+      const response = await CricketApiService.deleteMatch(matchId);
+
+      if (response.success) {
+        setMatches(matches.filter(match => match.id !== matchId));
+      } else {
+        alert('Failed to delete match');
+      }
+    } catch (error) {
+      console.error('Error deleting match:', error);
+      alert('Failed to delete match');
+    }
   };
 
   const handleUpdateStatus = (matchId: number, newStatus: 'Scheduled' | 'Live' | 'Completed') => {
@@ -254,6 +339,10 @@ const MatchesManagement: React.FC = () => {
   const handleCloseMenu = () => {
     setAnchorEl(null);
     setMenuMatch(null);
+  };
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setMatchesPagination(prev => ({ ...prev, page }));
   };
 
   const getStatusColor = (status: string) => {
@@ -306,13 +395,11 @@ const MatchesManagement: React.FC = () => {
         match.venue.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-  const totalMatches = matches.length;
-  const liveMatches = matches.filter((m) => m.status === 'Live').length;
-  const scheduledMatches = matches.filter((m) => m.status === 'Scheduled').length;
-  const completedMatches = matches.filter((m) => m.status === 'Completed').length;
+  const totalMatches = matchesPagination.total;
 
   return (
-    <Box>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box>
       {/* Header with Stats */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
@@ -332,60 +419,6 @@ const MatchesManagement: React.FC = () => {
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
                     {totalMatches}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ flex: '1 1 200px', minWidth: 0 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: '#EF4444' }}>
-                  <PlayArrowIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Live Matches
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {liveMatches}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ flex: '1 1 200px', minWidth: 0 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: '#F59E0B' }}>
-                  <ScheduleIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Scheduled
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {scheduledMatches}
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ flex: '1 1 200px', minWidth: 0 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar sx={{ bgcolor: '#10B981' }}>
-                  <CheckCircleIcon />
-                </Avatar>
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Completed
-                  </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {completedMatches}
                   </Typography>
                 </Box>
               </Box>
@@ -459,10 +492,10 @@ const MatchesManagement: React.FC = () => {
           onChange={(_e, newValue) => setTabValue(newValue)}
           sx={{ borderBottom: 1, borderColor: 'divider' }}
         >
-          <Tab label={`All (${totalMatches})`} />
-          <Tab label={`Scheduled (${scheduledMatches})`} />
-          <Tab label={`Live (${liveMatches})`} />
-          <Tab label={`Completed (${completedMatches})`} />
+          <Tab label="All" />
+          <Tab label="Scheduled" />
+          <Tab label="Live" />
+          <Tab label="Completed" />
         </Tabs>
       </Card>
 
@@ -544,6 +577,19 @@ const MatchesManagement: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination */}
+        {matchesPagination.totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 2 }}>
+            <Pagination
+              count={matchesPagination.totalPages}
+              page={matchesPagination.page}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+            />
+          </Box>
+        )}
       </Card>
 
       {/* Actions Menu */}
@@ -558,7 +604,7 @@ const MatchesManagement: React.FC = () => {
           Edit
         </MenuItem>
         {menuMatch?.status === 'Scheduled' && (
-          <MenuItem onClick={() => handleUpdateStatus(menuMatch!.id, 'Live')}>
+          <MenuItem onClick={() => navigate(`/admin/matches/${menuMatch!.id}/score`)}>
             <PlayArrowIcon sx={{ mr: 1, fontSize: 20 }} />
             Start Match
           </MenuItem>
@@ -610,14 +656,23 @@ const MatchesManagement: React.FC = () => {
               </Select>
             </FormControl>
 
-            <TextField
+            <DatePicker
               label="Date"
-              type="date"
-              fullWidth
-              value={formData.date}
-              onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              required
+              value={formData.date ? new Date(formData.date) : null}
+              onChange={(newValue) => {
+                if (newValue) {
+                  const formattedDate = newValue.toISOString().split('T')[0];
+                  setFormData({ ...formData, date: formattedDate });
+                } else {
+                  setFormData({ ...formData, date: '' });
+                }
+              }}
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                },
+              }}
             />
 
             <TextField
@@ -672,6 +727,7 @@ const MatchesManagement: React.FC = () => {
         </DialogActions>
       </Dialog>
     </Box>
+    </LocalizationProvider>
   );
 };
 

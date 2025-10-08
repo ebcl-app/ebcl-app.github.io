@@ -28,6 +28,9 @@ import {
   InputLabel,
   Tabs,
   Tab,
+  CircularProgress,
+  Alert,
+  Pagination,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -40,24 +43,7 @@ import StarIcon from '@mui/icons-material/Star';
 import GroupIcon from '@mui/icons-material/Group';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { useAuth } from '../contexts/AuthContext';
-
-interface Player {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  team: string;
-  role: 'Batsman' | 'Bowler' | 'All-rounder' | 'Wicket-keeper';
-  battingStyle: string;
-  bowlingStyle: string;
-  matches: number;
-  runs: number;
-  wickets: number;
-  average: string;
-  strikeRate: string;
-  status: 'Active' | 'Injured' | 'Inactive';
-  avatar?: string;
-}
+import { CricketApiService, type ApiPlayer, type ApiTeam } from '../api/cricketApi';
 
 const PlayersManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -71,142 +57,66 @@ const PlayersManagement: React.FC = () => {
       </Box>
     );
   }
-  const [players, setPlayers] = React.useState<Player[]>([
-    {
-      id: 1,
-      name: 'Rajesh Kumar',
-      email: 'rajesh.k@email.com',
-      phone: '+91 98765 43210',
-      team: 'Thunder Strikers',
-      role: 'Batsman',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'N/A',
-      matches: 45,
-      runs: 2156,
-      wickets: 0,
-      average: '47.91',
-      strikeRate: '142.5',
-      status: 'Active',
-    },
-    {
-      id: 2,
-      name: 'Amit Sharma',
-      email: 'amit.sharma@email.com',
-      phone: '+91 98765 43211',
-      team: 'Lightning Bolts',
-      role: 'All-rounder',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'Right-arm fast',
-      matches: 52,
-      runs: 1876,
-      wickets: 64,
-      average: '38.25',
-      strikeRate: '135.8',
-      status: 'Active',
-    },
-    {
-      id: 3,
-      name: 'Priya Patel',
-      email: 'priya.p@email.com',
-      phone: '+91 98765 43212',
-      team: 'Royal Warriors',
-      role: 'Bowler',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'Right-arm spin',
-      matches: 38,
-      runs: 245,
-      wickets: 58,
-      average: '8.12',
-      strikeRate: '98.5',
-      status: 'Active',
-    },
-    {
-      id: 4,
-      name: 'Vikram Singh',
-      email: 'vikram.s@email.com',
-      phone: '+91 98765 43213',
-      team: 'Phoenix Risers',
-      role: 'Wicket-keeper',
-      battingStyle: 'Left-handed',
-      bowlingStyle: 'N/A',
-      matches: 41,
-      runs: 1654,
-      wickets: 0,
-      average: '42.41',
-      strikeRate: '128.3',
-      status: 'Injured',
-    },
-    {
-      id: 5,
-      name: 'Anil Verma',
-      email: 'anil.v@email.com',
-      phone: '+91 98765 43214',
-      team: 'Kings XI',
-      role: 'All-rounder',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'Left-arm spin',
-      matches: 48,
-      runs: 1923,
-      wickets: 42,
-      average: '44.72',
-      strikeRate: '138.9',
-      status: 'Active',
-    },
-    {
-      id: 6,
-      name: 'Sneha Reddy',
-      email: 'sneha.r@email.com',
-      phone: '+91 98765 43215',
-      team: 'Eagle Eyes',
-      role: 'Batsman',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'N/A',
-      matches: 35,
-      runs: 1587,
-      wickets: 0,
-      average: '49.59',
-      strikeRate: '145.2',
-      status: 'Active',
-    },
-    {
-      id: 7,
-      name: 'Mohammed Ali',
-      email: 'mohammed.a@email.com',
-      phone: '+91 98765 43216',
-      team: 'Thunder Strikers',
-      role: 'Bowler',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'Right-arm fast',
-      matches: 44,
-      runs: 156,
-      wickets: 72,
-      average: '5.19',
-      strikeRate: '87.4',
-      status: 'Active',
-    },
-    {
-      id: 8,
-      name: 'Deepak Choudhary',
-      email: 'deepak.c@email.com',
-      phone: '+91 98765 43217',
-      team: 'Lightning Bolts',
-      role: 'Batsman',
-      battingStyle: 'Left-handed',
-      bowlingStyle: 'N/A',
-      matches: 29,
-      runs: 1234,
-      wickets: 0,
-      average: '45.70',
-      strikeRate: '139.8',
-      status: 'Inactive',
-    },
-  ]);
+
+  const [players, setPlayers] = React.useState<ApiPlayer[]>([]);
+  const [teams, setTeams] = React.useState<ApiTeam[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [playersPagination, setPlayersPagination] = React.useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+  });
+  const [teamsPagination, setTeamsPagination] = React.useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+  });
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [playersResponse, teamsResponse] = await Promise.all([
+          CricketApiService.getPlayers({ page: playersPagination.page, limit: playersPagination.limit }),
+          CricketApiService.getTeams({ page: teamsPagination.page, limit: teamsPagination.limit })
+        ]);
+
+        if (playersResponse.success && teamsResponse.success) {
+          setPlayers(playersResponse.data);
+          setTeams(teamsResponse.data);
+          setPlayersPagination(prev => ({
+            ...prev,
+            total: playersResponse.pagination.total,
+            totalPages: playersResponse.pagination.totalPages,
+          }));
+          setTeamsPagination(prev => ({
+            ...prev,
+            total: teamsResponse.pagination.total,
+            totalPages: teamsResponse.pagination.totalPages,
+          }));
+        } else {
+          setError('Failed to load players and teams data');
+        }
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load players and teams data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [playersPagination.page, teamsPagination.page]);
 
   const [openDialog, setOpenDialog] = React.useState(false);
-  const [selectedPlayer, setSelectedPlayer] = React.useState<Player | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = React.useState<ApiPlayer | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [menuPlayer, setMenuPlayer] = React.useState<Player | null>(null);
+  const [menuPlayer, setMenuPlayer] = React.useState<ApiPlayer | null>(null);
   const [tabValue, setTabValue] = React.useState(0);
 
   const [formData, setFormData] = React.useState({
@@ -214,33 +124,24 @@ const PlayersManagement: React.FC = () => {
     email: '',
     phone: '',
     team: '',
-    role: 'Batsman' as Player['role'],
-    battingStyle: 'Right-handed',
-    bowlingStyle: 'N/A',
+    role: 'batsman' as ApiPlayer['role'],
+    battingStyle: 'RHB',
+    bowlingStyle: '',
   });
 
-  const availableTeams = [
-    'Thunder Strikers',
-    'Lightning Bolts',
-    'Royal Warriors',
-    'Kings XI',
-    'Phoenix Risers',
-    'Eagle Eyes',
-    'Warriors United',
-    'Storm Chasers',
-  ];
+  const availableTeams = teams.map(team => team.name);
 
-  const handleOpenDialog = (player?: Player) => {
+  const handleOpenDialog = (player?: ApiPlayer) => {
     if (player) {
       setSelectedPlayer(player);
       setFormData({
         name: player.name,
-        email: player.email,
-        phone: player.phone,
-        team: player.team,
+        email: player.email || '',
+        phone: '', // ApiPlayer doesn't have phone
+        team: '', // ApiPlayer doesn't have team directly
         role: player.role,
-        battingStyle: player.battingStyle,
-        bowlingStyle: player.bowlingStyle,
+        battingStyle: player.battingStyle || 'RHB',
+        bowlingStyle: player.bowlingStyle || '',
       });
     } else {
       setSelectedPlayer(null);
@@ -249,9 +150,9 @@ const PlayersManagement: React.FC = () => {
         email: '',
         phone: '',
         team: '',
-        role: 'Batsman',
-        battingStyle: 'Right-handed',
-        bowlingStyle: 'N/A',
+        role: 'batsman',
+        battingStyle: 'RHB',
+        bowlingStyle: '',
       });
     }
     setOpenDialog(true);
@@ -265,71 +166,76 @@ const PlayersManagement: React.FC = () => {
       email: '',
       phone: '',
       team: '',
-      role: 'Batsman',
+      role: 'batsman',
       battingStyle: 'Right-handed',
       bowlingStyle: 'N/A',
     });
   };
 
-  const handleSavePlayer = () => {
-    if (selectedPlayer) {
-      // Update existing player
-      setPlayers(
-        players.map((player) =>
-          player.id === selectedPlayer.id
-            ? {
-                ...player,
-                name: formData.name,
-                email: formData.email,
-                phone: formData.phone,
-                team: formData.team,
-                role: formData.role,
-                battingStyle: formData.battingStyle,
-                bowlingStyle: formData.bowlingStyle,
-              }
-            : player
-        )
-      );
-    } else {
-      // Create new player
-      const newPlayer: Player = {
-        id: Math.max(...players.map((p) => p.id)) + 1,
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        team: formData.team,
-        role: formData.role,
-        battingStyle: formData.battingStyle,
-        bowlingStyle: formData.bowlingStyle,
-        matches: 0,
-        runs: 0,
-        wickets: 0,
-        average: '0.00',
-        strikeRate: '0.00',
-        status: 'Active',
-      };
-      setPlayers([...players, newPlayer]);
+  const handleSavePlayer = async () => {
+    try {
+      if (selectedPlayer) {
+        // Update existing player
+        const response = await CricketApiService.updatePlayer(selectedPlayer.numericId, {
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          battingStyle: formData.battingStyle === 'N/A' ? undefined : formData.battingStyle as 'RHB' | 'LHB',
+          bowlingStyle: formData.bowlingStyle === 'N/A' ? undefined : formData.bowlingStyle,
+        });
+
+        if (response.success) {
+          setPlayers(players.map(player => 
+            player.numericId === selectedPlayer.numericId ? response.data : player
+          ));
+          handleCloseDialog();
+        } else {
+          alert('Failed to update player');
+        }
+      } else {
+        // Create new player
+        const response = await CricketApiService.createPlayer({
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          battingStyle: formData.battingStyle === 'N/A' ? undefined : formData.battingStyle as 'RHB' | 'LHB',
+          bowlingStyle: formData.bowlingStyle === 'N/A' ? undefined : formData.bowlingStyle,
+          isActive: true,
+        });
+
+        if (response.success) {
+          setPlayers([...players, response.data]);
+          handleCloseDialog();
+        } else {
+          alert('Failed to create player');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving player:', error);
+      alert('Failed to save player');
     }
-    handleCloseDialog();
   };
 
-  const handleDeletePlayer = (playerId: number) => {
-    if (window.confirm('Are you sure you want to delete this player?')) {
-      setPlayers(players.filter((player) => player.id !== playerId));
+  const handleDeletePlayer = async (playerId: string) => {
+    if (!window.confirm('Are you sure you want to delete this player?')) {
+      return;
     }
-    handleCloseMenu();
+
+    try {
+      const response = await CricketApiService.deletePlayer(parseInt(playerId));
+
+      if (response.success) {
+        setPlayers(players.filter(player => player.id !== playerId));
+      } else {
+        alert('Failed to delete player');
+      }
+    } catch (error) {
+      console.error('Error deleting player:', error);
+      alert('Failed to delete player');
+    }
   };
 
-  const handleUpdateStatus = (playerId: number, newStatus: Player['status']) => {
-    setPlayers(
-      players.map((player) =>
-        player.id === playerId ? { ...player, status: newStatus } : player
-      )
-    );
-    handleCloseMenu();
-  };
-
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, player: Player) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, player: ApiPlayer) => {
     setAnchorEl(event.currentTarget);
     setMenuPlayer(player);
   };
@@ -339,46 +245,37 @@ const PlayersManagement: React.FC = () => {
     setMenuPlayer(null);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'success';
-      case 'Injured':
-        return 'error';
-      case 'Inactive':
-        return 'default';
-      default:
-        return 'default';
-    }
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setPlayersPagination(prev => ({ ...prev, page }));
   };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Batsman':
+      case 'batsman':
         return '#4A90E2';
-      case 'Bowler':
+      case 'bowler':
         return '#EF4444';
-      case 'All-rounder':
+      case 'all-rounder':
         return '#10B981';
-      case 'Wicket-keeper':
+      case 'wicket-keeper':
         return '#F59E0B';
       default:
         return '#6B7280';
     }
   };
 
-  const filterPlayersByTab = (player: Player) => {
+  const filterPlayersByTab = (player: ApiPlayer) => {
     switch (tabValue) {
       case 0: // All
         return true;
       case 1: // Batsmen
-        return player.role === 'Batsman';
+        return player.role === 'batsman';
       case 2: // Bowlers
-        return player.role === 'Bowler';
+        return player.role === 'bowler';
       case 3: // All-rounders
-        return player.role === 'All-rounder';
+        return player.role === 'all-rounder';
       case 4: // Wicket-keepers
-        return player.role === 'Wicket-keeper';
+        return player.role === 'wicket-keeper';
       default:
         return true;
     }
@@ -389,14 +286,29 @@ const PlayersManagement: React.FC = () => {
     .filter(
       (player) =>
         player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        player.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        player.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (player.email && player.email.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-  const totalPlayers = players.length;
-  const activePlayers = players.filter((p) => p.status === 'Active').length;
-  const totalRuns = players.reduce((sum, p) => sum + p.runs, 0);
-  const totalWickets = players.reduce((sum, p) => sum + p.wickets, 0);
+  const totalPlayers = playersPagination.total;
+  const activePlayers = players.filter((p) => p.isActive).length;
+  const totalRuns = players.reduce((sum, p) => sum + (p.totalRuns || 0), 0);
+  const totalWickets = players.reduce((sum, p) => sum + (p.totalWickets || 0), 0);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -527,11 +439,11 @@ const PlayersManagement: React.FC = () => {
           variant="scrollable"
           scrollButtons="auto"
         >
-          <Tab label={`All (${totalPlayers})`} />
-          <Tab label={`Batsmen (${players.filter((p) => p.role === 'Batsman').length})`} />
-          <Tab label={`Bowlers (${players.filter((p) => p.role === 'Bowler').length})`} />
-          <Tab label={`All-rounders (${players.filter((p) => p.role === 'All-rounder').length})`} />
-          <Tab label={`Wicket-keepers (${players.filter((p) => p.role === 'Wicket-keeper').length})`} />
+          <Tab label="All" />
+          <Tab label="Batsmen" />
+          <Tab label="Bowlers" />
+          <Tab label="All-rounders" />
+          <Tab label="Wicket-keepers" />
         </Tabs>
       </Card>
 
@@ -578,11 +490,11 @@ const PlayersManagement: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.team}</Typography>
+                    <Typography variant="body2">N/A</Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={player.role}
+                      label={player.role.charAt(0).toUpperCase() + player.role.slice(1)}
                       size="small"
                       sx={{
                         bgcolor: `${getRoleColor(player.role)}20`,
@@ -592,29 +504,29 @@ const PlayersManagement: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.matches}</Typography>
+                    <Typography variant="body2">{player.matchesPlayed || 0}</Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {player.runs}
+                      {player.totalRuns || 0}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {player.wickets}
+                      {player.totalWickets || 0}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.average}</Typography>
+                    <Typography variant="body2">{player.battingAverage?.toFixed(2) || '0.00'}</Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.strikeRate}</Typography>
+                    <Typography variant="body2">{player.battingStrikeRate?.toFixed(2) || '0.00'}</Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
-                      label={player.status}
+                      label={player.isActive ? 'Active' : 'Inactive'}
                       size="small"
-                      color={getStatusColor(player.status)}
+                      color={player.isActive ? 'success' : 'default'}
                     />
                   </TableCell>
                   <TableCell>
@@ -627,6 +539,19 @@ const PlayersManagement: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination */}
+        {playersPagination.totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 2 }}>
+            <Pagination
+              count={playersPagination.totalPages}
+              page={playersPagination.page}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+            />
+          </Box>
+        )}
       </Card>
 
       {/* Actions Menu */}
@@ -647,24 +572,6 @@ const PlayersManagement: React.FC = () => {
           <EditIcon sx={{ mr: 1, fontSize: 20 }} />
           Edit
         </MenuItem>
-        {menuPlayer?.status !== 'Active' && (
-          <MenuItem onClick={() => handleUpdateStatus(menuPlayer!.id, 'Active')}>
-            <PersonIcon sx={{ mr: 1, fontSize: 20 }} />
-            Mark as Active
-          </MenuItem>
-        )}
-        {menuPlayer?.status !== 'Injured' && (
-          <MenuItem onClick={() => handleUpdateStatus(menuPlayer!.id, 'Injured')}>
-            <PersonIcon sx={{ mr: 1, fontSize: 20 }} />
-            Mark as Injured
-          </MenuItem>
-        )}
-        {menuPlayer?.status !== 'Inactive' && (
-          <MenuItem onClick={() => handleUpdateStatus(menuPlayer!.id, 'Inactive')}>
-            <PersonIcon sx={{ mr: 1, fontSize: 20 }} />
-            Mark as Inactive
-          </MenuItem>
-        )}
         <MenuItem onClick={() => handleDeletePlayer(menuPlayer!.id)}>
           <DeleteIcon sx={{ mr: 1, fontSize: 20 }} />
           Delete
@@ -722,12 +629,12 @@ const PlayersManagement: React.FC = () => {
               <Select
                 value={formData.role}
                 label="Role"
-                onChange={(e) => setFormData({ ...formData, role: e.target.value as Player['role'] })}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as ApiPlayer['role'] })}
               >
-                <MenuItem value="Batsman">Batsman</MenuItem>
-                <MenuItem value="Bowler">Bowler</MenuItem>
-                <MenuItem value="All-rounder">All-rounder</MenuItem>
-                <MenuItem value="Wicket-keeper">Wicket-keeper</MenuItem>
+                <MenuItem value="batsman">Batsman</MenuItem>
+                <MenuItem value="bowler">Bowler</MenuItem>
+                <MenuItem value="all-rounder">All-rounder</MenuItem>
+                <MenuItem value="wicket-keeper">Wicket-keeper</MenuItem>
               </Select>
             </FormControl>
 

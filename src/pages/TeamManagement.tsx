@@ -23,6 +23,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  CircularProgress,
+  Alert,
+  Pagination,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
@@ -32,18 +35,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { useAuth } from '../contexts/AuthContext';
-
-interface Team {
-  id: number;
-  name: string;
-  captain: string;
-  players: number;
-  matches: number;
-  wins: number;
-  losses: number;
-  status: 'Active' | 'Inactive';
-  logo?: string;
-}
+import { CricketApiService, type ApiTeam } from '../api/cricketApi';
 
 const TeamManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -57,19 +49,64 @@ const TeamManagement: React.FC = () => {
       </Box>
     );
   }
-  const [teams, setTeams] = React.useState<Team[]>([
-    { id: 1, name: 'Thunder Strikers', captain: 'Rajesh Kumar', players: 15, matches: 24, wins: 18, losses: 6, status: 'Active' },
-    { id: 2, name: 'Lightning Bolts', captain: 'Amit Singh', players: 14, matches: 22, wins: 14, losses: 8, status: 'Active' },
-    { id: 3, name: 'Royal Warriors', captain: 'Vikas Sharma', players: 16, matches: 20, wins: 12, losses: 8, status: 'Active' },
-    { id: 4, name: 'Kings XI', captain: 'Suresh Patel', players: 15, matches: 18, wins: 10, losses: 8, status: 'Active' },
-    { id: 5, name: 'Phoenix Risers', captain: 'Anil Verma', players: 13, matches: 15, wins: 8, losses: 7, status: 'Inactive' },
-  ]);
+
+  const [teams, setTeams] = React.useState<ApiTeam[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [teamsPagination, setTeamsPagination] = React.useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+  });
+  const [playersPagination, setPlayersPagination] = React.useState({
+    page: 1,
+    limit: 50,
+    total: 0,
+    totalPages: 0,
+  });
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [teamsResponse, playersResponse] = await Promise.all([
+          CricketApiService.getTeams({ page: teamsPagination.page, limit: teamsPagination.limit }),
+          CricketApiService.getPlayers({ page: 1, limit: 1 }) // Just get pagination info, not all players
+        ]);
+
+        if (teamsResponse.success && playersResponse.success) {
+          setTeams(teamsResponse.data);
+          setTeamsPagination(prev => ({
+            ...prev,
+            total: teamsResponse.pagination.total,
+            totalPages: teamsResponse.pagination.totalPages,
+          }));
+          setPlayersPagination(prev => ({
+            ...prev,
+            total: playersResponse.pagination.total,
+            totalPages: playersResponse.pagination.totalPages,
+          }));
+        } else {
+          setError('Failed to load teams data');
+        }
+      } catch (err) {
+        console.error('Error fetching teams:', err);
+        setError('Failed to load teams data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [teamsPagination.page]);
 
   const [openDialog, setOpenDialog] = React.useState(false);
-  const [selectedTeam, setSelectedTeam] = React.useState<Team | null>(null);
+  const [selectedTeam, setSelectedTeam] = React.useState<ApiTeam | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [menuTeam, setMenuTeam] = React.useState<Team | null>(null);
+  const [menuTeam, setMenuTeam] = React.useState<ApiTeam | null>(null);
 
   const [formData, setFormData] = React.useState({
     name: '',
@@ -77,13 +114,13 @@ const TeamManagement: React.FC = () => {
     players: '',
   });
 
-  const handleOpenDialog = (team?: Team) => {
+  const handleOpenDialog = (team?: ApiTeam) => {
     if (team) {
       setSelectedTeam(team);
       setFormData({
         name: team.name,
-        captain: team.captain,
-        players: team.players.toString(),
+        captain: team.captain?.name || '',
+        players: team.playersCount?.toString() || '',
       });
     } else {
       setSelectedTeam(null);
@@ -98,39 +135,63 @@ const TeamManagement: React.FC = () => {
     setFormData({ name: '', captain: '', players: '' });
   };
 
-  const handleSaveTeam = () => {
-    if (selectedTeam) {
-      // Update existing team
-      setTeams(teams.map(team =>
-        team.id === selectedTeam.id
-          ? { ...team, name: formData.name, captain: formData.captain, players: parseInt(formData.players) || 0 }
-          : team
-      ));
-    } else {
-      // Create new team
-      const newTeam: Team = {
-        id: Math.max(...teams.map(t => t.id)) + 1,
-        name: formData.name,
-        captain: formData.captain,
-        players: parseInt(formData.players) || 0,
-        matches: 0,
-        wins: 0,
-        losses: 0,
-        status: 'Active',
-      };
-      setTeams([...teams, newTeam]);
+  const handleSaveTeam = async () => {
+    try {
+      if (selectedTeam) {
+        // Update existing team
+        const response = await CricketApiService.updateTeam(selectedTeam.numericId, {
+          name: formData.name,
+          captainId: formData.captain ? formData.captain : undefined,
+        });
+
+        if (response.success) {
+          setTeams(teams.map(team => 
+            team.numericId === selectedTeam.numericId ? response.data : team
+          ));
+          handleCloseDialog();
+        } else {
+          alert('Failed to update team');
+        }
+      } else {
+        // Create new team
+        const response = await CricketApiService.createTeam({
+          name: formData.name,
+          captainId: formData.captain ? formData.captain : undefined,
+        });
+
+        if (response.success) {
+          setTeams([...teams, response.data]);
+          handleCloseDialog();
+        } else {
+          alert('Failed to create team');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving team:', error);
+      alert('Failed to save team');
     }
-    handleCloseDialog();
   };
 
-  const handleDeleteTeam = (teamId: number) => {
-    if (window.confirm('Are you sure you want to delete this team?')) {
-      setTeams(teams.filter(team => team.id !== teamId));
+  const handleDeleteTeam = async (teamId: string) => {
+    if (!window.confirm('Are you sure you want to delete this team?')) {
+      return;
     }
-    handleCloseMenu();
+
+    try {
+      const response = await CricketApiService.deleteTeam(parseInt(teamId));
+
+      if (response.success) {
+        setTeams(teams.filter(team => team.id !== teamId));
+      } else {
+        alert('Failed to delete team');
+      }
+    } catch (error) {
+      console.error('Error deleting team:', error);
+      alert('Failed to delete team');
+    }
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, team: Team) => {
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, team: ApiTeam) => {
     setAnchorEl(event.currentTarget);
     setMenuTeam(team);
   };
@@ -140,14 +201,34 @@ const TeamManagement: React.FC = () => {
     setMenuTeam(null);
   };
 
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setTeamsPagination(prev => ({ ...prev, page }));
+  };
+
   const filteredTeams = teams.filter(team =>
     team.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    team.captain.toLowerCase().includes(searchQuery.toLowerCase())
+    (team.captain?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalTeams = teams.length;
-  const activeTeams = teams.filter(t => t.status === 'Active').length;
-  const totalPlayers = teams.reduce((sum, team) => sum + team.players, 0);
+  const totalTeams = teamsPagination.total;
+  const activeTeams = teamsPagination.total; // All teams are considered active
+  const totalPlayers = playersPagination.total; // Unique players count
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -272,16 +353,16 @@ const TeamManagement: React.FC = () => {
                       </Typography>
                     </Box>
                   </TableCell>
-                  <TableCell>{team.captain}</TableCell>
-                  <TableCell>{team.players}</TableCell>
-                  <TableCell>{team.matches}</TableCell>
-                  <TableCell>{team.wins}</TableCell>
-                  <TableCell>{team.losses}</TableCell>
+                  <TableCell>{team.captain?.name || 'N/A'}</TableCell>
+                  <TableCell>{team.playersCount || 0}</TableCell>
+                  <TableCell>{team.statistics?.totalMatches || 0}</TableCell>
+                  <TableCell>{team.statistics?.wins || 0}</TableCell>
+                  <TableCell>{team.statistics?.losses || 0}</TableCell>
                   <TableCell>
                     <Chip
-                      label={team.status}
+                      label="Active"
                       size="small"
-                      color={team.status === 'Active' ? 'success' : 'default'}
+                      color="success"
                     />
                   </TableCell>
                   <TableCell>
@@ -297,6 +378,19 @@ const TeamManagement: React.FC = () => {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Pagination */}
+        {teamsPagination.totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 2 }}>
+            <Pagination
+              count={teamsPagination.totalPages}
+              page={teamsPagination.page}
+              onChange={handlePageChange}
+              color="primary"
+              size="large"
+            />
+          </Box>
+        )}
       </Card>
 
       {/* Actions Menu */}

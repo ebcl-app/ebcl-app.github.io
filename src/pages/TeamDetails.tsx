@@ -31,6 +31,7 @@ const TeamDetails: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const [team, setTeam] = React.useState<ApiTeam | null>(null);
   const [teamMatches, setTeamMatches] = React.useState<ApiMatchHistoryEntry[]>([]);
+  const [teamDataLoaded, setTeamDataLoaded] = React.useState(false);
 
   // Helper function to get player icon based on role
   const getPlayerIcon = (role: string) => {
@@ -61,12 +62,17 @@ const TeamDetails: React.FC = () => {
   };
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const lastFetchedTeamId = React.useRef<string | null>(null);
 
   React.useEffect(() => {
     const fetchTeamDetails = async () => {
       if (!teamId) {
         setError('Team ID not provided');
         setLoading(false);
+        return;
+      }
+
+      if (teamDataLoaded && lastFetchedTeamId.current === teamId) {
         return;
       }
 
@@ -77,6 +83,8 @@ const TeamDetails: React.FC = () => {
         return;
       }
 
+      lastFetchedTeamId.current = teamId;
+
       try {
         setLoading(true);
         setError(null);
@@ -86,22 +94,25 @@ const TeamDetails: React.FC = () => {
         
         if (!teamResponse) {
           setError('Team not found');
+          lastFetchedTeamId.current = null;
           return;
         }
 
         setTeam(teamResponse);
         // Use matchHistory from team data instead of separate API call
         setTeamMatches(teamResponse.matchHistory || []);
+        setTeamDataLoaded(true);
       } catch (err) {
         setError('Failed to load team details. Please try again later.');
         console.error('Error fetching team details:', err);
+        lastFetchedTeamId.current = null;
       } finally {
         setLoading(false);
       }
     };
 
     fetchTeamDetails();
-  }, [teamId]);
+  }, [teamId, teamDataLoaded]);
 
   if (loading) {
     return (

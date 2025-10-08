@@ -128,6 +128,11 @@ export interface ApiMatch {
       overs: string;
       economy: string;
     };
+    fielding: {
+      catches: number;
+      runOuts: number;
+      stumpings: number;
+    };
   };
   innings?: ApiInning[];
 }
@@ -151,6 +156,7 @@ export interface ApiPlayer {
   bowlingAverage?: number;
   battingStrikeRate?: number;
   bowlingEconomy?: number;
+  totalOvers?: number;
   matchHistory?: Array<{
     matchId: string;
     matchDate: string;
@@ -162,7 +168,7 @@ export interface ApiPlayer {
       margin: string;
     };
     contributions: Array<{
-      type: 'batting' | 'bowling';
+      type: 'batting' | 'bowling' | 'fielding';
       inningNumber: number;
       // Batting fields
       runs?: number;
@@ -176,6 +182,9 @@ export interface ApiPlayer {
       maidens?: number;
       wickets?: number;
       economy?: string;
+      // Fielding fields
+      action?: string;
+      count?: number;
     }>;
   }>;
   createdAt: string;
@@ -334,7 +343,9 @@ export interface ApiInning {
 export class CricketApiService {
   private static async request<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        credentials: 'include'
+      });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -366,13 +377,57 @@ export class CricketApiService {
     return response.success ? response.data : null;
   }
 
+  static async createMatch(matchData: Partial<ApiMatch>): Promise<ApiResponse<ApiMatch>> {
+    const response = await fetch(`${API_BASE_URL}/matches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(matchData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+  static async updateMatch(numericId: number, matchData: Partial<ApiMatch>): Promise<ApiResponse<ApiMatch>> {
+    const response = await fetch(`${API_BASE_URL}/matches/${numericId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(matchData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+  static async deleteMatch(numericId: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await fetch(`${API_BASE_URL}/matches/${numericId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
   static async getInnings(matchNumericId: number): Promise<ApiInning[]> {
     const response = await this.request<ApiInning[]>(`/matches/${matchNumericId}/innings`);
     return response.success ? response.data : [];
   }
 
   // Players API
-  static async getPlayers(pagination?: PaginationParams): Promise<ApiResponse<ApiPlayer[]>> {
+  static async getPlayers(pagination?: PaginationParams): Promise<PaginatedResponse<ApiPlayer>> {
     let queryParams = '';
     const params: string[] = [];
 
@@ -383,7 +438,7 @@ export class CricketApiService {
       queryParams = '?' + params.join('&');
     }
 
-    return await this.request<ApiPlayer[]>(`/players${queryParams}`);
+    return await this.request<ApiPlayer[]>(`/players${queryParams}`) as PaginatedResponse<ApiPlayer>;
   }
 
   static async getPlayer(numericId: number): Promise<ApiPlayer | null> {
@@ -391,8 +446,52 @@ export class CricketApiService {
     return response.success ? response.data : null;
   }
 
+  static async createPlayer(playerData: Partial<ApiPlayer>): Promise<ApiResponse<ApiPlayer>> {
+    const response = await fetch(`${API_BASE_URL}/players`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(playerData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+  static async updatePlayer(numericId: number, playerData: Partial<ApiPlayer>): Promise<ApiResponse<ApiPlayer>> {
+    const response = await fetch(`${API_BASE_URL}/players/${numericId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(playerData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+  static async deletePlayer(numericId: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await fetch(`${API_BASE_URL}/players/${numericId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
   // Teams API
-  static async getTeams(pagination?: PaginationParams): Promise<ApiResponse<ApiTeam[]>> {
+  static async getTeams(pagination?: PaginationParams): Promise<PaginatedResponse<ApiTeam>> {
     let queryParams = '';
     const params: string[] = [];
 
@@ -403,12 +502,56 @@ export class CricketApiService {
       queryParams = '?' + params.join('&');
     }
 
-    return await this.request<ApiTeam[]>(`/teams${queryParams}`);
+    return await this.request<ApiTeam[]>(`/teams${queryParams}`) as PaginatedResponse<ApiTeam>;
   }
 
   static async getTeam(numericId: number): Promise<ApiTeam | null> {
     const response = await this.request<ApiTeam>(`/teams/${numericId}`);
     return response.success ? response.data : null;
+  }
+
+  static async createTeam(teamData: Partial<ApiTeam>): Promise<ApiResponse<ApiTeam>> {
+    const response = await fetch(`${API_BASE_URL}/teams`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(teamData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+  static async updateTeam(numericId: number, teamData: Partial<ApiTeam>): Promise<ApiResponse<ApiTeam>> {
+    const response = await fetch(`${API_BASE_URL}/teams/${numericId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(teamData),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+  }
+
+  static async deleteTeam(numericId: number): Promise<ApiResponse<{ message: string }>> {
+    const response = await fetch(`${API_BASE_URL}/teams/${numericId}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
   }
 
   static async getTeamMatches(teamNumericId: number): Promise<ApiResponse<ApiMatch[]>> {

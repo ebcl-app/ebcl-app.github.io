@@ -35,23 +35,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Storage key for user session
+  const USER_STORAGE_KEY = 'cricket_app_user';
+
+  // Helper function to get user from localStorage
+  const getStoredUser = (): User | null => {
+    try {
+      const storedUser = localStorage.getItem(USER_STORAGE_KEY);
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch (error) {
+      console.error('Error reading user from localStorage:', error);
+      return null;
+    }
+  };
+
+  // Helper function to store user in localStorage
+  const storeUser = (userData: User | null) => {
+    try {
+      if (userData) {
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+      } else {
+        localStorage.removeItem(USER_STORAGE_KEY);
+      }
+    } catch (error) {
+      console.error('Error storing user in localStorage:', error);
+    }
+  };
+
   useEffect(() => {
-    // Check for existing session on app load
-    const checkAuth = async () => {
+    // Initialize auth from localStorage - trust stored session
+    // API calls will fail if session is invalid
+    const initializeAuth = () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth-check`);
-        if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
+        const storedUser = getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
+        console.error('Auth initialization failed:', error);
+        storeUser(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkAuth();
+    initializeAuth();
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
@@ -67,6 +95,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        // Store user data in localStorage for session persistence
+        storeUser(userData);
         return true;
       }
       return false;
@@ -84,7 +114,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {
+      // Clear user data from state and localStorage
       setUser(null);
+      storeUser(null);
     }
   };
 

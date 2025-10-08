@@ -20,6 +20,14 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
+  ToggleButton,
+  ToggleButtonGroup,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
@@ -37,7 +45,10 @@ import StarIcon from '@mui/icons-material/Star';
 import WarningIcon from '@mui/icons-material/Warning';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import FlagIcon from '@mui/icons-material/Flag';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
+import { calculateImpactScore } from '../utils/impactCalculation';
 
 interface PlayerAnalysis {
   playerDescription: string;
@@ -91,15 +102,127 @@ interface PlayerAnalysis {
   };
 }
 
-const MiniBar: React.FC = () => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.75, height: 64 }}>
-    <Box sx={{ width: 8, height: 16, bgcolor: '#BFDBFE', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 40, bgcolor: '#60A5FA', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 28, bgcolor: '#93C5FD', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 52, bgcolor: '#3B82F6', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 24, bgcolor: '#93C5FD', borderRadius: 0.5 }} />
-  </Box>
-);
+// Helper function to get last 10 batting innings
+const getLast10BattingInnings = (matchHistory: any[]): number[] => {
+  const battingScores: number[] = [];
+  matchHistory.forEach(match => {
+    if (match.contributions) {
+      match.contributions.forEach((contribution: any) => {
+        if (contribution.type === 'batting') {
+          battingScores.push(contribution.runs || 0);
+        }
+      });
+    }
+  });
+  return battingScores.slice(-10);
+};
+
+// Helper function to get last 10 bowling figures (wickets)
+const getLast10BowlingFigures = (matchHistory: any[]): number[] => {
+  const bowlingFigures: number[] = [];
+  matchHistory.forEach(match => {
+    if (match.contributions) {
+      match.contributions.forEach((contribution: any) => {
+        if (contribution.type === 'bowling') {
+          bowlingFigures.push(contribution.wickets || 0);
+        }
+      });
+    }
+  });
+  return bowlingFigures.slice(-10);
+};
+
+// Helper function to calculate win percentage
+const calculateWinPercentage = (matchHistory: any[]): number => {
+  if (!matchHistory || matchHistory.length === 0) return 0;
+
+  let wins = 0;
+  let totalMatches = 0;
+
+  matchHistory.forEach(match => {
+    if (match.result && match.result.winner && match.result.winner !== 'N/A') {
+      totalMatches++;
+
+      // Determine player's team
+      let playerTeam = match.team1;
+      const hasBattingInning1 = match.contributions?.some((c: any) => c.type === 'batting' && c.inningNumber === 1);
+      const hasBowlingInning1 = match.contributions?.some((c: any) => c.type === 'bowling' && c.inningNumber === 1);
+
+      if (hasBattingInning1) {
+        playerTeam = match.team1;
+      } else if (hasBowlingInning1) {
+        playerTeam = match.team2;
+      }
+
+      if (match.result.winner === playerTeam) {
+        wins++;
+      }
+    }
+  });
+
+  return totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : 0;
+};
+
+// Helper function to get highest impact score
+const getHighestImpactScore = (matchHistory: any[]): number => {
+  if (!matchHistory || matchHistory.length === 0) return 0;
+
+  let highestImpact = 0;
+  matchHistory.forEach(match => {
+    if (match.contributions && match.contributions.length > 0) {
+      const impact = calculateImpactScore(match.contributions);
+      if (impact > highestImpact) {
+        highestImpact = impact;
+      }
+    }
+  });
+  return highestImpact;
+};
+
+// Dynamic bar chart component
+const DynamicBarChart: React.FC<{ data: number[]; color: string; maxHeight?: number }> = ({
+  data,
+  color,
+  maxHeight = 64
+}) => {
+  if (!data || data.length === 0) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: maxHeight }}>
+        <Typography variant="caption" color="text.secondary">No data</Typography>
+      </Box>
+    );
+  }
+
+  const maxValue = Math.max(...data, 1); // Avoid division by zero
+  const barWidth = Math.max(8, Math.min(20, 200 / data.length)); // Responsive bar width
+
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5, height: maxHeight, overflow: 'hidden' }}>
+      {data.map((value, index) => {
+        const height = maxValue > 0 ? (value / maxValue) * maxHeight : 0;
+        return (
+          <Box
+            key={index}
+            sx={{
+              width: barWidth,
+              height: Math.max(4, height), // Minimum height for visibility
+              bgcolor: color,
+              borderRadius: 0.5,
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                opacity: 0.8,
+                transform: 'scaleY(1.1)',
+              }
+            }}
+            title={`${value}`}
+          />
+        );
+      })}
+    </Box>
+  );
+};
+
+
 
 const PlayerDetails: React.FC = () => {
   const navigate = useNavigate();
@@ -109,6 +232,30 @@ const PlayerDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<PlayerAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+
+  // State to prevent duplicate API calls
+  const [playerDataLoaded, setPlayerDataLoaded] = useState(false);
+  const [analysisDataLoaded, setAnalysisDataLoaded] = useState(false);
+  const lastFetchedPlayerId = React.useRef<string | null>(null);
+  const lastAnalyzedPlayerId = React.useRef<string | null>(null);
+
+  // View mode for recent matches
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  // Reset state when playerId changes
+  React.useEffect(() => {
+    if (lastFetchedPlayerId.current !== playerId) {
+      setPlayerDataLoaded(false);
+      setAnalysisDataLoaded(false);
+      lastFetchedPlayerId.current = null;
+      lastAnalyzedPlayerId.current = null;
+      setPlayer(null);
+      setAnalysis(null);
+      setAnalysisLoading(false);
+      setLoading(true);
+      setError(null);
+    }
+  }, [playerId]);
 
   // Helper function to get player icon based on role
   const getPlayerIcon = (role: string) => {
@@ -122,6 +269,62 @@ const PlayerDetails: React.FC = () => {
       default:
         return <SportsCricketIcon />;
     }
+  };
+
+  // Helper function to calculate player stats from match history
+  const calculatePlayerStats = (matchHistory: any[]): {
+    matchesPlayed: number;
+    totalRuns: number;
+    battingAverage: number;
+    battingStrikeRate: number;
+    totalWickets: number;
+    bowlingAverage: number;
+    bowlingEconomy: number;
+    totalOvers: number;
+  } => {
+    let totalRuns = 0;
+    let totalBalls = 0;
+    let totalDismissals = 0;
+    let totalWickets = 0;
+    let totalBowlingRuns = 0;
+    let totalOvers = 0;
+    let matchesPlayed = matchHistory.length;
+
+    matchHistory.forEach(match => {
+      if (match.contributions) {
+        match.contributions.forEach((contribution: any) => {
+          if (contribution.type === 'batting') {
+            totalRuns += contribution.runs || 0;
+            totalBalls += contribution.balls || 0;
+            // Count dismissals (not counting 'not out')
+            if (contribution.dismissal && contribution.dismissal !== 'not out') {
+              totalDismissals += 1;
+            }
+          } else if (contribution.type === 'bowling') {
+            totalWickets += contribution.wickets || 0;
+            totalBowlingRuns += contribution.runs || 0;
+            totalOvers += Number(contribution.overs) || 0;
+          }
+        });
+      }
+    });
+
+    // Calculate averages and rates
+    const battingAverage = totalDismissals > 0 ? totalRuns / totalDismissals : totalRuns;
+    const battingStrikeRate = totalBalls > 0 ? (totalRuns / totalBalls) * 100 : 0;
+    const bowlingAverage = totalWickets > 0 ? totalBowlingRuns / totalWickets : 0;
+    const bowlingEconomy = totalOvers > 0 ? totalBowlingRuns / totalOvers : 0;
+
+    return {
+      matchesPlayed,
+      totalRuns,
+      battingAverage,
+      battingStrikeRate,
+      totalWickets,
+      bowlingAverage,
+      bowlingEconomy,
+      totalOvers,
+    };
   };
 
   // Helper function to get player icon color based on role
@@ -140,15 +343,16 @@ const PlayerDetails: React.FC = () => {
 
   useEffect(() => {
     const fetchPlayer = async () => {
-      if (!playerId) {
-        setError('Player ID not provided');
-        setLoading(false);
+      if (!playerId || playerDataLoaded || lastFetchedPlayerId.current === playerId) {
         return;
       }
+
+      lastFetchedPlayerId.current = playerId;
 
       const numericPlayerId = parseInt(playerId, 10);
       if (isNaN(numericPlayerId)) {
         setError('Invalid player ID');
+        lastFetchedPlayerId.current = null;
         setLoading(false);
         return;
       }
@@ -160,25 +364,86 @@ const PlayerDetails: React.FC = () => {
         
         if (!playerData) {
           setError('Player not found');
+          lastFetchedPlayerId.current = null;
           return;
         }
 
-        setPlayer(playerData);
+        // Calculate stats from match history and update player data
+        let finalPlayerData: ApiPlayer = playerData;
+        if (playerData.matchHistory && playerData.matchHistory.length > 0) {
+          const calculatedStats = calculatePlayerStats(playerData.matchHistory);
+          
+          // Update player data with calculated stats
+          finalPlayerData = {
+            id: playerData.id,
+            numericId: playerData.numericId,
+            displayId: playerData.displayId,
+            name: playerData.name,
+            email: playerData.email,
+            role: playerData.role,
+            battingStyle: playerData.battingStyle,
+            bowlingStyle: playerData.bowlingStyle,
+            nationality: playerData.nationality,
+            isActive: playerData.isActive,
+            matchHistory: playerData.matchHistory,
+            createdAt: playerData.createdAt,
+            updatedAt: playerData.updatedAt,
+            matchesPlayed: calculatedStats.matchesPlayed,
+            totalRuns: calculatedStats.totalRuns,
+            battingAverage: calculatedStats.battingAverage,
+            battingStrikeRate: calculatedStats.battingStrikeRate,
+            totalWickets: calculatedStats.totalWickets,
+            bowlingAverage: calculatedStats.bowlingAverage,
+            bowlingEconomy: calculatedStats.bowlingEconomy,
+            totalOvers: calculatedStats.totalOvers,
+          };
+          
+          // Sort match history by date and time
+          if (finalPlayerData.matchHistory) {
+            finalPlayerData.matchHistory.sort((a, b) => {
+              const dateA = new Date(a.matchDate);
+              const dateB = new Date(b.matchDate);
+              
+              // First compare dates (year, month, day)
+              const dateComparison = dateB.getFullYear() - dateA.getFullYear() ||
+                                    dateB.getMonth() - dateA.getMonth() ||
+                                    dateB.getDate() - dateA.getDate();
+              
+              // If dates are the same, compare times
+              if (dateComparison === 0) {
+                return dateB.getTime() - dateA.getTime();
+              }
+              
+              return dateComparison;
+            });
+          }
+        }
+        
+        setPlayer(finalPlayerData);
+        
+        setPlayer(finalPlayerData);
+        
+        setPlayerDataLoaded(true);
       } catch (err) {
         setError('Failed to load player details. Please try again later.');
         console.error('Error fetching player details:', err);
+        lastFetchedPlayerId.current = null;
       } finally {
         setLoading(false);
       }
     };
 
     fetchPlayer();
-  }, [playerId]);
+  }, [playerId, playerDataLoaded]);
 
   // Fetch player analysis when player data is loaded
   useEffect(() => {
     const fetchAnalysis = async () => {
-      if (!player) return;
+      if (!player || analysisDataLoaded || lastAnalyzedPlayerId.current === playerId) {
+        return;
+      }
+
+      lastAnalyzedPlayerId.current = playerId || null;
 
       try {
         setAnalysisLoading(true);
@@ -198,11 +463,13 @@ const PlayerDetails: React.FC = () => {
 
         if (result.success) {
           setAnalysis(result.data);
+          setAnalysisDataLoaded(true);
         } else {
           throw new Error(result.error || 'Failed to get analysis');
         }
       } catch (err) {
         console.error('Error fetching player analysis:', err);
+        lastAnalyzedPlayerId.current = null;
         // Analysis is optional, so we don't set an error state
       } finally {
         setAnalysisLoading(false);
@@ -210,7 +477,7 @@ const PlayerDetails: React.FC = () => {
     };
 
     fetchAnalysis();
-  }, [player]);
+  }, [player, playerId, analysisDataLoaded]);
 
   if (loading) {
     return (
@@ -431,7 +698,7 @@ const PlayerDetails: React.FC = () => {
                 display: 'grid',
                 gridTemplateColumns: {
                   xs: 'repeat(2, 1fr)', // 2 columns on mobile
-                  sm: 'repeat(3, 1fr)', // 3 columns on small screens and up (since there are only 3 stats)
+                  sm: 'repeat(4, 1fr)', // 4 columns on small screens and up
                 },
                 gap: { xs: 1.5, sm: 2 },
                 mb: 2,
@@ -489,6 +756,17 @@ const PlayerDetails: React.FC = () => {
                   >
                     Average
                   </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{
+                      fontSize: { xs: '0.6rem', sm: '0.65rem' },
+                      display: 'block',
+                      mt: -0.5
+                    }}
+                  >
+                    (Runs/Wicket)
+                  </Typography>
                 </CardContent>
               </Card>
               <Card sx={{
@@ -518,51 +796,142 @@ const PlayerDetails: React.FC = () => {
                   </Typography>
                 </CardContent>
               </Card>
+              <Card sx={{
+                boxShadow: 1,
+                minHeight: { xs: 80, sm: 100 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+                <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                  <Typography
+                    variant="h5"
+                    sx={{
+                      fontWeight: 700,
+                      color: '#9c27b0',
+                      fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                    }}
+                  >
+                    {player.totalOvers?.toFixed(1) || '0.0'}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                  >
+                    Total Overs
+                  </Typography>
+                </CardContent>
+              </Card>
             </Box>
           </>
         )}
 
-        {/* Charts */}
+        {/* Charts and Additional Stats */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+          {/* Batting Last 10 Innings */}
           <Box sx={{ flex: '1 1 45%', minWidth: '300px' }}>
             <Card sx={{ boxShadow: 1 }}>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Batting Last 10 Innings</Typography>
-                <MiniBar />
+                <DynamicBarChart
+                  data={getLast10BattingInnings(player.matchHistory || [])}
+                  color="#1976d2"
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Recent batting scores (runs per innings)
+                </Typography>
               </CardContent>
             </Card>
           </Box>
+
+          {/* Bowling Last 10 Innings */}
           <Box sx={{ flex: '1 1 45%', minWidth: '300px' }}>
             <Card sx={{ boxShadow: 1 }}>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Bowling Last 10 Innings</Typography>
-                <MiniBar />
+                <DynamicBarChart
+                  data={getLast10BowlingFigures(player.matchHistory || [])}
+                  color="#d32f2f"
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  Recent bowling figures (wickets per match)
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Win Percentage */}
+          <Box sx={{ flex: '1 1 45%', minWidth: '300px' }}>
+            <Card sx={{ boxShadow: 1 }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Win Percentage</Typography>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#2e7d32',
+                    mb: 1
+                  }}
+                >
+                  {calculateWinPercentage(player.matchHistory || [])}%
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Based on {player.matchHistory?.length || 0} matches played
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* Highest Impact Score */}
+          <Box sx={{ flex: '1 1 45%', minWidth: '300px' }}>
+            <Card sx={{ boxShadow: 1 }}>
+              <CardContent sx={{ textAlign: 'center' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>Highest Impact Score</Typography>
+                <Typography
+                  variant="h3"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#ed6c02',
+                    mb: 1
+                  }}
+                >
+                  {getHighestImpactScore(player.matchHistory || [])}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Best match contribution rating
+                </Typography>
               </CardContent>
             </Card>
           </Box>
         </Box>
 
         {/* AI Analysis Section */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          AI Performance Analysis
-        </Typography>
-        <Card sx={{ mb: 2, boxShadow: 1 }}>
-          <CardContent>
-            {analysisLoading ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
-                <PsychologyIcon sx={{ color: '#4A90E2' }} />
-                <Box>
-                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                    Analyzing player performance...
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Using AI to provide comprehensive insights based on stats and match history
-                  </Typography>
-                </Box>
-                <CircularProgress size={20} sx={{ ml: 'auto' }} />
-              </Box>
-            ) : analysis ? (
-              <Box>
+        <Accordion sx={{ mb: 2, boxShadow: 1 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+              <PsychologyIcon />
+              AI Performance Analysis
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Card sx={{ boxShadow: 'none', border: 'none' }}>
+              <CardContent sx={{ p: 0 }}>
+                {analysisLoading ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, py: 2 }}>
+                    <PsychologyIcon sx={{ color: '#4A90E2' }} />
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                        Analyzing player performance...
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Using AI to provide comprehensive insights based on stats and match history
+                      </Typography>
+                    </Box>
+                    <CircularProgress size={20} sx={{ ml: 'auto' }} />
+                  </Box>
+                ) : analysis ? (
+                  <Box>
                 {/* Executive Summary */}
                 <Accordion defaultExpanded sx={{ mb: 1 }}>
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -914,82 +1283,292 @@ const PlayerDetails: React.FC = () => {
                 </Typography>
               </Box>
             )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </AccordionDetails>
+        </Accordion>
 
         {/* Recent Matches */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>Recent Matches</Typography>
-        {player.matchHistory && player.matchHistory.length > 0 ? (
-          player.matchHistory.slice(0, 5).map((match, index) => {
-            // Extract batting and bowling contributions from the match
-            const battingContribution = match.contributions?.find(c => c.type === 'batting');
-            const bowlingContribution = match.contributions?.find(c => c.type === 'bowling');
-            
-            // Format date
-            const matchDate = new Date(match.matchDate).toLocaleDateString('en-US', {
-              day: 'numeric',
-              month: 'short'
-            });
-            
-            return (
-              <Card key={match.matchId || index} sx={{ boxShadow: 1, mb: 1 }}>
-                <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Avatar sx={{ width: 36, height: 36 }}>
-                    {match.team1?.charAt(0) || 'T'}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {match.team1} vs {match.team2}
-                    </Typography>
-                    
-                    {/* Performance Details */}
-                    {(battingContribution || bowlingContribution) ? (
-                      <Box sx={{ mt: 0.5 }}>
-                        {battingContribution && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
-                            🏏 Bat: {battingContribution.runs || 0}{(!battingContribution.dismissal || battingContribution.dismissal === 'not out') ? '*' : ''} ({battingContribution.balls || 0})
-                          </Typography>
-                        )}
-                        {bowlingContribution && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                            🎯 Bowl: {bowlingContribution.wickets || 0}/{bowlingContribution.runs || 0} ({bowlingContribution.overs || 0})
-                          </Typography>
-                        )}
-                      </Box>
-                    ) : (
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Did not bat/bowl
-                      </Typography>
-                    )}
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Typography variant="caption" color="text.secondary">
-                        {matchDate}
-                      </Typography>
-                      {match.result && (
-                        <Chip 
-                          size="small" 
-                          label={`${match.result.winner} won${match.result.margin ? ` by ${match.result.margin}` : ''}`}
-                          color={match.result.winner === match.team1 ? 'success' : 'error'}
-                          variant="outlined"
-                          sx={{ fontSize: '0.7rem', height: '20px' }}
-                        />
-                      )}
-                    </Box>
-                  </Box>
+        <Accordion sx={{ mb: 2, boxShadow: 1 }}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', mr: 2 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TimelineIcon />
+                Recent Matches
+              </Typography>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(_, newViewMode) => {
+                  if (newViewMode !== null) {
+                    setViewMode(newViewMode);
+                  }
+                }}
+                size="small"
+              >
+                <ToggleButton value="list">
+                  <ViewListIcon />
+                </ToggleButton>
+                <ToggleButton value="grid">
+                  <ViewModuleIcon />
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            {player.matchHistory && player.matchHistory.length > 0 ? (
+              viewMode === 'list' ? (
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#F9FAFB' }}>
+                        <TableCell sx={{ fontWeight: 700 }}>Match</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Performance</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Result</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Impact</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {player.matchHistory.slice(0, 5).map((match, index) => {
+                        // Extract batting, bowling, and fielding contributions from the match
+                        const battingContribution = match.contributions?.find(c => c.type === 'batting');
+                        const bowlingContribution = match.contributions?.find(c => c.type === 'bowling');
+                        const fieldingContributions = match.contributions?.filter(c => c.type === 'fielding') || [];
+
+                        // Format date
+                        const matchDate = new Date(match.matchDate).toLocaleDateString('en-US', {
+                          day: 'numeric',
+                          month: 'short'
+                        });
+
+                        // Determine if player was on winning or losing team
+                        let playerTeam = match.team1; // Default assumption
+                        const hasBattingInning1 = match.contributions?.some(c => c.type === 'batting' && c.inningNumber === 1);
+                        const hasBowlingInning1 = match.contributions?.some(c => c.type === 'bowling' && c.inningNumber === 1);
+
+                        if (hasBattingInning1) {
+                          playerTeam = match.team1; // Batted in inning 1, so on team1
+                        } else if (hasBowlingInning1) {
+                          playerTeam = match.team2; // Bowled in inning 1, so on team2
+                        }
+
+                        const isWinner = match.result && match.result.winner === playerTeam;
+                        const isLoser = match.result && match.result.winner !== playerTeam && match.result.winner !== 'N/A';
+
+                        return (
+                          <TableRow key={match.matchId || index} hover>
+                            <TableCell>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Avatar sx={{ width: 32, height: 32 }}>
+                                  {match.team1?.charAt(0) || 'T'}
+                                </Avatar>
+                                <Box>
+                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                    {match.team1} vs {match.team2}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              {(battingContribution || bowlingContribution || fieldingContributions.length > 0) ? (
+                                <Box>
+                                  {battingContribution && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                      🏏 {battingContribution.runs || 0}{(!battingContribution.dismissal || battingContribution.dismissal === 'not out') ? '*' : ''} ({battingContribution.balls || 0})
+                                    </Typography>
+                                  )}
+                                  {bowlingContribution && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                      🎯 {bowlingContribution.wickets || 0}/{bowlingContribution.runs || 0} ({bowlingContribution.overs || 0})
+                                    </Typography>
+                                  )}
+                                  {fieldingContributions.length > 0 && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                      🏃 {fieldingContributions.map(fc => `${fc.count || 0} ${fc.action || 'action'}${fc.count !== 1 ? 's' : ''}`).join(', ')}
+                                    </Typography>
+                                  )}
+                                </Box>
+                              ) : (
+                                <Typography variant="caption" color="text.secondary">
+                                  Did not contribute
+                                </Typography>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2">{matchDate}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              {match.result && (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                  <Chip
+                                    size="small"
+                                    label={`${match.result.winner} won${match.result.margin ? ` by ${match.result.margin}` : ''}`}
+                                    color={match.result.winner === match.team1 ? 'success' : 'error'}
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: '20px' }}
+                                  />
+                                  <Chip
+                                    size="small"
+                                    label={isWinner ? 'Won' : isLoser ? 'Lost' : 'N/A'}
+                                    color={isWinner ? 'success' : isLoser ? 'error' : 'default'}
+                                    variant="filled"
+                                    sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
+                                  />
+                                </Box>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {match.contributions && match.contributions.length > 0 && (
+                                <Chip
+                                  size="small"
+                                  label={`${calculateImpactScore(match.contributions)}`}
+                                  color="primary"
+                                  variant="filled"
+                                  sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
+                                />
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              ) : (
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: {
+                      xs: 'repeat(1, 1fr)',
+                      sm: 'repeat(2, 1fr)',
+                      md: 'repeat(3, 1fr)'
+                    },
+                    gap: 2,
+                  }}
+                >
+                  {player.matchHistory.slice(0, 5).map((match, index) => {
+                    // Extract batting, bowling, and fielding contributions from the match
+                    const battingContribution = match.contributions?.find(c => c.type === 'batting');
+                    const bowlingContribution = match.contributions?.find(c => c.type === 'bowling');
+                    const fieldingContributions = match.contributions?.filter(c => c.type === 'fielding') || [];
+
+                    // Format date
+                    const matchDate = new Date(match.matchDate).toLocaleDateString('en-US', {
+                      day: 'numeric',
+                      month: 'short'
+                    });
+
+                    // Determine if player was on winning or losing team
+                    let playerTeam = match.team1; // Default assumption
+                    const hasBattingInning1 = match.contributions?.some(c => c.type === 'batting' && c.inningNumber === 1);
+                    const hasBowlingInning1 = match.contributions?.some(c => c.type === 'bowling' && c.inningNumber === 1);
+
+                    if (hasBattingInning1) {
+                      playerTeam = match.team1; // Batted in inning 1, so on team1
+                    } else if (hasBowlingInning1) {
+                      playerTeam = match.team2; // Bowled in inning 1, so on team2
+                    }
+
+                    const isWinner = match.result && match.result.winner === playerTeam;
+                    const isLoser = match.result && match.result.winner !== playerTeam && match.result.winner !== 'N/A';
+
+                    return (
+                      <Card key={match.matchId || index} sx={{ boxShadow: 1 }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar sx={{ width: 36, height: 36 }}>
+                            {match.team1?.charAt(0) || 'T'}
+                          </Avatar>
+                          <Box sx={{ flex: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {match.team1} vs {match.team2}
+                            </Typography>
+
+                            {/* Performance Details */}
+                            {(battingContribution || bowlingContribution || fieldingContributions.length > 0) ? (
+                              <Box sx={{ mt: 0.5 }}>
+                                {battingContribution && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
+                                    🏏 Bat: {battingContribution.runs || 0}{(!battingContribution.dismissal || battingContribution.dismissal === 'not out') ? '*' : ''} ({battingContribution.balls || 0})
+                                  </Typography>
+                                )}
+                                {bowlingContribution && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: fieldingContributions.length > 0 ? 0.25 : 0 }}>
+                                    🎯 Bowl: {bowlingContribution.wickets || 0}/{bowlingContribution.runs || 0} ({bowlingContribution.overs || 0})
+                                  </Typography>
+                                )}
+                                {fieldingContributions.length > 0 && (
+                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                    🏃 Field: {fieldingContributions.map(fc => `${fc.count || 0} ${fc.action || 'action'}${fc.count !== 1 ? 's' : ''}`).join(', ')}
+                                  </Typography>
+                                )}
+                              </Box>
+                            ) : (
+                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                Did not contribute
+                              </Typography>
+                            )}
+
+                            <Box sx={{ mt: 0.5 }}>
+                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                {matchDate}
+                              </Typography>
+                              <Box sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.5,
+                                mt: 0.5,
+                                alignItems: 'center'
+                              }}>
+                                {match.result && (
+                                  <Chip
+                                    size="small"
+                                    label={`${match.result.winner} won${match.result.margin ? ` by ${match.result.margin}` : ''}`}
+                                    color={match.result.winner === match.team1 ? 'success' : 'error'}
+                                    variant="outlined"
+                                    sx={{ fontSize: '0.7rem', height: '20px' }}
+                                  />
+                                )}
+                                {/* Player Result Status */}
+                                {match.result && (
+                                  <Chip
+                                    size="small"
+                                    label={isWinner ? 'Won' : isLoser ? 'Lost' : 'N/A'}
+                                    color={isWinner ? 'success' : isLoser ? 'error' : 'default'}
+                                    variant="filled"
+                                    sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
+                                  />
+                                )}
+                                {/* Impact Score */}
+                                {match.contributions && match.contributions.length > 0 && (
+                                  <Chip
+                                    size="small"
+                                    label={`Impact: ${calculateImpactScore(match.contributions)}`}
+                                    color="primary"
+                                    variant="filled"
+                                    sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
+                                  />
+                                )}
+                              </Box>
+                            </Box>
+                          </Box>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </Box>
+              )
+            ) : (
+              <Card sx={{ boxShadow: 1 }}>
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+                    No recent matches available
+                  </Typography>
                 </CardContent>
               </Card>
-            );
-          })
-        ) : (
-          <Card sx={{ boxShadow: 1 }}>
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                No recent matches available
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </AccordionDetails>
+        </Accordion>
       </Container>
 
       {/* Floating Action */}

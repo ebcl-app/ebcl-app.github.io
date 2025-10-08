@@ -177,8 +177,8 @@ const AdminDashboard: React.FC = () => {
       </Box>
 
       {/* Match Status Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={8}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 4 }}>
+        <Box sx={{ flex: '1 1 65%', minWidth: '300px' }}>
           <Card sx={{ boxShadow: 2 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
@@ -221,9 +221,9 @@ const AdminDashboard: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
+        </Box>
 
-        <Grid item xs={12} md={4}>
+        <Box sx={{ flex: '1 1 30%', minWidth: '250px' }}>
           <Card sx={{ boxShadow: 2 }}>
             <CardContent>
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
@@ -266,8 +266,8 @@ const AdminDashboard: React.FC = () => {
               </Box>
             </CardContent>
           </Card>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
 
       {/* Recent Activity */}
       <Card sx={{ boxShadow: 2 }}>

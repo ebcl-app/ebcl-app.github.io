@@ -1,37 +1,28 @@
 import React from 'react';
 import {
   Box,
-  Drawer,
-  AppBar,
-  Toolbar,
-  List,
   Typography,
-  Divider,
-  IconButton,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
   Card,
   CardContent,
   Avatar,
   Chip,
+  Container,
+  IconButton,
+  Tabs,
+  Tab,
+  Pagination,
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import DashboardIcon from '@mui/icons-material/Dashboard';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsIcon from '@mui/icons-material/Sports';
 import PeopleIcon from '@mui/icons-material/People';
 import PersonIcon from '@mui/icons-material/Person';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import SettingsIcon from '@mui/icons-material/Settings';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { useNavigate } from 'react-router-dom';
 import TeamManagement from './TeamManagement';
 import MatchesManagement from './MatchesManagement';
 import PlayersManagement from './PlayersManagement';
-
-const drawerWidth = 240;
+import { CricketApiService, type ApiMatch } from '../api/cricketApi';
 
 interface StatCardProps {
   title: string;
@@ -71,133 +62,138 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color, trend })
 );
 
 const AdminPanel: React.FC = () => {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const [selectedMenu, setSelectedMenu] = React.useState('Dashboard');
+  const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = React.useState(0);
+  const [matchesPage, setMatchesPage] = React.useState(1);
+  const [playersPage, setPlayersPage] = React.useState(1);
+  const [dashboardStats, setDashboardStats] = React.useState({
+    totalMatches: 0,
+    activeTeams: 0,
+    registeredPlayers: 0,
+    championships: 0,
+    loading: true,
+    error: null as string | null,
+  });
+  const [recentMatches, setRecentMatches] = React.useState<any[]>([]);
+  const [topPlayers, setTopPlayers] = React.useState<any[]>([]);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  // Pagination constants
+  const MATCHES_PER_PAGE = 10;
+  const PLAYERS_PER_PAGE = 10;
+
+  // Fetch dashboard statistics
+  React.useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        setDashboardStats(prev => ({ ...prev, loading: true, error: null }));
+
+        // Fetch all data in parallel with high limits for dashboard
+        const [matchesResponse, teamsResponse, playersResponse] = await Promise.all([
+          CricketApiService.getMatches(undefined, { page: 1, limit: 1000 }),
+          CricketApiService.getTeams({ page: 1, limit: 1000 }),
+          CricketApiService.getPlayers({ page: 1, limit: 1000 }),
+        ]);
+
+        if (matchesResponse.success && teamsResponse.success && playersResponse.success) {
+          const matches = matchesResponse.data;
+          const players = playersResponse.data;
+
+          // Calculate statistics using pagination totals
+          const totalMatches = matchesResponse.pagination.total;
+          const activeTeams = teamsResponse.pagination.total;
+          const registeredPlayers = playersResponse.pagination.total;
+          
+          // Count completed matches from the loaded data (since we need to filter)
+          const completedMatches = matches.filter((match: ApiMatch) => match.status === 'completed').length;
+
+          setDashboardStats({
+            totalMatches,
+            activeTeams,
+            registeredPlayers,
+            championships: completedMatches,
+            loading: false,
+            error: null,
+          });
+
+          // Set recent matches (all matches, not just last 3)
+          const recentMatchesData = matches.map((match: ApiMatch) => ({
+            team1: match.team1?.name || 'Unknown Team',
+            team2: match.team2?.name || 'Unknown Team',
+            score: match.team1Score && match.team2Score ? `${match.team1Score} vs ${match.team2Score}` : 'Not started',
+            status: match.status.charAt(0).toUpperCase() + match.status.slice(1),
+          }));
+          setRecentMatches(recentMatchesData);
+
+          // Set top players (by total runs, all players)
+          const sortedPlayers = players
+            .filter((player: any) => player.totalRuns)
+            .sort((a: any, b: any) => (b.totalRuns || 0) - (a.totalRuns || 0))
+            .map((player: any) => ({
+              name: player.name,
+              runs: player.totalRuns?.toLocaleString() || '0',
+              avatar: player.name.charAt(0),
+            }));
+          setTopPlayers(sortedPlayers);
+        } else {
+          setDashboardStats(prev => ({
+            ...prev,
+            loading: false,
+            error: 'Failed to load dashboard data',
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard stats:', error);
+        setDashboardStats(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Failed to load dashboard data',
+        }));
+      }
+    };
+
+    fetchDashboardStats();
+  }, []);
+
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setSelectedTab(newValue);
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/admin' },
-    { text: 'Matches', icon: <SportsIcon />, path: '/admin/matches' },
-    { text: 'Teams', icon: <PeopleIcon />, path: '/admin/teams' },
-    { text: 'Players', icon: <PersonIcon />, path: '/admin/players' },
-    { text: 'Reports', icon: <AssessmentIcon />, path: '/admin/reports' },
-    { text: 'Settings', icon: <SettingsIcon />, path: '/admin/settings' },
-  ];
+  const handleMatchesPageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setMatchesPage(page);
+  };
 
-  const drawer = (
-    <Box>
-      <Toolbar sx={{ bgcolor: '#4A90E2', color: 'white' }}>
-        <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 700 }}>
-          Box Cricket
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              selected={selectedMenu === item.text}
-              onClick={() => setSelectedMenu(item.text)}
-              sx={{
-                '&.Mui-selected': {
-                  bgcolor: '#E3F2FD',
-                  borderLeft: '4px solid #4A90E2',
-                  '& .MuiListItemIcon-root': {
-                    color: '#4A90E2',
-                  },
-                },
-              }}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-    </Box>
-  );
+  const handlePlayersPageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setPlayersPage(page);
+  };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: '#F5F7FA' }}>
-      {/* App Bar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
-          bgcolor: 'white',
-          color: '#333',
-          boxShadow: 1,
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
-          >
-            <MenuIcon />
+    <Box sx={{ bgcolor: '#F5F7FA', minHeight: '100vh', pb: 12 }}>
+      <Container maxWidth="lg" sx={{ pt: 2 }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
+            <ArrowBackIosNewIcon fontSize="small" />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 600 }}>
-            {selectedMenu}
+          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+            Admin Panel
           </Typography>
-          <IconButton color="inherit">
-            <NotificationsIcon />
-          </IconButton>
-          <Avatar sx={{ ml: 2, bgcolor: '#4A90E2' }}>A</Avatar>
-        </Toolbar>
-      </AppBar>
+        </Box>
 
-      {/* Drawer */}
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
-        <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
-          variant="permanent"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-          open
-        >
-          {drawer}
-        </Drawer>
-      </Box>
+        {/* Navigation Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs value={selectedTab} onChange={handleTabChange} aria-label="admin navigation">
+            <Tab label="Dashboard" />
+            <Tab label="Teams" />
+            <Tab label="Players" />
+            <Tab label="Matches" />
+          </Tabs>
+        </Box>
 
-      {/* Main Content */}
-      <Box
-        component="main"
-        sx={{
-          flexGrow: 1,
-          p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-        }}
-      >
-        <Toolbar />
-
-        {/* Dashboard Content */}
-        {selectedMenu === 'Dashboard' && (
-          <Box>
+        {/* Content Area */}
+        {selectedTab === 0 && (
+          <>
             <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
-              Overview
+              Dashboard Overview
             </Typography>
 
             {/* Stats Grid */}
@@ -205,37 +201,37 @@ const AdminPanel: React.FC = () => {
               <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
                 <StatCard
                   title="Total Matches"
-                  value="156"
+                  value={dashboardStats.loading ? '...' : dashboardStats.totalMatches}
                   icon={<SportsIcon />}
                   color="#4A90E2"
-                  trend="+12% this month"
+                  trend={dashboardStats.loading ? undefined : "+12% this month"}
                 />
               </Box>
               <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
                 <StatCard
                   title="Active Teams"
-                  value="24"
+                  value={dashboardStats.loading ? '...' : dashboardStats.activeTeams}
                   icon={<PeopleIcon />}
                   color="#10B981"
-                  trend="+5% this month"
+                  trend={dashboardStats.loading ? undefined : "+5% this month"}
                 />
               </Box>
               <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
                 <StatCard
                   title="Registered Players"
-                  value="482"
+                  value={dashboardStats.loading ? '...' : dashboardStats.registeredPlayers}
                   icon={<PersonIcon />}
                   color="#F59E0B"
-                  trend="+18% this month"
+                  trend={dashboardStats.loading ? undefined : "+18% this month"}
                 />
               </Box>
               <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 calc(50% - 12px)', md: '1 1 calc(25% - 18px)' }, minWidth: 0 }}>
                 <StatCard
                   title="Championships"
-                  value="12"
+                  value={dashboardStats.loading ? '...' : dashboardStats.championships}
                   icon={<EmojiEventsIcon />}
                   color="#EF4444"
-                  trend="+2 this year"
+                  trend={dashboardStats.loading ? undefined : "+2 this year"}
                 />
               </Box>
             </Box>
@@ -249,37 +245,60 @@ const AdminPanel: React.FC = () => {
                       Recent Matches
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {[
-                        { team1: 'Thunder Strikers', team2: 'Lightning Bolts', score: '185/8 vs 178/9', status: 'Completed' },
-                        { team1: 'Royal Warriors', team2: 'Kings XI', score: '156/6 vs 142/10', status: 'Completed' },
-                        { team1: 'Phoenix Risers', team2: 'Eagle Eyes', score: '120/4 vs 95/3', status: 'Live' },
-                      ].map((match, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            p: 2,
-                            bgcolor: '#F9FAFB',
-                            borderRadius: 1,
-                          }}
-                        >
-                          <Box>
-                            <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                              {match.team1} vs {match.team2}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {match.score}
-                            </Typography>
-                          </Box>
-                          <Chip
-                            label={match.status}
-                            size="small"
-                            color={match.status === 'Live' ? 'error' : 'success'}
-                          />
-                        </Box>
-                      ))}
+                      {dashboardStats.loading ? (
+                        <Typography>Loading recent matches...</Typography>
+                      ) : (() => {
+                        const startIndex = (matchesPage - 1) * MATCHES_PER_PAGE;
+                        const endIndex = startIndex + MATCHES_PER_PAGE;
+                        const paginatedMatches = recentMatches.slice(startIndex, endIndex);
+                        
+                        return paginatedMatches.length > 0 ? (
+                          <>
+                            {paginatedMatches.map((match, index) => (
+                              <Box
+                                key={startIndex + index}
+                                sx={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  p: 2,
+                                  bgcolor: '#F9FAFB',
+                                  borderRadius: 1,
+                                }}
+                              >
+                                <Box>
+                                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                    {match.team1} vs {match.team2}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {match.score}
+                                  </Typography>
+                                </Box>
+                                <Chip
+                                  label={match.status}
+                                  size="small"
+                                  color={match.status === 'Live' ? 'error' : 'success'}
+                                />
+                              </Box>
+                            ))}
+                            {recentMatches.length > MATCHES_PER_PAGE && (
+                              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                <Pagination
+                                  count={Math.ceil(recentMatches.length / MATCHES_PER_PAGE)}
+                                  page={matchesPage}
+                                  onChange={handleMatchesPageChange}
+                                  size="small"
+                                  color="primary"
+                                />
+                              </Box>
+                            )}
+                          </>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            No recent matches available
+                          </Typography>
+                        );
+                      })()}
                     </Box>
                   </CardContent>
                 </Card>
@@ -292,63 +311,69 @@ const AdminPanel: React.FC = () => {
                       Top Players
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      {[
-                        { name: 'Rajesh Kumar', runs: '1,245', avatar: 'R' },
-                        { name: 'Amit Singh', runs: '1,180', avatar: 'A' },
-                        { name: 'Vikas Sharma', runs: '1,050', avatar: 'V' },
-                      ].map((player, index) => (
-                        <Box
-                          key={index}
-                          sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
-                        >
-                          <Avatar sx={{ bgcolor: '#4A90E2' }}>{player.avatar}</Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                              {player.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {player.runs} runs
-                            </Typography>
-                          </Box>
-                          <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                            #{index + 1}
+                      {dashboardStats.loading ? (
+                        <Typography>Loading top players...</Typography>
+                      ) : (() => {
+                        const startIndex = (playersPage - 1) * PLAYERS_PER_PAGE;
+                        const endIndex = startIndex + PLAYERS_PER_PAGE;
+                        const paginatedPlayers = topPlayers.slice(startIndex, endIndex);
+                        
+                        return paginatedPlayers.length > 0 ? (
+                          <>
+                            {paginatedPlayers.map((player, index) => (
+                              <Box
+                                key={startIndex + index}
+                                sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
+                              >
+                                <Avatar sx={{ bgcolor: '#4A90E2' }}>{player.avatar}</Avatar>
+                                <Box sx={{ flex: 1 }}>
+                                  <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                    {player.name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {player.runs} runs
+                                  </Typography>
+                                </Box>
+                                <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
+                                  #{startIndex + index + 1}
+                                </Typography>
+                              </Box>
+                            ))}
+                            {topPlayers.length > PLAYERS_PER_PAGE && (
+                              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                                <Pagination
+                                  count={Math.ceil(topPlayers.length / PLAYERS_PER_PAGE)}
+                                  page={playersPage}
+                                  onChange={handlePlayersPageChange}
+                                  size="small"
+                                  color="primary"
+                                />
+                              </Box>
+                            )}
+                          </>
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">
+                            No player data available
                           </Typography>
-                        </Box>
-                      ))}
+                        );
+                      })()}
                     </Box>
                   </CardContent>
                 </Card>
               </Box>
             </Box>
-          </Box>
+          </>
         )}
 
         {/* Teams Management */}
-        {selectedMenu === 'Teams' && <TeamManagement />}
-
-        {/* Matches Management */}
-        {selectedMenu === 'Matches' && <MatchesManagement />}
+        {selectedTab === 1 && <TeamManagement />}
 
         {/* Players Management */}
-        {selectedMenu === 'Players' && <PlayersManagement />}
+        {selectedTab === 2 && <PlayersManagement />}
 
-        {/* Other Menu Content Placeholders */}
-        {selectedMenu !== 'Dashboard' && 
-         selectedMenu !== 'Teams' && 
-         selectedMenu !== 'Matches' && 
-         selectedMenu !== 'Players' && (
-          <Card sx={{ boxShadow: 2 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                {selectedMenu}
-              </Typography>
-              <Typography color="text.secondary">
-                {selectedMenu} management interface will be implemented here.
-              </Typography>
-            </CardContent>
-          </Card>
-        )}
-      </Box>
+        {/* Matches Management */}
+        {selectedTab === 3 && <MatchesManagement />}
+      </Container>
     </Box>
   );
 };

@@ -10,89 +10,114 @@ import {
   LinearProgress,
   Paper,
   IconButton,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import SportsIcon from '@mui/icons-material/Sports';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
 
 interface PlayerProfileProps {
   playerId?: number;
   onBack?: () => void;
 }
 
-interface MatchPerformance {
-  id: number;
-  date: string;
-  opponent: string;
-  runs: number;
-  wickets: number;
-  result: 'Won' | 'Lost';
-}
+const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 6, onBack }) => {
+  const [player, setPlayer] = React.useState<ApiPlayer | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) => {
-  // Mock player data - in real app, fetch based on playerId
-  const player = {
-    id: playerId,
-    name: 'Rajesh Kumar',
-    email: 'rajesh.k@email.com',
-    phone: '+91 98765 43210',
-    team: 'Thunder Strikers',
-    role: 'Batsman',
-    battingStyle: 'Right-handed',
-    bowlingStyle: 'N/A',
-    status: 'Active',
-    joinDate: '2023-01-15',
-    
-    // Career stats
-    matches: 45,
-    innings: 43,
-    runs: 2156,
-    highestScore: 98,
-    average: '47.91',
-    strikeRate: '142.5',
-    fifties: 18,
-    hundreds: 4,
-    
-    // Bowling stats
-    wickets: 0,
-    bestBowling: 'N/A',
-    bowlingAverage: 'N/A',
-    economy: 'N/A',
-    
-    // Achievements
-    achievements: [
-      'Player of the Match - 8 times',
-      'Highest run scorer - Season 2024',
-      'Best batting average - Season 2023',
-      'Century against Lightning Bolts',
-    ],
-  };
+  React.useEffect(() => {
+    const fetchPlayerData = async () => {
+      if (!playerId) {
+        setError('Player ID not provided');
+        setLoading(false);
+        return;
+      }
 
-  const recentMatches: MatchPerformance[] = [
-    { id: 1, date: '2025-10-01', opponent: 'Lightning Bolts', runs: 78, wickets: 0, result: 'Won' },
-    { id: 2, date: '2025-09-28', opponent: 'Royal Warriors', runs: 45, wickets: 0, result: 'Lost' },
-    { id: 3, date: '2025-09-25', opponent: 'Phoenix Risers', runs: 92, wickets: 0, result: 'Won' },
-    { id: 4, date: '2025-09-20', opponent: 'Kings XI', runs: 34, wickets: 0, result: 'Won' },
-    { id: 5, date: '2025-09-15', opponent: 'Eagle Eyes', runs: 67, wickets: 0, result: 'Lost' },
-  ];
+      try {
+        setLoading(true);
+        setError(null);
+        const playerData = await CricketApiService.getPlayer(playerId);
+        
+        if (!playerData) {
+          setError('Player not found');
+          return;
+        }
+
+        setPlayer(playerData);
+      } catch (err) {
+        console.error('Error fetching player data:', err);
+        setError('Failed to load player data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlayerData();
+  }, [playerId]);
+
+  // Sort match history by matchDate in descending order (newest first)
+  // First sort by date, then by time within the same date
+  const sortedMatchHistory = React.useMemo(() => {
+    if (!player?.matchHistory) return [];
+    return [...player.matchHistory].sort((a, b) => {
+      const dateA = new Date(a.matchDate);
+      const dateB = new Date(b.matchDate);
+      
+      // First compare dates (year, month, day)
+      const dateComparison = dateB.getFullYear() - dateA.getFullYear() ||
+                            dateB.getMonth() - dateA.getMonth() ||
+                            dateB.getDate() - dateA.getDate();
+      
+      // If dates are the same, compare times
+      if (dateComparison === 0) {
+        return dateB.getTime() - dateA.getTime();
+      }
+      
+      return dateComparison;
+    });
+  }, [player?.matchHistory]);
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'Batsman':
+      case 'batsman':
         return '#4A90E2';
-      case 'Bowler':
+      case 'bowler':
         return '#EF4444';
-      case 'All-rounder':
+      case 'all-rounder':
         return '#10B981';
-      case 'Wicket-keeper':
+      case 'wicket-keeper':
         return '#F59E0B';
       default:
         return '#6B7280';
     }
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
+  if (!player) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="info">Player not found</Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -132,7 +157,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
               </Typography>
               <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                 <Chip
-                  label={player.role}
+                  label={player.role.charAt(0).toUpperCase() + player.role.slice(1)}
                   sx={{
                     bgcolor: 'rgba(255,255,255,0.2)',
                     color: 'white',
@@ -140,16 +165,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                   }}
                 />
                 <Chip
-                  label={player.status}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.2)',
-                    color: 'white',
-                    fontWeight: 600,
-                  }}
-                />
-                <Chip
-                  label={player.team}
-                  icon={<SportsIcon sx={{ color: 'white !important' }} />}
+                  label={player.isActive ? 'Active' : 'Inactive'}
                   sx={{
                     bgcolor: 'rgba(255,255,255,0.2)',
                     color: 'white',
@@ -158,14 +174,12 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                 />
               </Box>
               <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <EmailIcon sx={{ fontSize: 20 }} />
-                  <Typography variant="body2">{player.email}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <PhoneIcon sx={{ fontSize: 20 }} />
-                  <Typography variant="body2">{player.phone}</Typography>
-                </Box>
+                {player.email && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EmailIcon sx={{ fontSize: 20 }} />
+                    <Typography variant="body2">{player.email}</Typography>
+                  </Box>
+                )}
               </Box>
             </Box>
           </Box>
@@ -180,7 +194,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
               Matches Played
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#4A90E2' }}>
-              {player.matches}
+              {player.matchesPlayed || 0}
             </Typography>
           </CardContent>
         </Card>
@@ -190,17 +204,17 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
               Total Runs
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
-              {player.runs}
+              {player.totalRuns || 0}
             </Typography>
           </CardContent>
         </Card>
         <Card sx={{ flex: '1 1 200px', minWidth: 0 }}>
           <CardContent>
             <Typography variant="body2" color="text.secondary" gutterBottom>
-              Average
+              Batting Average
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
-              {player.average}
+              {player.battingAverage?.toFixed(2) || '0.00'}
             </Typography>
           </CardContent>
         </Card>
@@ -210,7 +224,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
               Strike Rate
             </Typography>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
-              {player.strikeRate}
+              {player.battingStrikeRate?.toFixed(2) || '0.00'}
             </Typography>
           </CardContent>
         </Card>
@@ -228,10 +242,10 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                 <Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Innings Played
+                      Total Wickets
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {player.innings}
+                      {player.totalWickets || 0}
                     </Typography>
                   </Box>
                 </Box>
@@ -239,10 +253,10 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                 <Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Highest Score
+                      Bowling Average
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {player.highestScore}
+                      {player.bowlingAverage?.toFixed(2) || '0.00'}
                     </Typography>
                   </Box>
                 </Box>
@@ -250,21 +264,10 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                 <Box>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
                     <Typography variant="body2" color="text.secondary">
-                      Fifties
+                      Economy
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {player.fifties}
-                    </Typography>
-                  </Box>
-                </Box>
-                <Divider />
-                <Box>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Hundreds
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {player.hundreds}
+                      {player.bowlingEconomy?.toFixed(2) || '0.00'}
                     </Typography>
                   </Box>
                 </Box>
@@ -275,7 +278,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                       Batting Style
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {player.battingStyle}
+                      {player.battingStyle === 'RHB' ? 'Right-handed' : player.battingStyle === 'LHB' ? 'Left-handed' : 'N/A'}
                     </Typography>
                   </Box>
                 </Box>
@@ -286,7 +289,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                       Bowling Style
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                      {player.bowlingStyle}
+                      {player.bowlingStyle || 'N/A'}
                     </Typography>
                   </Box>
                 </Box>
@@ -294,46 +297,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
             </CardContent>
           </Card>
 
-          {/* Achievements */}
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <EmojiEventsIcon sx={{ color: '#F59E0B' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Achievements
-                </Typography>
-              </Box>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                {player.achievements.map((achievement, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      p: 1.5,
-                      bgcolor: '#F9FAFB',
-                      borderRadius: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        bgcolor: '#10B981',
-                      }}
-                    />
-                    <Typography variant="body2">{achievement}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
-        </Box>
-
-        {/* Right Column - Recent Matches */}
-        <Box sx={{ flex: '1 1 400px', minWidth: 0 }}>
+          {/* Recent Matches */}
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -343,57 +307,72 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 1, onBack }) =
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {recentMatches.map((match) => (
-                  <Paper
-                    key={match.id}
-                    elevation={0}
-                    sx={{
-                      p: 2,
-                      bgcolor: '#F9FAFB',
-                      borderLeft: `4px solid ${
-                        match.result === 'Won' ? '#10B981' : '#EF4444'
-                      }`,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        vs {match.opponent}
-                      </Typography>
-                      <Chip
-                        label={match.result}
-                        size="small"
-                        color={match.result === 'Won' ? 'success' : 'error'}
-                      />
-                    </Box>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                      {new Date(match.date).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 3 }}>
-                      <Box>
-                        <Typography variant="caption" color="text.secondary">
-                          Runs
+                {sortedMatchHistory.slice(0, 5).map((match, index) => {
+                  // Determine opponent team
+                  const opponent = match.team1 === player.name ? match.team2 : match.team1;
+                  // Determine result
+                  const isWinner = match.result.winner === player.name;
+                  
+                  return (
+                    <Paper
+                      key={`${match.matchId}-${index}`}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        bgcolor: '#F9FAFB',
+                        borderLeft: `4px solid ${
+                          isWinner ? '#10B981' : '#EF4444'
+                        }`,
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          vs {opponent}
                         </Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 700, color: '#4A90E2' }}>
-                          {match.runs}
-                        </Typography>
+                        <Chip
+                          label={isWinner ? 'Won' : 'Lost'}
+                          size="small"
+                          color={isWinner ? 'success' : 'error'}
+                        />
                       </Box>
-                      {match.wickets > 0 && (
-                        <Box>
-                          <Typography variant="caption" color="text.secondary">
-                            Wickets
-                          </Typography>
-                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#EF4444' }}>
-                            {match.wickets}
-                          </Typography>
-                        </Box>
-                      )}
-                    </Box>
-                  </Paper>
-                ))}
+                      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                        {new Date(match.matchDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 3 }}>
+                        {/* Show batting contribution */}
+                        {match.contributions
+                          .filter(c => c.type === 'batting')
+                          .map((contrib, contribIndex) => (
+                            <Box key={contribIndex}>
+                              <Typography variant="caption" color="text.secondary">
+                                Runs
+                              </Typography>
+                              <Typography variant="h6" sx={{ fontWeight: 700, color: '#4A90E2' }}>
+                                {contrib.runs || 0}
+                              </Typography>
+                            </Box>
+                          ))}
+                        {/* Show bowling contribution */}
+                        {match.contributions
+                          .filter(c => c.type === 'bowling')
+                          .map((contrib, contribIndex) => (
+                            <Box key={contribIndex}>
+                              <Typography variant="caption" color="text.secondary">
+                                Wickets
+                              </Typography>
+                              <Typography variant="h6" sx={{ fontWeight: 700, color: '#EF4444' }}>
+                                {contrib.wickets || 0}
+                              </Typography>
+                            </Box>
+                          ))}
+                      </Box>
+                    </Paper>
+                  );
+                })}
               </Box>
             </CardContent>
           </Card>

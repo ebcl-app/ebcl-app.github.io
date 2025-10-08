@@ -82,6 +82,11 @@ interface Match {
       overs: string;
       economy: string;
     };
+    fielding: {
+      catches: number;
+      runOuts: number;
+      stumpings: number;
+    };
   };
 }
 
@@ -297,7 +302,9 @@ const MatchesList: React.FC = () => {
               <>
                 <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#e8f5e8', borderRadius: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 700, color: '#2e7d32' }}>
-                    {typeof match.result.winner === 'object' && match.result.winner?.name ? match.result.winner.name : match.result.winner}
+                    {typeof match.result.winner === 'object' 
+                      ? (match.result.winner?.name || match.result.winner?.shortName || `Team ${match.result.winner?.id || 'Unknown'}`)
+                      : (match.result.winner || 'N/A')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Winner
@@ -318,14 +325,27 @@ const MatchesList: React.FC = () => {
             const mom = match.manOfTheMatch;
             const hasBatting = mom.batting.runs > 0 || mom.batting.balls > 0;
             const hasBowling = mom.bowling.wickets > 0 || parseFloat(mom.bowling.overs) > 0;
+            const hasFielding = mom.fielding && (mom.fielding.catches > 0 || mom.fielding.runOuts > 0 || mom.fielding.stumpings > 0);
 
             let performance = '';
             let bgColor = '#e3f2fd';
 
-            if (hasBatting && hasBowling) {
+            if (hasBatting && hasBowling && hasFielding) {
+              // All-rounder with fielding performance
+              performance = `${mom.batting.runs} runs, ${mom.bowling.wickets} wickets & ${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding`;
+              bgColor = '#e1f5fe';
+            } else if (hasBatting && hasBowling) {
               // All-rounder performance
               performance = `${mom.batting.runs} runs & ${mom.bowling.wickets} wickets`;
               bgColor = '#f3e5f5';
+            } else if (hasBatting && hasFielding) {
+              // Batting with fielding
+              performance = `${mom.batting.runs} runs & ${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding`;
+              bgColor = '#e8f5e8';
+            } else if (hasBowling && hasFielding) {
+              // Bowling with fielding
+              performance = `${mom.bowling.wickets} wickets & ${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding`;
+              bgColor = '#fff3e0';
             } else if (hasBatting) {
               // Batting performance
               performance = `${mom.batting.runs} runs (${mom.batting.strikeRate} SR)`;
@@ -334,6 +354,10 @@ const MatchesList: React.FC = () => {
               // Bowling performance
               performance = `${mom.bowling.wickets} wickets (${mom.bowling.economy} econ)`;
               bgColor = '#ffebee';
+            } else if (hasFielding) {
+              // Fielding only performance
+              performance = `${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding contributions`;
+              bgColor = '#f3e5f5';
             }
 
             return (

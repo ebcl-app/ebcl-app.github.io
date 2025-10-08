@@ -29,6 +29,7 @@ import GroupIcon from '@mui/icons-material/Group';
 import StarIcon from '@mui/icons-material/Star';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { CricketApiService, type ApiMatch } from '../api/cricketApi';
+import { calculateAggregatedImpactScore } from '../utils/impactCalculation';
 
 interface MatchAnalysis {
   matchSummary: string;
@@ -121,15 +122,110 @@ const SectionCard: React.FC<{ title: string; children: React.ReactNode }>
   </Card>
 );
 
-const MiniBar: React.FC = () => (
-  <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.75, height: 64 }}>
-    <Box sx={{ width: 8, height: 16, bgcolor: '#BFDBFE', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 40, bgcolor: '#60A5FA', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 28, bgcolor: '#93C5FD', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 52, bgcolor: '#3B82F6', borderRadius: 0.5 }} />
-    <Box sx={{ width: 8, height: 24, bgcolor: '#93C5FD', borderRadius: 0.5 }} />
-  </Box>
-);
+// Calculate team performance metrics
+const calculateTeamPerformance = (teamName: string, innings: any[]) => {
+  if (!innings || innings.length === 0) return null;
+
+  const teamInnings = innings.filter(inning => inning.battingTeam === teamName);
+  if (teamInnings.length === 0) return null;
+
+  let totalRuns = 0;
+  let totalWickets = 0;
+  let totalOvers = 0;
+  let totalBalls = 0;
+  let totalBoundaries = 0;
+
+  teamInnings.forEach(inning => {
+    totalRuns += inning.totalRuns || 0;
+    totalWickets += inning.totalWickets || 0;
+    totalOvers += inning.totalOvers || 0;
+
+    // Calculate boundaries from batsmen data
+    if (inning.batsmen) {
+      inning.batsmen.forEach((batsman: any) => {
+        totalBoundaries += (batsman.fours || 0) + (batsman.sixes || 0);
+      });
+    }
+
+    // Calculate total balls from batsmen
+    if (inning.batsmen) {
+      inning.batsmen.forEach((batsman: any) => {
+        totalBalls += batsman.balls || 0;
+      });
+    }
+  });
+
+  const runRate = totalOvers > 0 ? (totalRuns / totalOvers).toFixed(2) : '0.00';
+  const avgWicketsPerInning = teamInnings.length > 0 ? (totalWickets / teamInnings.length).toFixed(1) : '0.0';
+
+  return {
+    totalRuns,
+    totalWickets,
+    totalOvers,
+    runRate,
+    avgWicketsPerInning,
+    totalBoundaries,
+    totalBalls,
+    inningsCount: teamInnings.length
+  };
+};
+
+// Team Performance Bar Chart Component
+const TeamPerformanceChart: React.FC<{ teamName: string; innings: any[] }> = ({ teamName, innings }) => {
+  const performance = calculateTeamPerformance(teamName, innings);
+
+  if (!performance) {
+    return (
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 64 }}>
+        <Typography variant="body2" color="text.secondary">No data</Typography>
+      </Box>
+    );
+  }
+
+  // Create bars based on actual performance metrics
+  const maxRuns = Math.max(performance.totalRuns, 50); // Minimum scale
+  const maxWickets = Math.max(performance.totalWickets, 5);
+  const maxBoundaries = Math.max(performance.totalBoundaries, 10);
+
+  const runsHeight = Math.max(8, (performance.totalRuns / maxRuns) * 56);
+  const wicketsHeight = Math.max(8, (performance.totalWickets / maxWickets) * 56);
+  const boundariesHeight = Math.max(8, (performance.totalBoundaries / maxBoundaries) * 56);
+
+  return (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, height: 64, mb: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 12, height: runsHeight, bgcolor: '#4CAF50', borderRadius: 0.5 }} />
+          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: '#4CAF50', fontWeight: 600 }}>
+            {performance.totalRuns}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 12, height: wicketsHeight, bgcolor: '#F44336', borderRadius: 0.5 }} />
+          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: '#F44336', fontWeight: 600 }}>
+            {performance.totalWickets}
+          </Typography>
+        </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.5 }}>
+          <Box sx={{ width: 12, height: boundariesHeight, bgcolor: '#FF9800', borderRadius: 0.5 }} />
+          <Typography variant="caption" sx={{ fontSize: '0.6rem', color: '#FF9800', fontWeight: 600 }}>
+            {performance.totalBoundaries}
+          </Typography>
+        </Box>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+        <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#4CAF50' }}>Runs</Typography>
+        <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#F44336' }}>Wkts</Typography>
+        <Typography variant="caption" sx={{ fontSize: '0.65rem', color: '#FF9800' }}>4s+6s</Typography>
+      </Box>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 0.5 }}>
+        <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'text.secondary' }}>
+          RR: {performance.runRate} | {performance.inningsCount} inns
+        </Typography>
+      </Box>
+    </Box>
+  );
+};
 
 // Helper functions for match progression charts
 const generateRunProgressionData = (innings: any[]) => {
@@ -168,7 +264,7 @@ const getWicketMarkers = (inning: any) => {
   }));
 };
 
-// Calculate player impacts using the same formula as Man of the Match
+// Calculate player impacts using the common impact calculation formula
 const calculatePlayerImpacts = (innings: any[]) => {
   const playerPerformances = new Map();
 
@@ -184,7 +280,8 @@ const calculatePlayerImpacts = (innings: any[]) => {
             playerPerformances.set(playerId, {
               player: batsman.player,
               batting: { runs: 0, balls: 0, fours: 0, sixes: 0 },
-              bowling: { wickets: 0, runs: 0, overs: 0 }
+              bowling: { wickets: 0, runs: 0, overs: 0 },
+              fielding: { catches: 0, runOuts: 0, stumpings: 0 }
             });
           }
 
@@ -207,7 +304,8 @@ const calculatePlayerImpacts = (innings: any[]) => {
             playerPerformances.set(playerId, {
               player: bowler.player,
               batting: { runs: 0, balls: 0, fours: 0, sixes: 0 },
-              bowling: { wickets: 0, runs: 0, overs: 0 }
+              bowling: { wickets: 0, runs: 0, overs: 0 },
+              fielding: { catches: 0, runOuts: 0, stumpings: 0 }
             });
           }
 
@@ -218,44 +316,61 @@ const calculatePlayerImpacts = (innings: any[]) => {
         }
       }
     }
+
+    // Process fielding (catches, run-outs from batsmen dismissals)
+    if (inning.batsmen && Array.isArray(inning.batsmen)) {
+      for (const batsman of inning.batsmen) {
+        if (batsman.howOut && batsman.howOut.fielder) {
+          const fielderId = batsman.howOut.fielderId || batsman.howOut.fielder;
+          if (fielderId) {
+            if (!playerPerformances.has(fielderId)) {
+              playerPerformances.set(fielderId, {
+                player: batsman.howOut.fielder,
+                batting: { runs: 0, balls: 0, fours: 0, sixes: 0 },
+                bowling: { wickets: 0, runs: 0, overs: 0 },
+                fielding: { catches: 0, runOuts: 0, stumpings: 0 }
+              });
+            }
+
+            const perf = playerPerformances.get(fielderId);
+            if (batsman.howOut.type === 'caught') {
+              perf.fielding.catches += 1;
+            } else if (batsman.howOut.type === 'run out') {
+              perf.fielding.runOuts += 1;
+            } else if (batsman.howOut.type === 'stumped') {
+              perf.fielding.stumpings += 1;
+            }
+          }
+        }
+      }
+    }
   }
 
-  // Calculate net impact for each player
+  // Calculate net impact for each player using the common formula
   const impacts = [];
   for (const [_playerId, perf] of playerPerformances) {
-    // Calculate batting impact
-    const battingRuns = perf.batting.runs;
-    const battingBalls = perf.batting.balls;
-    const strikeRate = battingBalls > 0 ? (battingRuns / battingBalls) * 100 : 0;
-    const boundaries = perf.batting.fours + (perf.batting.sixes * 2); // 6s worth double
-
-    const battingImpact = battingRuns + (strikeRate - 100) * 0.1 + boundaries;
-
-    // Calculate bowling impact
-    const bowlingWickets = perf.bowling.wickets;
-    const bowlingOvers = perf.bowling.overs;
-    const economy = bowlingOvers > 0 ? perf.bowling.runs / bowlingOvers : 0;
-
-    const bowlingImpact = (bowlingWickets * 25) - (economy - 6) * 2;
-
-    // Net impact
-    const netImpact = battingImpact + bowlingImpact;
+    const netImpact = calculateAggregatedImpactScore(perf);
 
     impacts.push({
       player: perf.player,
-      netImpact: parseFloat(netImpact.toFixed(2)),
+      netImpact: netImpact,
       batting: {
-        runs: battingRuns,
-        balls: battingBalls,
+        runs: perf.batting.runs,
+        balls: perf.batting.balls,
         fours: perf.batting.fours,
         sixes: perf.batting.sixes,
-        strikeRate: strikeRate.toFixed(2)
+        strikeRate: perf.batting.balls > 0 ? ((perf.batting.runs / perf.batting.balls) * 100).toFixed(2) : '0.00'
       },
       bowling: {
-        wickets: bowlingWickets,
+        wickets: perf.bowling.wickets,
         runs: perf.bowling.runs,
-        overs: bowlingOvers.toFixed(1),
-        economy: economy.toFixed(2)
+        overs: perf.bowling.overs.toFixed(1),
+        economy: perf.bowling.overs > 0 ? (perf.bowling.runs / perf.bowling.overs).toFixed(2) : '0.00'
+      },
+      fielding: {
+        catches: perf.fielding.catches,
+        runOuts: perf.fielding.runOuts,
+        stumpings: perf.fielding.stumpings
       }
     });
   }
@@ -278,32 +393,38 @@ const MatchDetails: React.FC = () => {
   const [analysisLoading, setAnalysisLoading] = React.useState(false);
   const [playerImpacts, setPlayerImpacts] = React.useState<any[]>([]);
   
-  // Refs to prevent duplicate API calls
-  const dataLoadedRef = React.useRef(false);
+  // State to prevent duplicate API calls
+  const [dataLoaded, setDataLoaded] = React.useState(false);
+  const lastFetchedMatchId = React.useRef<string | null>(null);
 
-  // Reset refs when matchId changes
+  // Reset state when matchId changes
   React.useEffect(() => {
-    dataLoadedRef.current = false;
-    setMatch(null);
-    setInnings([]);
-    setAnalysis(null);
-    setAnalysisLoading(false);
-    setLoading(true);
-    setError(null);
+    if (lastFetchedMatchId.current !== matchId) {
+      setDataLoaded(false);
+      lastFetchedMatchId.current = null;
+      setMatch(null);
+      setInnings([]);
+      setAnalysis(null);
+      setAnalysisLoading(false);
+      setLoading(true);
+      setError(null);
+    }
   }, [matchId]);
 
   // Single useEffect to handle all data fetching
   React.useEffect(() => {
     const fetchAllData = async () => {
-      if (!matchId || dataLoadedRef.current) return;
+      if (!matchId || dataLoaded || lastFetchedMatchId.current === matchId) {
+        return;
+      }
+
+      lastFetchedMatchId.current = matchId;
 
       try {
-        dataLoadedRef.current = true; // Mark as loading immediately
-
         const numericMatchId = parseInt(matchId, 10);
         if (isNaN(numericMatchId)) {
           setError('Invalid match ID');
-          dataLoadedRef.current = false;
+          lastFetchedMatchId.current = null;
           return;
         }
 
@@ -311,7 +432,7 @@ const MatchDetails: React.FC = () => {
         const matchData = await CricketApiService.getMatch(numericMatchId);
         if (!matchData) {
           setError('Match not found');
-          dataLoadedRef.current = false;
+          lastFetchedMatchId.current = null;
           return;
         }
 
@@ -375,18 +496,17 @@ const MatchDetails: React.FC = () => {
           setAnalysisLoading(false);
         }
 
+        setDataLoaded(true);
       } catch (err) {
         setError('Failed to load match details. Please try again later.');
         console.error('Error fetching match details:', err);
-        dataLoadedRef.current = false;
+        lastFetchedMatchId.current = null;
         setLoading(false);
       }
     };
 
     fetchAllData();
-  }, [matchId]);
-
-  if (loading) {
+  }, [matchId, dataLoaded]);  if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
@@ -596,7 +716,9 @@ const MatchDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {typeof match.winner === 'object' && match.winner?.name ? match.winner.name : match.winner || 'N/A'}
+                    {typeof match.winner === 'object' 
+                      ? (match.winner?.name || match.winner?.shortName || `Team ${match.winner?.id || 'Unknown'}`)
+                      : (match.winner || 'N/A')}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -644,7 +766,7 @@ const MatchDetails: React.FC = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       {match.team1?.name || 'Team 1'} Performance
                     </Typography>
-                    <MiniBar />
+                    <TeamPerformanceChart teamName={match.team1?.name || 'Team 1'} innings={innings} />
                   </CardContent>
                 </Card>
               </Box>
@@ -654,7 +776,7 @@ const MatchDetails: React.FC = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       {match.team2?.name || 'Team 2'} Performance
                     </Typography>
-                    <MiniBar />
+                    <TeamPerformanceChart teamName={match.team2?.name || 'Team 2'} innings={innings} />
                   </CardContent>
                 </Card>
               </Box>
@@ -671,19 +793,39 @@ const MatchDetails: React.FC = () => {
                     const rank = index + 1;
                     const hasBatting = impact.batting.runs > 0 || impact.batting.balls > 0;
                     const hasBowling = impact.bowling.wickets > 0 || parseFloat(impact.bowling.overs) > 0;
+                    const hasFielding = impact.fielding && (impact.fielding.catches > 0 || impact.fielding.runOuts > 0 || impact.fielding.stumpings > 0);
 
                     let performance = '';
                     let bgColor = '#e3f2fd';
 
-                    if (hasBatting && hasBowling) {
+                    if (hasBatting && hasBowling && hasFielding) {
+                      // All-rounder with fielding performance
+                      performance = `${impact.batting.runs} runs, ${impact.bowling.wickets} wickets & ${impact.fielding.catches + impact.fielding.runOuts + impact.fielding.stumpings} fielding`;
+                      bgColor = '#e1f5fe';
+                    } else if (hasBatting && hasBowling) {
+                      // All-rounder performance
                       performance = `${impact.batting.runs} runs & ${impact.bowling.wickets} wickets`;
                       bgColor = '#f3e5f5';
+                    } else if (hasBatting && hasFielding) {
+                      // Batting with fielding
+                      performance = `${impact.batting.runs} runs & ${impact.fielding.catches + impact.fielding.runOuts + impact.fielding.stumpings} fielding`;
+                      bgColor = '#e8f5e8';
+                    } else if (hasBowling && hasFielding) {
+                      // Bowling with fielding
+                      performance = `${impact.bowling.wickets} wickets & ${impact.fielding.catches + impact.fielding.runOuts + impact.fielding.stumpings} fielding`;
+                      bgColor = '#fff3e0';
                     } else if (hasBatting) {
+                      // Batting performance
                       performance = `${impact.batting.runs} runs (${impact.batting.strikeRate} SR)`;
                       bgColor = '#e3f2fd';
                     } else if (hasBowling) {
+                      // Bowling performance
                       performance = `${impact.bowling.wickets} wickets (${impact.bowling.economy} econ)`;
                       bgColor = '#ffebee';
+                    } else if (hasFielding) {
+                      // Fielding only performance
+                      performance = `${impact.fielding.catches + impact.fielding.runOuts + impact.fielding.stumpings} fielding contributions`;
+                      bgColor = '#f3e5f5';
                     }
 
                     return (
