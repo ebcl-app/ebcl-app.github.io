@@ -10,10 +10,7 @@ import {
   IconButton,
   Tabs,
   Tab,
-  Pagination,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Pagination
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsIcon from '@mui/icons-material/Sports';
@@ -23,11 +20,6 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import SportsCricketIcon from '@mui/icons-material/SportsCricket';
-import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
-import StarIcon from '@mui/icons-material/Star';
-import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { useNavigate } from 'react-router-dom';
 import TeamManagement from './TeamManagement';
 import MatchesManagement from './MatchesManagement';
