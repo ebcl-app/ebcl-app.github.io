@@ -13,8 +13,10 @@ import MatchDetails from './pages/MatchDetails';
 import MatchesManagement from './pages/MatchesManagement';
 import MatchScoring from './pages/MatchScoring';
 import PlayersList from './pages/PlayersList';
+import PlayersManagement from './pages/PlayersManagement';
 import TeamsList from './pages/TeamsList';
 import TeamDetails from './pages/TeamDetails';
+import TeamManagement from './pages/TeamManagement';
 import PlayerDetails from './pages/PlayerDetails';
 import News from './pages/News';
 import AuctionManagement from './pages/AuctionManagement';
@@ -74,6 +76,22 @@ const AppContent = () => {
           element={
             <ProtectedRoute requireAdmin>
               <MatchesManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/players"
+          element={
+            <ProtectedRoute requireAdmin>
+              <PlayersManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/teams"
+          element={
+            <ProtectedRoute requireAdmin>
+              <TeamManagement />
             </ProtectedRoute>
           }
         />

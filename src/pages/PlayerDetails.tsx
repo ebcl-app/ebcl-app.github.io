@@ -27,6 +27,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Stack,
 } from '@mui/material';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
@@ -269,6 +270,7 @@ const PlayerDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<PlayerAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
+  const [tab, setTab] = useState<'summary' | 'matches' | 'teams'>('summary');
 
   // State to prevent duplicate API calls
   const [playerDataLoaded, setPlayerDataLoaded] = useState(false);
@@ -519,56 +521,64 @@ const PlayerDetails: React.FC = () => {
 
   // Mobile View Component matching mockup
   const renderMobileView = () => (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#34548a', pb: 10 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#e8eef5', pb: 10 }}>
       {/* Player Header Section */}
-      <Box sx={{ 
-        bgcolor: '#34548a', 
-        pt: 3,
-        pb: 4,
-        px: 3,
-        textAlign: 'center',
-        color: '#ffffff'
-      }}>
-        <Avatar
-          sx={{
-            width: 120,
-            height: 120,
-            margin: '0 auto',
-            mb: 2,
-            bgcolor: getPlayerIconColor(player.role),
-            border: '4px solid #ffffff',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
-            fontSize: '3rem',
-          }}
-        >
-          {player.name.charAt(0).toUpperCase()}
-        </Avatar>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-          {player.name}
-        </Typography>
-        <Typography variant="body1" sx={{ mb: 0.5, opacity: 0.9 }}>
-          {player.role}
-        </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-          {player.preferredTeam?.name || 'Team Malay'}
-        </Typography>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-          sx={{
-            mt: 2,
-            color: '#ffffff',
-            borderColor: '#ffffff',
-            textTransform: 'none',
-            '&:hover': {
-              borderColor: '#ffffff',
-              bgcolor: 'rgba(255, 255, 255, 0.1)',
-            },
-          }}
-        >
-          Edit Profile
-        </Button>
+      <Box sx={{ pt: 2, px: 2 }}>
+        <Card sx={{
+          mb: 3,
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #93c5fd',
+          borderRadius: 2
+        }}>
+          <CardContent sx={{ p: 2.5 }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <Avatar sx={{
+                bgcolor: getPlayerIconColor(player.role),
+                width: 70,
+                height: 70,
+                fontWeight: 700,
+                fontSize: '2rem',
+                border: '3px solid #e3f2fd'
+              }}>
+                {getPlayerIcon(player.role)}
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a5f', mb: 0.5 }}>
+                  {player.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {player.role}
+                </Typography>
+              </Box>
+            </Stack>
+            <Stack direction="row" spacing={1}>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: '#1e3a5f',
+                  '&:hover': { bgcolor: '#152a47' },
+                  px: 2.5
+                }}
+              >
+                Follow
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                sx={{
+                  textTransform: 'none',
+                  bgcolor: '#1e3a5f',
+                  '&:hover': { bgcolor: '#152a47' },
+                  px: 2.5
+                }}
+              >
+                Edit Profile
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
       </Box>
 
       {/* Stats Cards */}
@@ -624,131 +634,67 @@ const PlayerDetails: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Career Statistics */}
-      <Box sx={{ px: 2, mt: 3 }}>
-        <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
-              Career Statistics
-            </Typography>
-            
-            {/* Bar Charts */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem', display: 'block', mb: 1 }}>
-                Batting Form (Last 10 Matches)
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5, height: 80 }}>
-                {[20, 35, 45, 30, 55, 40, 65, 50, 70, 60].map((value, idx) => (
-                  <Box
-                    key={idx}
-                    sx={{
-                      flex: 1,
-                      height: `${value}%`,
-                      bgcolor: '#2196f3',
-                      borderRadius: 0.5,
-                      minHeight: 4,
-                    }}
-                  />
-                ))}
-              </Box>
-            </Box>
-
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem', display: 'block', mb: 1 }}>
-                Bowling Form (Last 10 Matches)
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 0.5, height: 80 }}>
-                {[40, 30, 50, 35, 65, 45, 70, 55, 75, 60].map((value, idx) => (
-                  <Box
-                    key={idx}
-                    sx={{
-                      flex: 1,
-                      height: `${value}%`,
-                      bgcolor: '#2196f3',
-                      borderRadius: 0.5,
-                      minHeight: 4,
-                    }}
-                  />
-                ))}
-              </Box>
-            </Box>
-
-            {/* Stats Table */}
-            <TableContainer>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: 600, fontSize: '0.75rem', py: 1 }}>Matches</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.75rem', py: 1 }}>Runs</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.75rem', py: 1 }}>Runs Avg</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.75rem', py: 1 }}>Wickets SR</TableCell>
-                    <TableCell align="right" sx={{ fontWeight: 600, fontSize: '0.75rem', py: 1 }}>Econ Econ</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  <TableRow>
-                    <TableCell sx={{ fontSize: '0.75rem', py: 1 }}>Innings</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>{player.careerStats?.overall?.matchesPlayed || 25}</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>{player.careerStats?.batting?.runs || 540}</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>{player.careerStats?.bowling?.wickets || 30}</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>-</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontSize: '0.75rem', py: 1 }}>Innings</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>20</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>110</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>80</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>568</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell sx={{ fontSize: '0.75rem', py: 1 }}>Innings</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>12</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>100</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>90</TableCell>
-                    <TableCell align="right" sx={{ fontSize: '0.75rem', py: 1 }}>700</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {/* Personal Information */}
-      <Box sx={{ px: 2, mt: 3 }}>
-        <Card sx={{ boxShadow: 3, borderRadius: 2 }}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
-              Personal Information
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
-                  Date of Birth:
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#1e293b' }}>
-                  01/01/1998
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
-                  Playing Style:
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#1e293b' }}>
-                  {player.battingStyle || 'Right-hand Bat'}, {player.bowlingStyle || 'Arm Fast'}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="caption" sx={{ color: '#64748b', fontSize: '0.75rem', fontWeight: 600 }}>
-                  City:
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#1e293b' }}>
-                  Pune
-                </Typography>
-              </Box>
-            </Box>
-          </CardContent>
-        </Card>
+      {/* Tab Buttons inside Main Card */}
+      <Box sx={{ px: 2.5, mt: 2, mb: 1 }}>
+        <Box sx={{ display: 'flex', gap: 0, backgroundColor: '#f1f5f9', borderRadius: 1, p: 0.5 }}>
+          <Button
+            variant="text"
+            onClick={() => setTab('summary')}
+            sx={{
+              flex: 1,
+              textTransform: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              py: 0.8,
+              borderRadius: 0.8,
+              backgroundColor: tab === 'summary' ? '#2c3e5f' : 'transparent',
+              color: tab === 'summary' ? '#ffffff' : '#64748b',
+              '&:hover': {
+                backgroundColor: tab === 'summary' ? '#253451' : 'rgba(0,0,0,0.04)'
+              }
+            }}
+          >
+            Summary
+          </Button>
+          <Button
+            variant="text"
+            onClick={() => setTab('matches')}
+            sx={{
+              flex: 1,
+              textTransform: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              py: 0.8,
+              borderRadius: 0.8,
+              backgroundColor: tab === 'matches' ? '#2c3e5f' : 'transparent',
+              color: tab === 'matches' ? '#ffffff' : '#64748b',
+              '&:hover': {
+                backgroundColor: tab === 'matches' ? '#253451' : 'rgba(0,0,0,0.04)'
+              }
+            }}
+          >
+            Matches
+          </Button>
+          <Button
+            variant="text"
+            onClick={() => setTab('teams')}
+            sx={{
+              flex: 1,
+              textTransform: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              py: 0.8,
+              borderRadius: 0.8,
+              backgroundColor: tab === 'teams' ? '#2c3e5f' : 'transparent',
+              color: tab === 'teams' ? '#ffffff' : '#64748b',
+              '&:hover': {
+                backgroundColor: tab === 'teams' ? '#253451' : 'rgba(0,0,0,0.04)'
+              }
+            }}
+          >
+            Teams
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
@@ -758,54 +704,52 @@ const PlayerDetails: React.FC = () => {
       {/* Mobile View */}
       <Box sx={{ display: { xs: 'block', md: 'none' } }}>
         {renderMobileView()}
+
+        {/* Summary Tab Content - already in renderMobileView */}
       </Box>
 
       {/* Desktop View */}
       <Box sx={{ display: { xs: 'none', md: 'block' }, bgcolor: '#F5F7FA', minHeight: '100vh', pb: { xs: 8, sm: 10, md: 12 } }}>
-      <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
+        <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
         {/* Summary Card */}
         <Card sx={{ 
-          mb: { xs: 2, sm: 2.5, md: 3 }, 
-          boxShadow: 3,
-          transition: 'all 0.3s ease',
-          borderLeft: `6px solid ${getPlayerIconColor(player.role)}`,
-          '&:hover': {
-            boxShadow: 6,
-            transform: 'translateY(-4px)',
-          }
+          mb: 3, 
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #93c5fd',
+          borderRadius: 2
         }}>
-          <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 }, mb: analysis ? 1 : 0, flexDirection: { xs: 'column', sm: 'row' } }}>
+          <CardContent sx={{ p: 2.5 }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
               <Avatar sx={{ 
-                width: { xs: 64, sm: 72, md: 80 }, 
-                height: { xs: 64, sm: 72, md: 80 }, 
-                border: '3px solid #4A90E2',
-                bgcolor: getPlayerIconColor(player.role),
-                fontSize: { xs: '2rem', sm: '2.25rem', md: '2.5rem' },
-                boxShadow: 3
+                bgcolor: getPlayerIconColor(player.role), 
+                width: 70, 
+                height: 70, 
+                fontWeight: 700,
+                fontSize: '2rem',
+                border: '3px solid #e3f2fd'
               }}>
                 {getPlayerIcon(player.role)}
               </Avatar>
-              <Box sx={{ flex: 1, textAlign: { xs: 'center', sm: 'left' } }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' } }}>{player.name}</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, mt: 0.5 }}>{player.role}</Typography>
-                <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: { xs: 'center', sm: 'flex-start' } }}>
-                  <Chip label={player.role} color="primary" variant="outlined" size="small" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }} />
-                  {player.battingStyle && <Chip label={player.battingStyle} size="small" variant="outlined" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }} />}
-                  {player.bowlingStyle && <Chip label={player.bowlingStyle} size="small" variant="outlined" sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }} />}
-                </Box>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a5f', mb: 0.5 }}>
+                  {player.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {player.role}
+                </Typography>
               </Box>
               <Button 
                 variant="contained" 
                 startIcon={<SportsCricketIcon />} 
                 sx={{ 
                   textTransform: 'none',
-                  display: { xs: 'none', sm: 'flex' }
+                  bgcolor: '#1e3a5f',
+                  '&:hover': { bgcolor: '#152a47' }
                 }}
               >
                 Follow
               </Button>
-            </Box>
+            </Stack>
             {analysis && (
               <Typography
                 variant="body2"
@@ -813,20 +757,84 @@ const PlayerDetails: React.FC = () => {
                 sx={{
                   mt: 1,
                   fontStyle: 'italic',
-                  fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                  lineHeight: { xs: 1.3, sm: 1.4 }
+                  fontSize: '0.75rem',
+                  lineHeight: 1.3
                 }}
               >
                 {analysis.playerDescription}
               </Typography>
             )}
+
+            {/* Tab Buttons */}
+            <Box sx={{ display: 'flex', gap: 0, backgroundColor: '#f1f5f9', borderRadius: 1, p: 0.5, mt: 2 }}>
+              <Button
+                variant="text"
+                onClick={() => setTab('summary')}
+                sx={{
+                  flex: 1,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  py: 0.8,
+                  borderRadius: 0.8,
+                  backgroundColor: tab === 'summary' ? '#2c3e5f' : 'transparent',
+                  color: tab === 'summary' ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: tab === 'summary' ? '#253451' : 'rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                Summary
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => setTab('matches')}
+                sx={{
+                  flex: 1,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  py: 0.8,
+                  borderRadius: 0.8,
+                  backgroundColor: tab === 'matches' ? '#2c3e5f' : 'transparent',
+                  color: tab === 'matches' ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: tab === 'matches' ? '#253451' : 'rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                Matches
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => setTab('teams')}
+                sx={{
+                  flex: 1,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  py: 0.8,
+                  borderRadius: 0.8,
+                  backgroundColor: tab === 'teams' ? '#2c3e5f' : 'transparent',
+                  color: tab === 'teams' ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: tab === 'teams' ? '#253451' : 'rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                Teams
+              </Button>
+            </Box>
           </CardContent>
         </Card>
 
-        {/* Key Stats */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: { xs: 1.5, sm: 2 }, fontSize: { xs: '1rem', sm: '1.125rem' } }}>
-          📊 Key Statistics
-        </Typography>
+        {/* Summary Tab Content */}
+        {tab === 'summary' && (
+          <>
+            {/* Key Stats */}
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: { xs: 1.5, sm: 2 }, fontSize: { xs: '1rem', sm: '1.125rem' } }}>
+              📊 Key Statistics
+            </Typography>
 
         {/* Batting Stats */}
         {(player.role === 'batsman' || player.role === 'all-rounder' || player.role === 'wicket-keeper') && (
@@ -1818,6 +1826,103 @@ const PlayerDetails: React.FC = () => {
             )}
           </AccordionDetails>
         </Accordion>
+          </>
+        )}
+
+        {/* Matches Tab Content */}
+        {tab === 'matches' && (
+          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TimelineIcon />
+                Recent Matches
+              </Typography>
+              {player.recentMatches && player.recentMatches.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {player.recentMatches.map((match: any, index: number) => {
+                    // Format date if it's a Firestore timestamp
+                    let formattedDate = 'Date not available';
+                    if (match.date) {
+                      if (match.date._seconds) {
+                        formattedDate = new Date(match.date._seconds * 1000).toLocaleDateString();
+                      } else if (typeof match.date === 'string') {
+                        formattedDate = match.date;
+                      }
+                    }
+                    
+                    return (
+                      <Box
+                        key={`match-desktop-${index}-${match.id || match.matchId}`}
+                        sx={{
+                          p: 2,
+                          backgroundColor: '#f8fafc',
+                          borderRadius: 1,
+                          borderLeft: '4px solid #3b82f6',
+                          transition: 'all 0.2s ease',
+                          '&:hover': {
+                            backgroundColor: '#f1f5f9',
+                            transform: 'translateX(4px)'
+                          }
+                        }}
+                      >
+                        <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b', mb: 0.5 }}>
+                          {match.matchTitle || 'Match'}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#64748b' }}>
+                          {formattedDate}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center', py: 4 }}>
+                  No recent matches available
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Teams Tab Content */}
+        {tab === 'teams' && (
+          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+            <CardContent sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <GroupIcon />
+                Teams Played For
+              </Typography>
+              {player.recentTeams && player.recentTeams.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {player.recentTeams.map((team: any, index: number) => (
+                    <Box
+                      key={`team-desktop-${index}-${team.id || team.teamId}`}
+                      sx={{
+                        p: 2,
+                        backgroundColor: '#f8fafc',
+                        borderRadius: 1,
+                        borderLeft: '4px solid #10b981',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: '#f1f5f9',
+                          transform: 'translateX(4px)'
+                        }
+                      }}
+                    >
+                      <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                        {team.teamName || 'Team'}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              ) : (
+                <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center', py: 4 }}>
+                  No team information available
+                </Typography>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
       {/* Floating Action */}
       <Paper sx={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 72, px: 2, py: 1, borderRadius: 999, boxShadow: 4, display: 'flex', alignItems: 'center', gap: 1 }}>
