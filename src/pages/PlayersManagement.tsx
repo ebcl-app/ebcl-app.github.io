@@ -96,12 +96,12 @@ const PlayersManagement: React.FC = () => {
           setPlayersPagination(prev => ({
             ...prev,
             total: playersResponse.pagination.total,
-            totalPages: playersResponse.pagination.totalPages,
+            totalPages: playersResponse.pagination.pages,
           }));
           setTeamsPagination(prev => ({
             ...prev,
             total: teamsResponse.pagination.total,
-            totalPages: teamsResponse.pagination.totalPages,
+            totalPages: teamsResponse.pagination.pages,
           }));
         } else {
           setError('Failed to load players and teams data');
@@ -129,14 +129,15 @@ const PlayersManagement: React.FC = () => {
   const [formData, setFormData] = React.useState({
     name: '',
     email: '',
-    phone: '',
-    team: '',
     role: 'batsman' as ApiPlayer['role'],
-    battingStyle: 'RHB',
+    battingStyle: 'RHB' as 'RHB' | 'LHB',
     bowlingStyle: '',
+    nationality: '',
+    isActive: true,
+    preferredTeamId: '',
   });
 
-  const availableTeams = teams.map(team => team.name);
+
 
   const handleOpenDialog = (player?: ApiPlayer) => {
     if (player) {
@@ -144,22 +145,24 @@ const PlayersManagement: React.FC = () => {
       setFormData({
         name: player.name,
         email: player.email || '',
-        phone: '', // ApiPlayer doesn't have phone
-        team: '', // ApiPlayer doesn't have team directly
         role: player.role,
         battingStyle: player.battingStyle || 'RHB',
         bowlingStyle: player.bowlingStyle || '',
+        nationality: player.nationality || '',
+        isActive: player.isActive,
+        preferredTeamId: player.preferredTeamId || '',
       });
     } else {
       setSelectedPlayer(null);
       setFormData({
         name: '',
         email: '',
-        phone: '',
-        team: '',
         role: 'batsman',
         battingStyle: 'RHB',
         bowlingStyle: '',
+        nationality: '',
+        isActive: true,
+        preferredTeamId: '',
       });
     }
     setOpenDialog(true);
@@ -171,11 +174,12 @@ const PlayersManagement: React.FC = () => {
     setFormData({
       name: '',
       email: '',
-      phone: '',
-      team: '',
       role: 'batsman',
-      battingStyle: 'Right-handed',
-      bowlingStyle: 'N/A',
+      battingStyle: 'RHB',
+      bowlingStyle: '',
+      nationality: '',
+      isActive: true,
+      preferredTeamId: '',
     });
   };
 
@@ -187,8 +191,11 @@ const PlayersManagement: React.FC = () => {
           name: formData.name,
           email: formData.email,
           role: formData.role,
-          battingStyle: formData.battingStyle === 'N/A' ? undefined : formData.battingStyle as 'RHB' | 'LHB',
-          bowlingStyle: formData.bowlingStyle === 'N/A' ? undefined : formData.bowlingStyle,
+          battingStyle: formData.battingStyle,
+          bowlingStyle: formData.bowlingStyle || undefined,
+          nationality: formData.nationality || undefined,
+          isActive: formData.isActive,
+          preferredTeamId: formData.preferredTeamId || undefined,
         });
 
         if (response.success) {
@@ -205,9 +212,11 @@ const PlayersManagement: React.FC = () => {
           name: formData.name,
           email: formData.email,
           role: formData.role,
-          battingStyle: formData.battingStyle === 'N/A' ? undefined : formData.battingStyle as 'RHB' | 'LHB',
-          bowlingStyle: formData.bowlingStyle === 'N/A' ? undefined : formData.bowlingStyle,
-          isActive: true,
+          battingStyle: formData.battingStyle,
+          bowlingStyle: formData.bowlingStyle || undefined,
+          nationality: formData.nationality || undefined,
+          isActive: formData.isActive,
+          preferredTeamId: formData.preferredTeamId || undefined,
         });
 
         if (response.success) {
@@ -302,8 +311,8 @@ const PlayersManagement: React.FC = () => {
 
   const totalPlayers = playersPagination.total;
   const activePlayers = players.filter((p) => p.isActive).length;
-  const totalRuns = players.reduce((sum, p) => sum + (p.totalRuns || 0), 0);
-  const totalWickets = players.reduce((sum, p) => sum + (p.totalWickets || 0), 0);
+  const totalRuns = players.reduce((sum, p) => sum + (p.careerStats?.batting?.runs || p.totalRuns || 0), 0);
+  const totalWickets = players.reduce((sum, p) => sum + (p.careerStats?.bowling?.wickets || p.totalWickets || 0), 0);
 
   if (loading) {
     return (
@@ -544,7 +553,9 @@ const PlayersManagement: React.FC = () => {
                     </Box>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">N/A</Typography>
+                    <Typography variant="body2">
+                      {player.preferredTeam?.name || 'No Team'}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -558,23 +569,29 @@ const PlayersManagement: React.FC = () => {
                     />
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.matchesPlayed || 0}</Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {player.totalRuns || 0}
+                    <Typography variant="body2">
+                      {player.careerStats?.overall?.matchesPlayed || player.matchesPlayed || 0}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {player.totalWickets || 0}
+                      {player.careerStats?.batting?.runs || player.totalRuns || 0}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.battingAverage?.toFixed(2) || '0.00'}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      {player.careerStats?.bowling?.wickets || player.totalWickets || 0}
+                    </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{player.battingStrikeRate?.toFixed(2) || '0.00'}</Typography>
+                    <Typography variant="body2">
+                      {player.careerStats?.batting?.average?.toFixed(2) || player.battingAverage?.toFixed(2) || '0.00'}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2">
+                      {player.careerStats?.batting?.strikeRate?.toFixed(2) || player.battingStrikeRate?.toFixed(2) || '0.00'}
+                    </Typography>
                   </TableCell>
                   <TableCell>
                     <Chip
@@ -655,24 +672,26 @@ const PlayersManagement: React.FC = () => {
                 required
               />
               <TextField
-                label="Phone"
+                label="Nationality"
                 fullWidth
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                required
+                value={formData.nationality}
+                onChange={(e) => setFormData({ ...formData, nationality: e.target.value })}
               />
             </Box>
 
-            <FormControl fullWidth required>
-              <InputLabel>Team</InputLabel>
+            <FormControl fullWidth>
+              <InputLabel>Preferred Team</InputLabel>
               <Select
-                value={formData.team}
-                label="Team"
-                onChange={(e) => setFormData({ ...formData, team: e.target.value })}
+                value={formData.preferredTeamId}
+                label="Preferred Team"
+                onChange={(e) => setFormData({ ...formData, preferredTeamId: e.target.value })}
               >
-                {availableTeams.map((team) => (
-                  <MenuItem key={team} value={team}>
-                    {team}
+                <MenuItem value="">
+                  <em>No preferred team</em>
+                </MenuItem>
+                {teams.map((team) => (
+                  <MenuItem key={team.id} value={team.id}>
+                    {team.name}
                   </MenuItem>
                 ))}
               </Select>
@@ -698,26 +717,27 @@ const PlayersManagement: React.FC = () => {
                 <Select
                   value={formData.battingStyle}
                   label="Batting Style"
-                  onChange={(e) => setFormData({ ...formData, battingStyle: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, battingStyle: e.target.value as 'RHB' | 'LHB' })}
                 >
-                  <MenuItem value="Right-handed">Right-handed</MenuItem>
-                  <MenuItem value="Left-handed">Left-handed</MenuItem>
-                  <MenuItem value="N/A">N/A</MenuItem>
+                  <MenuItem value="RHB">Right-handed (RHB)</MenuItem>
+                  <MenuItem value="LHB">Left-handed (LHB)</MenuItem>
                 </Select>
               </FormControl>
 
-              <FormControl fullWidth required>
+              <FormControl fullWidth>
                 <InputLabel>Bowling Style</InputLabel>
                 <Select
                   value={formData.bowlingStyle}
                   label="Bowling Style"
                   onChange={(e) => setFormData({ ...formData, bowlingStyle: e.target.value })}
                 >
+                  <MenuItem value="">
+                    <em>No bowling style</em>
+                  </MenuItem>
                   <MenuItem value="Right-arm fast">Right-arm fast</MenuItem>
                   <MenuItem value="Left-arm fast">Left-arm fast</MenuItem>
                   <MenuItem value="Right-arm spin">Right-arm spin</MenuItem>
                   <MenuItem value="Left-arm spin">Left-arm spin</MenuItem>
-                  <MenuItem value="N/A">N/A</MenuItem>
                 </Select>
               </FormControl>
             </Box>
@@ -730,9 +750,7 @@ const PlayersManagement: React.FC = () => {
             onClick={handleSavePlayer}
             disabled={
               !formData.name ||
-              !formData.email ||
-              !formData.phone ||
-              !formData.team
+              !formData.email
             }
             sx={{ bgcolor: '#4A90E2' }}
           >

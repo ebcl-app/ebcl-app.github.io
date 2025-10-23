@@ -9,73 +9,34 @@ import {
   Avatar,
   TextField,
   InputAdornment,
-  Container,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Select,
-  MenuItem,
-  FormControl,
-  ToggleButtonGroup,
-  ToggleButton,
   Button,
   Alert,
-  Pagination,
-  useMediaQuery,
-  useTheme,
   IconButton,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
 import BusyOverlay from '../components/BusyOverlay';
-
-interface Player {
-  id: number;
-  numericId: number;
-  stringId: string; // Add string ID for API calls
-  name: string;
-  team: string;
-  role: 'Batsman' | 'Bowler' | 'All-rounder' | 'Wicket-keeper';
-  matches: number;
-  runs: number;
-  wickets: number;
-  average: string;
-  strikeRate: string;
-  status: 'Active' | 'Injured' | 'Inactive';
-}
 
 const PlayersList: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [roleFilter, setRoleFilter] = React.useState('All');
   const [letterFilter, setLetterFilter] = React.useState<string>('All');
   const [showLetterFilter, setShowLetterFilter] = React.useState(false);
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
-  const [players, setPlayers] = React.useState<Player[]>([]);
+  const [players, setPlayers] = React.useState<ApiPlayer[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [totalPages, setTotalPages] = React.useState(1);
-  const [pagination, setPagination] = React.useState<any>(null);
+  const [hasMore, setHasMore] = React.useState(true);
   const navigate = useNavigate();
-  const theme = useTheme();
-  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const isFetchingRef = React.useRef(false);
+  const observerTarget = React.useRef<HTMLDivElement>(null);
 
-  const fetchPlayers = async (page: number = 1) => {
+  const fetchPlayers = async (page: number = 1, append: boolean = false) => {
     // Prevent duplicate API calls
     if (isFetchingRef.current) return;
     
@@ -83,31 +44,21 @@ const PlayersList: React.FC = () => {
       isFetchingRef.current = true;
       setLoading(true);
       setError(null);
-      const response = await CricketApiService.getPlayers({ page, limit: 4 });
+      if (!append) {
+        setPlayers([]); // Clear players only on initial load or refresh
+      }
+      
+      const response = await CricketApiService.getPlayers({ page, limit: 12 });
 
       if (response.success) {
-        // Transform API data to component format
-        const transformedPlayers: Player[] = response.data.map((apiPlayer: ApiPlayer) => ({
-          id: apiPlayer.numericId,
-          numericId: apiPlayer.numericId,
-          stringId: apiPlayer.id, // Add string ID for navigation
-          name: apiPlayer.name,
-          team: 'Unknown', // API doesn't provide team info directly
-          role: apiPlayer.role === 'batsman' ? 'Batsman' :
-                apiPlayer.role === 'bowler' ? 'Bowler' :
-                apiPlayer.role === 'all-rounder' ? 'All-rounder' :
-                apiPlayer.role === 'wicket-keeper' ? 'Wicket-keeper' : 'Batsman',
-          matches: apiPlayer.matchesPlayed || 0,
-          runs: apiPlayer.totalRuns || 0,
-          wickets: apiPlayer.totalWickets || 0,
-          average: apiPlayer.battingAverage ? apiPlayer.battingAverage.toFixed(2) : '0.00',
-          strikeRate: apiPlayer.battingStrikeRate ? apiPlayer.battingStrikeRate.toFixed(1) : '0.0',
-          status: apiPlayer.isActive ? 'Active' : 'Inactive',
-        }));
-
-        setPlayers(transformedPlayers);
-        setPagination(response.pagination);
-        setTotalPages(response.pagination?.totalPages || 1);
+        // Deduplicate players by id to prevent duplicate key errors
+        const uniquePlayers = response.data.filter((player, index, self) => 
+          index === self.findIndex(p => p.id === player.id)
+        );
+        
+        setPlayers(prev => append ? [...prev, ...uniquePlayers] : uniquePlayers);
+        const totalPages = response.pagination?.pages || 1;
+        setHasMore(page < totalPages);
       } else {
         setError('Failed to load players. Please try again later.');
       }
@@ -120,19 +71,35 @@ const PlayersList: React.FC = () => {
     }
   };
 
+  // Initial data fetch
   React.useEffect(() => {
     fetchPlayers(1);
   }, []);
 
-  // Auto-switch view mode based on screen size
+  // Infinite scroll observer
   React.useEffect(() => {
-    setViewMode(isDesktop ? 'table' : 'grid');
-  }, [isDesktop]);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !isFetchingRef.current) {
+          const nextPage = currentPage + 1;
+          setCurrentPage(nextPage);
+          fetchPlayers(nextPage, true); // Append mode
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page);
-    fetchPlayers(page);
-  };
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, loading, currentPage]);
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -151,30 +118,18 @@ const PlayersList: React.FC = () => {
 
   // Helper function to get player icon based on role
   const getPlayerIcon = (role: string) => {
+    const iconStyle = { color: '#FFFFFF !important', fontSize: 'inherit' };
     switch (role) {
       case 'Batsman':
-        return <SportsCricketIcon />;
+        return <SportsCricketIcon sx={iconStyle} />;
       case 'Bowler':
-        return <SportsBaseballIcon />;
+        return <SportsBaseballIcon sx={iconStyle} />;
       case 'All-rounder':
-        return <ShuffleIcon />;
+        return <ShuffleIcon sx={iconStyle} />;
       case 'Wicket-keeper':
-        return <SportsCricketIcon />;
+        return <SportsCricketIcon sx={iconStyle} />;
       default:
-        return <SportsCricketIcon />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active':
-        return 'success';
-      case 'Injured':
-        return 'warning';
-      case 'Inactive':
-        return 'default';
-      default:
-        return 'default';
+        return <SportsCricketIcon sx={iconStyle} />;
     }
   };
 
@@ -185,315 +140,434 @@ const PlayersList: React.FC = () => {
     return matchesSearch && matchesRole && matchesLetter;
   });
 
-  const renderTableView = () => (
-    <TableContainer component={Paper} sx={{ mt: 2, overflowX: 'auto', maxWidth: '100%' }}>
-      <Table sx={{ minWidth: { xs: 600, sm: 800 } }}>
-        <TableHead>
-          <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-            <TableCell sx={{ fontWeight: 700, minWidth: { xs: 120, sm: 150 }, py: 1.5 }}>Player</TableCell>
-            <TableCell sx={{ fontWeight: 700, minWidth: { xs: 60, sm: 80 }, py: 1.5, display: { xs: 'none', sm: 'table-cell' } }}>Team</TableCell>
-            <TableCell sx={{ fontWeight: 700, minWidth: { xs: 60, sm: 80 }, py: 1.5 }}>Role</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Matches</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Runs</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Wickets</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>Average</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 60, sm: 80 }, py: 1.5, display: { xs: 'none', md: 'table-cell' } }}>Strike Rate</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 50, sm: 60 }, py: 1.5 }}>Status</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center', minWidth: { xs: 70, sm: 90 }, py: 1.5 }}>Action</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-           {filteredPlayers.map((player) => (
-            <TableRow key={player.id} hover>
-              <TableCell sx={{ py: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: getRoleColor(player.role) }}>
-                    {getPlayerIcon(player.role)}
-                  </Avatar>
-                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                    {player.name}
-                  </Typography>
-                </Box>
-              </TableCell>
-              <TableCell sx={{ py: 1, display: { xs: 'none', sm: 'table-cell' } }}>
-                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                  {player.team}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ py: 1 }}>
-                <Chip
-                  label={player.role}
-                  size="small"
-                  sx={{
-                    bgcolor: getRoleColor(player.role),
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                    height: { xs: 20, sm: 24 }
-                  }}
-                />
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center', py: 1 }}>
-                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                  {player.matches}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center', py: 1 }}>
-                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                  {player.runs}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center', py: 1 }}>
-                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                  {player.wickets}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center', py: 1, display: { xs: 'none', md: 'table-cell' } }}>
-                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                  {player.average}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center', py: 1, display: { xs: 'none', md: 'table-cell' } }}>
-                <Typography variant="body2" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                  {player.strikeRate}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center', py: 1 }}>
-                <Chip
-                  label={player.status}
-                  size="small"
-                  color={getStatusColor(player.status)}
-                  variant="outlined"
-                  sx={{
-                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                    height: { xs: 20, sm: 24 }
-                  }}
-                />
-              </TableCell>
-               <TableCell sx={{ textAlign: 'center', py: 1 }}>
-                 <Button
-                   size="small"
-                   variant="outlined"
-                   onClick={() => navigate(`/players/${player.numericId}`)}
-                   sx={{
-                     fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                     minWidth: { xs: 'auto', sm: '64px' },
-                     px: { xs: 1, sm: 2 }
-                   }}
-                 >
-                   View
-                 </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+  const renderMobileCard = (player: ApiPlayer) => (
+    <Card
+      key={player.id}
+      onClick={() => navigate(`/players/${player.displayId}`)}
+      sx={{
+        cursor: 'pointer',
+        transition: 'all 0.2s ease',
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.15)',
+        borderRadius: 4,
+        bgcolor: '#ffffff',
+        '&:hover': {
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+          transform: 'translateY(-2px)',
+        },
+      }}
+    >
+      <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+        {/* Player Info Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+          <Chip
+            label={player.role.toUpperCase()}
+            size="small"
+            sx={{
+              backgroundColor: getRoleColor(player.role),
+              color: '#ffffff',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: 24
+            }}
+          />
+          <Chip
+            label={player.isActive ? 'ACTIVE' : 'INACTIVE'}
+            size="small"
+            sx={{
+              backgroundColor: player.isActive ? '#10b981' : '#6b7280',
+              color: '#ffffff',
+              fontWeight: 600,
+              fontSize: '0.75rem',
+              height: 24
+            }}
+          />
+        </Box>
+
+        {/* Player Details */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+          <Avatar
+            sx={{
+              width: 48,
+              height: 48,
+              bgcolor: getRoleColor(player.role),
+              fontSize: '1rem',
+              fontWeight: 700,
+              mr: 2
+            }}
+          >
+            {getPlayerIcon(player.role)}
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+              {player.name}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+              {player.preferredTeam?.name || 'No Team'}
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Statistics - Grey Box */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', py: 1.5, bgcolor: '#f9fafb', borderRadius: 1, mb: 1.5 }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a8a', fontSize: '1.1rem' }}>
+              {player.careerStats?.overall?.matchesPlayed || player.matchesPlayed || 0}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+              Matches
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#F59E0B', fontSize: '1.1rem' }}>
+              {player.careerStats?.batting?.runs || player.totalRuns || 0}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+              Runs
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, color: '#EF4444', fontSize: '1.1rem' }}>
+              {player.careerStats?.bowling?.wickets || player.totalWickets || 0}
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+              Wickets
+            </Typography>
+          </Box>
+        </Box>
+
+        {/* Average */}
+        <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.75rem', textAlign: 'center' }}>
+          Batting Avg: {player.careerStats?.batting?.average?.toFixed(2) || player.battingAverage?.toFixed(2) || '0.00'}
+        </Typography>
+      </CardContent>
+    </Card>
   );
 
-  const renderGridView = () => (
-    <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
-       {filteredPlayers.map((player) => (
-         <Card key={player.id} sx={{ '&:hover': { boxShadow: 4 }, cursor: 'pointer' }} onClick={() => navigate(`/players/${player.numericId}`)}>
-          <CardContent>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Avatar sx={{ width: 48, height: 48, bgcolor: getRoleColor(player.role) }}>
-                {getPlayerIcon(player.role)}
-              </Avatar>
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {player.name}
+  const renderMobileView = () => {
+    return (
+      <Box sx={{ display: { xs: 'block', md: 'none' }, minHeight: '100vh', bgcolor: '#f5f5f5', pb: 10 }}>
+        {/* Filter Pills */}
+        <Box sx={{ px: 2, pt: 1, pb: 2.5, bgcolor: '#f5f5f5' }}>
+          <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
+            <Chip
+              label="All Players"
+              onClick={() => setRoleFilter('All')}
+              sx={{
+                bgcolor: roleFilter === 'All' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'All' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'All' ? 600 : 500,
+                fontSize: '0.875rem',
+                height: 32,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: roleFilter === 'All' ? '#1e3a8a' : '#f1f5f9',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            />
+            <Chip
+              label="Batsmen"
+              onClick={() => setRoleFilter('Batsman')}
+              sx={{
+                bgcolor: roleFilter === 'Batsman' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'Batsman' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'Batsman' ? 600 : 500,
+                fontSize: '0.875rem',
+                height: 32,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: roleFilter === 'Batsman' ? '#1e3a8a' : '#f1f5f9',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            />
+            <Chip
+              label="All-rounders"
+              onClick={() => setRoleFilter('All-rounder')}
+              sx={{
+                bgcolor: roleFilter === 'All-rounder' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'All-rounder' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'All-rounder' ? 600 : 500,
+                fontSize: '0.875rem',
+                height: 32,
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': {
+                  bgcolor: roleFilter === 'All-rounder' ? '#1e3a8a' : '#f1f5f9',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            />
+          </Box>
+        </Box>
+
+        {/* Player Cards */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, px: 2, pb: 2 }}>
+          {filteredPlayers.length > 0 ? (
+            filteredPlayers.map(renderMobileCard)
+          ) : (
+            <Card sx={{ boxShadow: 2, borderRadius: 3 }}>
+              <CardContent sx={{ textAlign: 'center', py: 6 }}>
+                <SportsCricketIcon sx={{ fontSize: 48, color: '#6b7280', mb: 2, opacity: 0.5 }} />
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No players found
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  {player.team}
+                  {searchQuery ? 'Try adjusting your search' : 'No players available'}
                 </Typography>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+              </CardContent>
+            </Card>
+          )}
+        </Box>
+
+        {/* Infinite Scroll Trigger */}
+        {hasMore && !loading && players.length > 0 && (
+          <Box ref={observerTarget} sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <Typography variant="body2" sx={{ color: '#ffffff' }}>
+              Scroll for more...
+            </Typography>
+          </Box>
+        )}
+
+        {/* Loading more indicator */}
+        {loading && players.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+            <Typography variant="body2" sx={{ color: '#ffffff' }}>
+              Loading more players...
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    );
+  };
+
+  const renderGridView = () => (
+    <>
+       {filteredPlayers.map((player) => (
+         <Card 
+           key={player.id} 
+           sx={{ 
+             borderRadius: 2,
+             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+             transition: 'all 0.2s ease',
+             height: '100%',
+             display: 'flex',
+             flexDirection: 'column',
+             '&:hover': {
+               transform: 'translateY(-2px)',
+               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+               cursor: 'pointer'
+             }
+           }} 
+           onClick={() => navigate(`/players/${player.displayId}`)}
+         >
+          <CardContent sx={{ p: { xs: 2, md: 2.5 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
+            {/* Player Info */}
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
               <Chip
-                label={player.role}
+                label={player.role.toUpperCase()}
                 size="small"
                 sx={{
-                  bgcolor: getRoleColor(player.role),
-                  color: 'white',
+                  backgroundColor: getRoleColor(player.role),
+                  color: '#ffffff',
                   fontWeight: 600,
+                  fontSize: '0.75rem',
+                  height: 24
                 }}
               />
               <Chip
-                label={player.status}
+                label={player.isActive ? 'ACTIVE' : 'INACTIVE'}
                 size="small"
-                color={getStatusColor(player.status)}
-                variant="outlined"
+                sx={{
+                  backgroundColor: player.isActive ? '#10b981' : '#6b7280',
+                  color: '#ffffff',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  height: 24
+                }}
               />
             </Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
-              <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                  {player.matches}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Matches
-                </Typography>
+
+            {/* Player Content */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
+                <Avatar sx={{ 
+                  width: 48, 
+                  height: 48, 
+                  bgcolor: getRoleColor(player.role), 
+                  fontSize: '1rem', 
+                  fontWeight: 700,
+                  mr: 2
+                }}>
+                  {getPlayerIcon(player.role)}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
+                    {player.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    {player.preferredTeam?.name || 'No Team'}
+                  </Typography>
+                </Box>
               </Box>
-              <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                  {player.runs}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Runs
-                </Typography>
+
+              {/* Statistics - simplified */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', py: 1.5, bgcolor: '#f9fafb', borderRadius: 1, mb: 1.5 }}>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a8a', fontSize: '1.1rem' }}>
+                    {player.careerStats?.overall?.matchesPlayed || player.matchesPlayed || 0}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+                    Matches
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#F59E0B', fontSize: '1.1rem' }}>
+                    {player.careerStats?.batting?.runs || player.totalRuns || 0}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+                    Runs
+                  </Typography>
+                </Box>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#EF4444', fontSize: '1.1rem' }}>
+                    {player.careerStats?.bowling?.wickets || player.totalWickets || 0}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem' }}>
+                    Wickets
+                  </Typography>
+                </Box>
               </Box>
-              <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                  {player.wickets}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Wickets
-                </Typography>
-              </Box>
-              <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                  {player.average}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Average
-                </Typography>
-              </Box>
+
+              {/* Average */}
+              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.75rem', textAlign: 'center' }}>
+                Batting Avg: {player.careerStats?.batting?.average?.toFixed(2) || player.battingAverage?.toFixed(2) || '0.00'}
+              </Typography>
             </Box>
-             <Button fullWidth variant="outlined" onClick={(e) => { e.stopPropagation(); navigate(`/players/${player.numericId}`); }}>
-              View Profile
-            </Button>
           </CardContent>
         </Card>
       ))}
-    </Box>
+    </>
   );
 
-  // Keep shell; show overlay and inline error
-
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <BusyOverlay open={loading} label="Loading players..." />
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
-          <ArrowBackIosNewIcon fontSize="small" />
-        </IconButton>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          Players
-        </Typography>
-      </Box>
+    <>
+      <BusyOverlay open={loading && players.length === 0} label="Loading players..." />
+      
+      {/* Mobile View */}
+      {renderMobileView()}
 
-      {/* Stats Cards */}
-      <Box sx={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-        gap: 2,
-        mb: 3
-      }}>
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <SportsCricketIcon sx={{ fontSize: 32, color: '#4A90E2', mb: 1 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#4A90E2' }}>
-              {pagination?.total || players.length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Players
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <TrendingUpIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
-              {players.filter(player => player.status === 'Active').length}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Active Players
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ fontSize: 24, color: '#F59E0B', mb: 1 }}>🏏</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
-              {players.length > 0 ? Math.round(players.reduce((sum, player) => sum + player.runs, 0) / players.length) : 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Avg Runs
-            </Typography>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent sx={{ textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ fontSize: 24, color: '#EF4444', mb: 1 }}>🎯</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
-              {players.length > 0 ? Math.round(players.reduce((sum, player) => sum + player.wickets, 0) / players.length) : 0}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Avg Wickets
-            </Typography>
-          </CardContent>
-        </Card>
-      </Box>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Filters and Search */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <TextField
-            placeholder="Search players..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ minWidth: 250 }}
-          />
-
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <Select
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              startAdornment={<FilterListIcon sx={{ ml: 1, mr: -0.5, color: 'action.active' }} />}
-            >
-              <MenuItem value="All">All Roles</MenuItem>
-              <MenuItem value="Batsman">Batsmen</MenuItem>
-              <MenuItem value="Bowler">Bowlers</MenuItem>
-              <MenuItem value="All-rounder">All-rounders</MenuItem>
-              <MenuItem value="Wicket-keeper">Wicket-keepers</MenuItem>
-            </Select>
-          </FormControl>
-
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(_, newView) => newView && setViewMode(newView)}
-            sx={{ ml: 'auto' }}
-          >
-            <ToggleButton value="table">
-              <ViewListIcon />
-            </ToggleButton>
-            <ToggleButton value="grid">
-              <ViewModuleIcon />
-            </ToggleButton>
-          </ToggleButtonGroup>
+      {/* Desktop View */}
+      <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', maxWidth: { xs: '100%', md: 1280 }, mx: { xs: 0, md: 'auto' }, pb: { xs: 10, md: 4 }, width: '100%', display: { xs: 'none', md: 'block' } }}>
+        
+        {/* Filter Chips */}
+        <Box sx={{ px: { xs: 2, md: 4 }, pt: { xs: 1, md: 2 }, pb: { xs: 2, md: 3 }, bgcolor: '#f5f5f5' }}>
+          <Box sx={{ display: 'flex', gap: { xs: 1, md: 1.5 }, justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
+            <Chip
+              label="All Players"
+              onClick={() => setRoleFilter('All')}
+              sx={{
+                bgcolor: roleFilter === 'All' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'All' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'All' ? 600 : 500,
+                fontSize: { xs: '0.875rem', md: '0.9375rem' },
+                height: { xs: 32, md: 36 },
+                px: { xs: 0, md: 1 },
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: roleFilter === 'All' ? '#1e3a8a' : '#f1f5f9' },
+                transition: 'all 0.2s ease',
+              }}
+            />
+            <Chip
+              label="Batsmen"
+              onClick={() => setRoleFilter('Batsman')}
+              sx={{
+                bgcolor: roleFilter === 'Batsman' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'Batsman' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'Batsman' ? 600 : 500,
+                fontSize: { xs: '0.875rem', md: '0.9375rem' },
+                height: { xs: 32, md: 36 },
+                px: { xs: 0, md: 1 },
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: roleFilter === 'Batsman' ? '#1e3a8a' : '#f1f5f9' },
+                transition: 'all 0.2s ease',
+              }}
+            />
+            <Chip
+              label="Bowlers"
+              onClick={() => setRoleFilter('Bowler')}
+              sx={{
+                bgcolor: roleFilter === 'Bowler' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'Bowler' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'Bowler' ? 600 : 500,
+                fontSize: { xs: '0.875rem', md: '0.9375rem' },
+                height: { xs: 32, md: 36 },
+                px: { xs: 0, md: 1 },
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: roleFilter === 'Bowler' ? '#1e3a8a' : '#f1f5f9' },
+                transition: 'all 0.2s ease',
+              }}
+            />
+            <Chip
+              label="All-rounders"
+              onClick={() => setRoleFilter('All-rounder')}
+              sx={{
+                bgcolor: roleFilter === 'All-rounder' ? '#1e40af' : '#ffffff',
+                color: roleFilter === 'All-rounder' ? '#ffffff' : '#64748b',
+                fontWeight: roleFilter === 'All-rounder' ? 600 : 500,
+                fontSize: { xs: '0.875rem', md: '0.9375rem' },
+                height: { xs: 32, md: 36 },
+                px: { xs: 0, md: 1 },
+                borderRadius: '16px',
+                cursor: 'pointer',
+                '&:hover': { bgcolor: roleFilter === 'All-rounder' ? '#1e3a8a' : '#f1f5f9' },
+                transition: 'all 0.2s ease',
+              }}
+            />
+            <TextField
+              placeholder="Search players..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: 18 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ 
+                width: { xs: 'auto', sm: 250 },
+                flex: { xs: 1, sm: 0 },
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: '#ffffff',
+                  borderRadius: '16px',
+                  height: { xs: 32, md: 36 },
+                  fontSize: { xs: '0.875rem', md: '0.9375rem' }
+                }
+              }}
+            />
+          </Box>
         </Box>
 
+        {/* Main Content */}
+        <Box sx={{ px: { xs: 3, md: 4 }, pt: { xs: 1, md: 0 }, pb: { xs: 2, md: 2 } }}>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
         {/* Alphabetical filtering */}
-        <Box sx={{ mb: 2 }}>
+        <Box sx={{ mb: 2, bgcolor: 'background.paper', borderRadius: 2, p: { xs: 1.5, sm: 2 }, border: '1px solid', borderColor: 'divider' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Filter by Name: {letterFilter !== 'All' && `(${letterFilter})`}
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+              Filter by Name {letterFilter !== 'All' && `(${letterFilter})`}
             </Typography>
             <IconButton
               size="small"
@@ -504,14 +578,23 @@ const PlayersList: React.FC = () => {
             </IconButton>
           </Box>
           {showLetterFilter && (
-            <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: { xs: 0.5, sm: 1 } }}>
               {['All', ...Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i))].map((letter) => (
                 <Button
                   key={letter}
                   variant={letterFilter === letter ? 'contained' : 'outlined'}
                   size="small"
                   onClick={() => setLetterFilter(letter)}
-                  sx={{ minWidth: '36px', height: '36px', p: 0 }}
+                  sx={{ 
+                    minWidth: { xs: '32px', sm: '36px' }, 
+                    height: { xs: '32px', sm: '36px' }, 
+                    p: 0,
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      transform: 'scale(1.1)',
+                    }
+                  }}
                 >
                   {letter}
                 </Button>
@@ -519,35 +602,60 @@ const PlayersList: React.FC = () => {
             </Box>
           )}
         </Box>
-      </Box>
+        </Box>
 
       {/* Content */}
-      {viewMode === 'table' ? renderTableView() : renderGridView()}
+      {/* Desktop View - Grid */}
+      <Box sx={{ 
+        display: 'grid', 
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fill, minmax(380px, 1fr))' },
+        gap: { xs: 2, sm: 2.5, md: 3 },
+      }}>
+        {renderGridView()}
+      </Box>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <Pagination
-            count={totalPages}
-            page={currentPage}
-            onChange={handlePageChange}
-            color="primary"
-            size="large"
-          />
+      {/* Infinite Scroll Trigger */}
+      {hasMore && !loading && players.length > 0 && (
+        <Box 
+          ref={observerTarget} 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            mt: { xs: 2, sm: 3 },
+            mb: { xs: 2, sm: 3 },
+            py: 2
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Scroll for more...
+          </Typography>
+        </Box>
+      )}
+
+      {/* Loading more indicator */}
+      {loading && players.length > 0 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
+          <Typography variant="body2" color="text.secondary">
+            Loading more players...
+          </Typography>
         </Box>
       )}
 
       {filteredPlayers.length === 0 && (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
+        <Box sx={{ textAlign: 'center', py: { xs: 6, sm: 8 }, px: 2 }}>
+          <Typography variant="h5" sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' }, mb: 1 }}>
+            🔍
+          </Typography>
+          <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
             No players found
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
             Try adjusting your search or filter criteria
           </Typography>
         </Box>
       )}
-    </Container>
+      </Box>
+    </>
   );
 };
 

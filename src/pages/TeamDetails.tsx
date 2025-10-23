@@ -76,21 +76,12 @@ const TeamDetails: React.FC = () => {
         return;
       }
 
-      const numericTeamId = parseInt(teamId, 10);
-      if (isNaN(numericTeamId)) {
-        setError('Invalid team ID');
-        setLoading(false);
-        return;
-      }
-
-      lastFetchedTeamId.current = teamId;
-
       try {
         setLoading(true);
         setError(null);
         
         // Fetch team details (now includes match history)
-        const teamResponse = await CricketApiService.getTeam(numericTeamId);
+        const teamResponse = await CricketApiService.getTeam(teamId);
         
         if (!teamResponse) {
           setError('Team not found');
@@ -139,38 +130,72 @@ const TeamDetails: React.FC = () => {
   }
 
   return (
-    <Box sx={{ bgcolor: '#F5F7FA', minHeight: '100vh', pb: 12 }}>
-      <Container maxWidth="md" sx={{ pt: 2 }}>
+    <Box sx={{ bgcolor: '#F5F7FA', minHeight: '100vh', pb: { xs: 8, sm: 10, md: 12 } }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: { xs: 2, sm: 2.5, md: 3 } }}>
           <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
             <ArrowBackIosNewIcon fontSize="small" />
           </IconButton>
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-            Team Details
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.125rem', sm: '1.25rem', md: '1.5rem' } }}>
+            ⚡ Team Details
           </Typography>
         </Box>
 
         {/* Team Summary Card */}
-        <Card sx={{ mb: 2, boxShadow: 2 }}>
-          <CardContent>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <Avatar sx={{ bgcolor: team.color || '#4A90E2', width: 56, height: 56, fontWeight: 800 }}>
+        <Card sx={{ 
+          mb: 3, 
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #93c5fd',
+          borderRadius: 2,
+          transition: 'all 0.3s ease',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            transform: 'translateY(-2px)',
+          }
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+              <Avatar sx={{ 
+                bgcolor: team.color || '#4A90E2', 
+                width: 80, 
+                height: 80, 
+                fontWeight: 700,
+                fontSize: '1.75rem',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                border: '3px solid #ffffff'
+              }}>
                 {team.shortName}
               </Avatar>
               <Box sx={{ flex: 1 }}>
-                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                <Typography variant="h5" sx={{ fontWeight: 700, mb: 0.5, color: '#1e293b' }}>
                   {team.name}
                 </Typography>
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                   Captain: {team.captain?.name || 'Not assigned'}
                 </Typography>
-                <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                  <Chip icon={<GroupIcon />} label={`${team.playersCount || 0} Players`} size="small" variant="outlined" />
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip 
+                    icon={<GroupIcon />} 
+                    label={`${team.playersCount || 0} Players`} 
+                    size="small" 
+                    sx={{ 
+                      bgcolor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      fontWeight: 600 
+                    }} 
+                  />
                 </Box>
               </Box>
               {isAuthenticated && (
-                <Button variant="contained" startIcon={<EditIcon />} sx={{ textTransform: 'none' }}>
+                <Button 
+                  variant="contained" 
+                  startIcon={<EditIcon />} 
+                  sx={{ 
+                    textTransform: 'none',
+                    display: { xs: 'none', sm: 'flex' }
+                  }}
+                >
                   Edit Team
                 </Button>
               )}
@@ -179,139 +204,185 @@ const TeamDetails: React.FC = () => {
         </Card>
 
         {/* Secondary chips row */}
-        <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <Chip label={`Created: ${new Date(team.createdAt).toLocaleDateString()}`} size="small" />
-          <Chip label={`Last Updated: ${new Date(team.updatedAt).toLocaleDateString()}`} size="small" />
+        <Box sx={{ mb: 3, display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
+          <Chip 
+            label={`Created: ${new Date(team.createdAt).toLocaleDateString()}`} 
+            size="small" 
+            sx={{ 
+              bgcolor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              fontSize: '0.75rem',
+              fontWeight: 500
+            }} 
+          />
+          <Chip 
+            label={`Updated: ${new Date(team.updatedAt).toLocaleDateString()}`} 
+            size="small" 
+            sx={{ 
+              bgcolor: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              fontSize: '0.75rem',
+              fontWeight: 500
+            }} 
+          />
         </Box>
 
         {/* Team Statistics */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          Team Statistics
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
+          📊 Team Statistics
         </Typography>
         <Box
           sx={{
             display: 'grid',
             gridTemplateColumns: {
-              xs: 'repeat(2, 1fr)', // 2 columns on mobile
-              sm: 'repeat(4, 1fr)', // 4 columns on small screens and up
+              xs: 'repeat(2, 1fr)',
+              sm: 'repeat(4, 1fr)',
             },
-            gap: { xs: 1.5, sm: 2 },
-            mb: 2,
+            gap: 2,
+            mb: 3,
           }}
         >
           <Card sx={{
-            boxShadow: 1,
-            minHeight: { xs: 80, sm: 100 },
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+            border: '1px solid #93c5fd',
+            borderRadius: 2,
+            minHeight: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }
           }}>
-            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+            <CardContent sx={{ textAlign: 'center', py: 2, px: 2 }}>
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: '#1976d2',
-                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  color: '#2563eb',
+                  mb: 0.5
                 }}
               >
                 {team.statistics?.totalMatches || 0}
               </Typography>
               <Typography
-                variant="caption"
+                variant="body2"
                 color="text.secondary"
-                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                sx={{ fontWeight: 500 }}
               >
                 Total Matches
               </Typography>
             </CardContent>
           </Card>
           <Card sx={{
-            boxShadow: 1,
-            minHeight: { xs: 80, sm: 100 },
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+            border: '1px solid #93c5fd',
+            borderRadius: 2,
+            minHeight: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }
           }}>
-            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+            <CardContent sx={{ textAlign: 'center', py: 2, px: 2 }}>
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: '#2e7d32',
-                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  color: '#10b981',
+                  mb: 0.5
                 }}
               >
                 {team.statistics?.wins || 0}
               </Typography>
               <Typography
-                variant="caption"
+                variant="body2"
                 color="text.secondary"
-                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                sx={{ fontWeight: 500 }}
               >
                 Wins
               </Typography>
             </CardContent>
           </Card>
           <Card sx={{
-            boxShadow: 1,
-            minHeight: { xs: 80, sm: 100 },
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+            border: '1px solid #93c5fd',
+            borderRadius: 2,
+            minHeight: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }
           }}>
-            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+            <CardContent sx={{ textAlign: 'center', py: 2, px: 2 }}>
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: '#d32f2f',
-                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  color: '#ef4444',
+                  mb: 0.5
                 }}
               >
                 {team.statistics?.losses || 0}
               </Typography>
               <Typography
-                variant="caption"
+                variant="body2"
                 color="text.secondary"
-                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                sx={{ fontWeight: 500 }}
               >
                 Losses
               </Typography>
             </CardContent>
           </Card>
           <Card sx={{
-            boxShadow: 1,
-            minHeight: { xs: 80, sm: 100 },
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+            border: '1px solid #93c5fd',
+            borderRadius: 2,
+            minHeight: 100,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              transform: 'translateY(-4px)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            }
           }}>
-            <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+            <CardContent sx={{ textAlign: 'center', py: 2, px: 2 }}>
               <Typography
-                variant="h5"
+                variant="h4"
                 sx={{
                   fontWeight: 700,
-                  color: '#ed6c02',
-                  fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  color: '#f59e0b',
+                  mb: 0.5
                 }}
               >
                 {team.statistics?.winPercentage?.toFixed(1) || '0.0'}%
               </Typography>
               <Typography
-                variant="caption"
+                variant="body2"
                 color="text.secondary"
-                sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                sx={{ fontWeight: 500 }}
               >
-                Win %
+                Win Rate
               </Typography>
             </CardContent>
           </Card>
         </Box>
 
         {/* Squad */}
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-          Squad
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, color: '#1e293b' }}>
+          👥 Squad
         </Typography>
         <Box sx={{ display: 'flex', gap: 1.5, overflowX: 'auto', pb: 1, mb: 2 }}>
           {team.players && team.players.length > 0 ? (
