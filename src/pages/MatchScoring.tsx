@@ -29,8 +29,6 @@ import {
   IconButton,
   Alert,
   Snackbar,
-  Checkbox,
-  FormControlLabel,
 } from '@mui/material';
 import {
   ArrowBack,
@@ -119,6 +117,10 @@ const MatchScoring: React.FC = () => {
   const [totalOvers, setTotalOvers] = useState<number>(20);
   const [team1PlayingMembers, setTeam1PlayingMembers] = useState<string[]>([]);
   const [team2PlayingMembers, setTeam2PlayingMembers] = useState<string[]>([]);
+  
+  // Player pool state
+  const [searchText, setSearchText] = useState('');
+  const [alphabetFilter, setAlphabetFilter] = useState<string>('');
 
   // Result state
   const [matchWinner, setMatchWinner] = useState('');
@@ -132,67 +134,136 @@ const MatchScoring: React.FC = () => {
 
   // Effect to load fresh match data when setup dialog opens
   useEffect(() => {
-    if (setupDialog && matchId) {
+    console.log('useEffect triggered - setupDialog:', setupDialog, 'matchId:', matchId, 'match exists:', !!match);
+    if (setupDialog && matchId && match) {
       console.log('Setup dialog opened, ensuring team data with players is loaded...');
+      console.log('Match team1:', match.team1?.name, 'teamId:', match.team1?.teamId, 'id:', match.team1?.id);
+      console.log('Match team2:', match.team2?.name, 'teamId:', match.team2?.teamId, 'id:', match.team2?.id);
       loadMatchWithTeams();
+    } else if (setupDialog && matchId && !match) {
+      console.log('Setup dialog opened but match data not loaded yet, waiting...');
+    } else {
+      console.log('useEffect conditions not met - setupDialog:', setupDialog, 'matchId:', matchId, 'match exists:', !!match);
     }
-  }, [setupDialog, matchId]); // Removed match from dependencies to avoid useEffect warning
+  }, [setupDialog, matchId]); // Keep match out of dependencies
 
   const loadMatchWithTeams = async () => {
-    try {
-      console.log('Loading match with teams for setup dialog...');
-      
-      // First get the match data
-      const matchData = await CricketApiService.getMatch(parseInt(matchId!));
-      console.log('Match data loaded:', matchData);
-      
-      if (matchData) {
-        // Now load full team details with players
-        let team1Data = matchData.team1;
-        let team2Data = matchData.team2;
-        
-        if (matchData.team1?.numericId) {
-          console.log('Loading team 1 details...');
-          const fullTeam1 = await CricketApiService.getTeam(matchData.team1.numericId);
-          if (fullTeam1) {
-            team1Data = fullTeam1;
-            console.log('Team 1 loaded with players:', fullTeam1.players);
-          }
-        }
-        
-        if (matchData.team2?.numericId) {
-          console.log('Loading team 2 details...');
-          const fullTeam2 = await CricketApiService.getTeam(matchData.team2.numericId);
-          if (fullTeam2) {
-            team2Data = fullTeam2;
-            console.log('Team 2 loaded with players:', fullTeam2.players);
-          }
-        }
-        
-        // Update match data with full team details
-        const updatedMatchData = {
-          ...matchData,
-          team1: team1Data,
-          team2: team2Data
-        };
-        
-        console.log('Updated match data with teams:', updatedMatchData);
-        setMatch(updatedMatchData);
+    if (!match) {
+      console.log('No match data available, cannot load teams');
+      return;
+    }
 
-        // Initialize setup state with existing data
-        if (matchData.totalOvers) {
-          setTotalOvers(matchData.totalOvers);
+    try {
+      console.log('Loading team players for setup dialog...');
+      console.log('Current match data:', JSON.stringify(match, null, 2));
+      console.log('Team1 data:', match.team1);
+      console.log('Team2 data:', match.team2);
+      
+      // Fetch players for both teams using existing match data
+      let team1Players: Array<{playerId: string, name: string, role: string}> = [];
+      let team2Players: Array<{playerId: string, name: string, role: string}> = [];
+      
+      // Check for team1 ID (prefer displayId, then teamId, avoid internal id)
+      let team1Id = match.team1?.displayId?.toString() || match.team1?.teamId;
+      const isTeam1IdInternal = team1Id && team1Id.toString().match(/^\d{19,}$/);
+      
+      console.log('Team 1 ID check:', { 
+        displayId: match.team1?.displayId,
+        teamId: match.team1?.teamId, 
+        id: match.team1?.id, 
+        selected: team1Id,
+        isInternal: isTeam1IdInternal 
+      });
+      
+      if (team1Id && !isTeam1IdInternal) {
+        console.log('Loading team 1 players for teamId:', team1Id);
+        try {
+          const playersResponse = await CricketApiService.getTeamPlayers(team1Id);
+          console.log('Team 1 players API response:', playersResponse);
+          if (playersResponse.success && playersResponse.data) {
+            team1Players = playersResponse.data.map(player => ({
+              // Include all player data for stats display
+              ...player,
+              // Override with our mapping
+              playerId: player.id,
+              id: player.id,
+              displayId: player.displayId,
+              finalImpactScore: 0
+            }));
+            console.log('Team 1 players loaded:', team1Players.length, 'players', team1Players);
+          } else {
+            console.log('Team 1 players API call failed or returned no data:', playersResponse);
+          }
+        } catch (error) {
+          console.error('Error loading team 1 players:', error);
         }
-        if (matchData.team1PlayingMembers) {
-          setTeam1PlayingMembers(matchData.team1PlayingMembers);
-        }
-        if (matchData.team2PlayingMembers) {
-          setTeam2PlayingMembers(matchData.team2PlayingMembers);
-        }
+      } else {
+        console.log('No valid team1 ID found or ID is internal - displayId:', match.team1?.displayId, 'teamId:', match.team1?.teamId, 'id:', match.team1?.id);
       }
+      
+      // Check for team2 ID (prefer displayId, then teamId, avoid internal id)
+      let team2Id = match.team2?.displayId?.toString() || match.team2?.teamId;
+      const isTeam2IdInternal = team2Id && team2Id.toString().match(/^\d{19,}$/);
+      
+      console.log('Team 2 ID check:', { 
+        displayId: match.team2?.displayId,
+        teamId: match.team2?.teamId, 
+        id: match.team2?.id, 
+        selected: team2Id,
+        isInternal: isTeam2IdInternal 
+      });
+      
+      if (team2Id && !isTeam2IdInternal) {
+        console.log('Loading team 2 players for teamId:', team2Id);
+        try {
+          const playersResponse = await CricketApiService.getTeamPlayers(team2Id);
+          console.log('Team 2 players API response:', playersResponse);
+          if (playersResponse.success && playersResponse.data) {
+            team2Players = playersResponse.data.map(player => ({
+              // Include all player data for stats display
+              ...player,
+              // Override with our mapping
+              playerId: player.id,
+              id: player.id,
+              displayId: player.displayId,
+              finalImpactScore: 0
+            }));
+            console.log('Team 2 players loaded:', team2Players.length, 'players', team2Players);
+          } else {
+            console.log('Team 2 players API call failed or returned no data:', playersResponse);
+          }
+        } catch (error) {
+          console.error('Error loading team 2 players:', error);
+        }
+      } else {
+        console.log('No valid team2 ID found or ID is internal - displayId:', match.team2?.displayId, 'teamId:', match.team2?.teamId, 'id:', match.team2?.id);
+      }
+      
+      // Update match data with players
+      const updatedMatchData = {
+        ...match,
+        team1: match.team1 ? {
+          ...match.team1,
+          players: team1Players
+        } : match.team1,
+        team2: match.team2 ? {
+          ...match.team2,
+          players: team2Players
+        } : match.team2
+      };
+      
+      console.log('Updated match data with players - team1:', team1Players.length, 'team2:', team2Players.length);
+      setMatch(updatedMatchData);
+
+      // Initialize setup state with existing data
+      if (match.totalOvers) {
+        setTotalOvers(match.totalOvers);
+      }
+      // Don't auto-populate playing members - let user select them manually
+      // Players will be selected one by one from the available pool
     } catch (error) {
-      console.error('Error loading match with teams:', error);
-      setSnackbar({ open: true, message: 'Error loading match details', severity: 'error' });
+      console.error('Error loading team players:', error);
+      setSnackbar({ open: true, message: 'Error loading team players', severity: 'error' });
     }
   };
 
@@ -214,11 +285,12 @@ const MatchScoring: React.FC = () => {
         if (matchData.totalOvers) {
           setTotalOvers(matchData.totalOvers);
         }
-        if (matchData.team1PlayingMembers) {
-          setTeam1PlayingMembers(matchData.team1PlayingMembers);
+        // Initialize playing members from team's players array
+        if (matchData.team1?.players) {
+          setTeam1PlayingMembers(matchData.team1.players.map(p => p.playerId));
         }
-        if (matchData.team2PlayingMembers) {
-          setTeam2PlayingMembers(matchData.team2PlayingMembers);
+        if (matchData.team2?.players) {
+          setTeam2PlayingMembers(matchData.team2.players.map(p => p.playerId));
         }
 
         // Load existing innings if any - convert ApiInning to InningData format
@@ -262,8 +334,8 @@ const MatchScoring: React.FC = () => {
         credentials: 'include',
         body: JSON.stringify({
           matchId: parseInt(matchId!),
-          battingTeamId: battingTeam.numericId,
-          bowlingTeamId: bowlingTeam.numericId,
+          battingTeamId: battingTeam.teamId || battingTeam.id,
+          bowlingTeamId: bowlingTeam.teamId || bowlingTeam.id,
           inningNumber: innings.length + 1,
         }),
       });
@@ -345,12 +417,12 @@ const MatchScoring: React.FC = () => {
         console.log('Match data after toss:', {
           hasToss: !!currentMatch?.toss,
           totalOvers: currentMatch?.totalOvers,
-          team1Players: currentMatch?.team1PlayingMembers?.length || 0,
-          team2Players: currentMatch?.team2PlayingMembers?.length || 0,
-          team1PlayingMembers: currentMatch?.team1PlayingMembers,
-          team2PlayingMembers: currentMatch?.team2PlayingMembers
+          team1Players: currentMatch?.team1?.players?.length || 0,
+          team2Players: currentMatch?.team2?.players?.length || 0,
+          team1PlayingMembers: team1PlayingMembers,
+          team2PlayingMembers: team2PlayingMembers
         });
-        if (currentMatch && currentMatch.toss && (!currentMatch.totalOvers || !currentMatch.team1PlayingMembers?.length || !currentMatch.team2PlayingMembers?.length)) {
+        if (currentMatch && currentMatch.toss && (!currentMatch.totalOvers || !currentMatch.team1?.players?.length || !currentMatch.team2?.players?.length)) {
           console.log('Opening setup dialog');
           setSetupDialog(true);
         }
@@ -365,11 +437,40 @@ const MatchScoring: React.FC = () => {
     if (!match) return;
 
     try {
-      await CricketApiService.updateMatch(parseInt(matchId!), {
+      const team1IdForSquad = match.team1?.displayId?.toString() || match.team1?.teamId || match.team1?.id || 'team1';
+      const team2IdForSquad = match.team2?.displayId?.toString() || match.team2?.teamId || match.team2?.id || 'team2';
+      
+      const updateData = {
         totalOvers: totalOvers,
-        team1PlayingMembers: team1PlayingMembers,
-        team2PlayingMembers: team2PlayingMembers,
-      });
+        squads: {
+          [team1IdForSquad]: {
+            teamId: team1IdForSquad,
+            players: team1PlayingMembers.map(playerId => {
+              const player = match.team1?.players?.find(p => p.playerId === playerId);
+              return player ? {
+                playerId: (player as any).displayId || (player as any).numericId?.toString() || player.playerId,
+                name: player.name,
+                role: player.role
+              } : null;
+            }).filter((p): p is { playerId: string; name: string; role: string } => p !== null)
+          },
+          [team2IdForSquad]: {
+            teamId: team2IdForSquad,
+            players: team2PlayingMembers.map(playerId => {
+              const player = match.team2?.players?.find(p => p.playerId === playerId);
+              return player ? {
+                playerId: (player as any).displayId || (player as any).numericId?.toString() || player.playerId,
+                name: player.name,
+                role: player.role
+              } : null;
+            }).filter((p): p is { playerId: string; name: string; role: string } => p !== null)
+          }
+        }
+      };
+
+      console.log('Update data being sent:', JSON.stringify(updateData, null, 2));
+      
+      await CricketApiService.updateMatch(parseInt(matchId!), updateData);
       setSnackbar({ open: true, message: 'Match setup saved successfully', severity: 'success' });
       setSetupDialog(false);
       // Reload match data to update UI state
@@ -447,7 +548,7 @@ const MatchScoring: React.FC = () => {
                   Record Toss
                 </Button>
               )}
-              {match.toss && (!match.totalOvers || !match.team1PlayingMembers?.length || !match.team2PlayingMembers?.length) && (
+              {match.toss && (!match.totalOvers || !match.team1?.players?.length || !match.team2?.players?.length) && (
                 <Button variant="outlined" onClick={() => setSetupDialog(true)}>
                   Complete Setup
                 </Button>
@@ -456,7 +557,7 @@ const MatchScoring: React.FC = () => {
               <Button variant="text" size="small" onClick={() => setSetupDialog(true)} sx={{ fontSize: '0.7rem' }}>
                 Debug Setup
               </Button>
-              {match.status === 'scheduled' && match.toss && match.totalOvers && match.team1PlayingMembers?.length && match.team2PlayingMembers?.length && (
+              {match.status === 'scheduled' && match.toss && match.totalOvers && match.team1?.players?.length && match.team2?.players?.length && (
                 <Button
                   variant="contained"
                   startIcon={<PlayArrow />}
@@ -465,7 +566,7 @@ const MatchScoring: React.FC = () => {
                   Start Match
                 </Button>
               )}
-              {match.status === 'live' && match.toss && match.totalOvers && match.team1PlayingMembers?.length && match.team2PlayingMembers?.length && !currentInning && (
+              {match.status === 'live' && match.toss && match.totalOvers && match.team1?.players?.length && match.team2?.players?.length && !currentInning && (
                 <Button
                   variant="contained"
                   startIcon={<PlayArrow />}
@@ -695,91 +796,437 @@ const MatchScoring: React.FC = () => {
             inputProps={{ min: 1, max: 50 }}
           />
 
-          <Typography variant="h6" sx={{ mb: 2 }}>Playing Members</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>Playing Members Selection</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Search and filter players, then assign them to Team 1 or Team 2 playing XI.
+          </Typography>
           
-          {(() => {
-            console.log('Setup dialog rendering - match data:', {
-              matchId: match?.id,
-              team1Name: match?.team1?.name,
-              team1Players: match?.team1?.players?.length,
-              team2Name: match?.team2?.name,
-              team2Players: match?.team2?.players?.length
-            });
-            return null;
-          })()}
-          
-          <Box sx={{ display: 'flex', gap: 4 }}>
-            {/* Team 1 Players */}
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                {match?.team1?.name} Players
+          {/* Player Pool Section */}
+          <Box sx={{ mb: 3 }}>
+            {/* Search and Filter */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search by player name..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              
+              {/* Alphabet Filter */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 2 }}>
+                <Button 
+                  size="small" 
+                  variant={alphabetFilter === '' ? 'contained' : 'outlined'}
+                  onClick={() => setAlphabetFilter('')}
+                  sx={{ minWidth: 40, px: 1 }}
+                >
+                  All
+                </Button>
+                {'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(letter => (
+                  <Button
+                    key={letter}
+                    size="small"
+                    variant={alphabetFilter === letter ? 'contained' : 'outlined'}
+                    onClick={() => setAlphabetFilter(letter)}
+                    sx={{ minWidth: 40, px: 1 }}
+                  >
+                    {letter}
+                  </Button>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Player Pool List */}
+            <Box sx={{ 
+              maxHeight: 300, 
+              overflow: 'auto', 
+              border: '1px solid #ccc', 
+              borderRadius: 1, 
+              bgcolor: '#fafafa',
+              mb: 3
+            }}>
+              <Typography variant="subtitle2" sx={{ p: 1.5, bgcolor: '#e0e0e0', fontWeight: 'bold' }}>
+                Available Players
               </Typography>
-              <Box sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid #ccc', borderRadius: 1, p: 1 }}>
-                {(() => {
-                  console.log('Team 1 players:', match?.team1?.players);
-                  return null;
-                })()}
-                {match?.team1?.players?.length ? match.team1.players.map((player: any) => (
-                  <FormControlLabel
-                    key={player.id}
-                    control={
-                      <Checkbox
-                        checked={team1PlayingMembers.includes(player.id)}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const checked = e.target.checked;
-                          console.log('Team 1 checkbox change:', player.name, checked);
-                          if (checked) {
-                            setTeam1PlayingMembers(prev => [...prev, player.id]);
-                          } else {
-                            setTeam1PlayingMembers(prev => prev.filter(id => id !== player.id));
-                          }
-                          console.log('Team 1 playing members after change:', team1PlayingMembers);
-                        }}
-                      />
+              {(() => {
+                // Combine all players from both teams
+                const allPlayers = [
+                  ...(match?.team1?.players || []).map((p: any) => ({ ...p, sourceTeam: match?.team1?.name })),
+                  ...(match?.team2?.players || []).map((p: any) => ({ ...p, sourceTeam: match?.team2?.name }))
+                ];
+
+                // Deduplicate players based on playerId
+                const uniquePlayers = allPlayers.reduce((acc: any[], player: any) => {
+                  const playerId = player.playerId || player.id;
+                  const exists = acc.find(p => (p.playerId || p.id) === playerId);
+                  if (!exists) {
+                    acc.push(player);
+                  }
+                  return acc;
+                }, []);
+
+                // Apply filters
+                let filteredPlayers = uniquePlayers.filter((player: any) => {
+                  const playerId = player.playerId || player.id;
+                  const isAlreadySelected = team1PlayingMembers.includes(playerId) || team2PlayingMembers.includes(playerId);
+                  
+                  // Don't show already selected players
+                  if (isAlreadySelected) return false;
+                  
+                  // Apply search filter
+                  if (searchText && !player.name.toLowerCase().includes(searchText.toLowerCase())) {
+                    return false;
+                  }
+                  
+                  // Apply alphabet filter
+                  if (alphabetFilter && !player.name.toUpperCase().startsWith(alphabetFilter)) {
+                    return false;
+                  }
+                  
+                  return true;
+                });
+
+                // Sort by name
+                filteredPlayers.sort((a: any, b: any) => a.name.localeCompare(b.name));
+
+                return filteredPlayers.length > 0 ? (
+                  filteredPlayers.map((player: any) => {
+                    const playerId = player.playerId || player.id;
+                    // Debug: Log player data structure
+                    if (filteredPlayers.indexOf(player) === 0) {
+                      console.log('Sample player data:', player);
+                      console.log('Player careerStats:', player.careerStats);
                     }
-                    label={player.name}
-                  />
-                )) : (
-                  <Typography variant="body2" color="text.secondary">
-                    No players available
+                    return (
+                      <Box 
+                        key={playerId}
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          p: 1.5,
+                          borderBottom: '1px solid #e0e0e0',
+                          '&:hover': { bgcolor: '#f5f5f5' }
+                        }}
+                      >
+                        <Box sx={{ flex: 1 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                              {player.name}
+                            </Typography>
+                            {/* Impact Score - Prominent Display */}
+                            {(player.finalImpactScore !== undefined || player.impactScore !== undefined) && (
+                              <Chip 
+                                label={`★ ${(player.finalImpactScore || player.impactScore || 0).toFixed(1)}`}
+                                size="small"
+                                color="success"
+                                sx={{ 
+                                  height: 24, 
+                                  fontSize: '0.75rem', 
+                                  fontWeight: 700,
+                                  bgcolor: '#4caf50',
+                                  color: 'white'
+                                }}
+                              />
+                            )}
+                          </Box>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                            {player.role} • From {player.sourceTeam}
+                          </Typography>
+                          
+                          {/* Player Statistics */}
+                          <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+                            {/* Batting Stats */}
+                            {player.careerStats?.batting && (
+                              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                                <Typography variant="caption" sx={{ fontWeight: 600, color: '#1976d2' }}>BAT:</Typography>
+                                <Chip 
+                                  label={`Mat: ${player.careerStats.batting.matchesPlayed || 0}`}
+                                  size="small"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                <Chip 
+                                  label={`Runs: ${player.careerStats.batting.runs || 0}`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                <Chip 
+                                  label={`Avg: ${player.careerStats.batting.average?.toFixed(1) || '0.0'}`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                <Chip 
+                                  label={`SR: ${player.careerStats.batting.strikeRate?.toFixed(1) || '0.0'}`}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                {player.careerStats.batting.centuries > 0 && (
+                                  <Chip 
+                                    label={`100s: ${player.careerStats.batting.centuries}`}
+                                    size="small"
+                                    color="success"
+                                    sx={{ height: 20, fontSize: '0.7rem' }}
+                                  />
+                                )}
+                                {player.careerStats.batting.fifties > 0 && (
+                                  <Chip 
+                                    label={`50s: ${player.careerStats.batting.fifties}`}
+                                    size="small"
+                                    color="info"
+                                    sx={{ height: 20, fontSize: '0.7rem' }}
+                                  />
+                                )}
+                              </Box>
+                            )}
+                            
+                            {/* Bowling Stats */}
+                            {player.careerStats?.bowling && player.careerStats.bowling.wickets > 0 && (
+                              <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                                <Typography variant="caption" sx={{ fontWeight: 600, color: '#9c27b0' }}>BOWL:</Typography>
+                                <Chip 
+                                  label={`Wkts: ${player.careerStats.bowling.wickets || 0}`}
+                                  size="small"
+                                  color="secondary"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                <Chip 
+                                  label={`Avg: ${player.careerStats.bowling.average?.toFixed(1) || '0.0'}`}
+                                  size="small"
+                                  color="secondary"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                <Chip 
+                                  label={`Econ: ${player.careerStats.bowling.economyRate?.toFixed(2) || '0.00'}`}
+                                  size="small"
+                                  color="secondary"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                {player.careerStats.bowling.fiveWicketHauls > 0 && (
+                                  <Chip 
+                                    label={`5W: ${player.careerStats.bowling.fiveWicketHauls}`}
+                                    size="small"
+                                    color="warning"
+                                    sx={{ height: 20, fontSize: '0.7rem' }}
+                                  />
+                                )}
+                              </Box>
+                            )}
+                            
+                            {/* Show overall stats if no detailed stats available */}
+                            {!player.careerStats?.batting && !player.careerStats?.bowling && player.careerStats?.overall && (
+                              <Box sx={{ display: 'flex', gap: 1.5 }}>
+                                <Chip 
+                                  label={`Matches: ${player.careerStats.overall.matchesPlayed || 0}`}
+                                  size="small"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                                <Chip 
+                                  label={`Wins: ${player.careerStats.overall.wins || 0}`}
+                                  size="small"
+                                  color="success"
+                                  variant="outlined"
+                                  sx={{ height: 20, fontSize: '0.7rem' }}
+                                />
+                              </Box>
+                            )}
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', gap: 1, ml: 2, flexDirection: 'column' }}>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => {
+                              if (team1PlayingMembers.length < 11) {
+                                setTeam1PlayingMembers(prev => [...prev, playerId]);
+                              }
+                            }}
+                            disabled={team1PlayingMembers.length >= 11}
+                            sx={{ whiteSpace: 'nowrap', minWidth: 100 }}
+                          >
+                            {match?.team1?.name || 'Team 1'}
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="secondary"
+                            onClick={() => {
+                              if (team2PlayingMembers.length < 11) {
+                                setTeam2PlayingMembers(prev => [...prev, playerId]);
+                              }
+                            }}
+                            disabled={team2PlayingMembers.length >= 11}
+                            sx={{ whiteSpace: 'nowrap', minWidth: 100 }}
+                          >
+                            {match?.team2?.name || 'Team 2'}
+                          </Button>
+                        </Box>
+                      </Box>
+                    );
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                    {searchText || alphabetFilter ? 'No players match your filters' : 'No available players'}
+                  </Typography>
+                );
+              })()}
+            </Box>
+          </Box>
+
+          {/* Selected Playing XI Display */}
+          <Typography variant="h6" sx={{ mb: 2 }}>Selected Playing XI</Typography>
+          <Box sx={{ display: 'flex', gap: 3 }}>
+            {/* Team 1 Playing XI */}
+            <Box sx={{ flex: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {match?.team1?.name}
+                </Typography>
+                <Chip 
+                  label={`${team1PlayingMembers.length}/11`}
+                  size="small" 
+                  color={team1PlayingMembers.length === 11 ? "success" : "default"}
+                />
+              </Box>
+              <Box sx={{ 
+                minHeight: 200,
+                maxHeight: 300, 
+                overflow: 'auto', 
+                border: '2px solid #1976d2', 
+                borderRadius: 1, 
+                bgcolor: '#e3f2fd',
+                p: 1
+              }}>
+                {team1PlayingMembers.length > 0 ? (
+                  team1PlayingMembers.map((playerId, index) => {
+                    // Find player from either team
+                    const player = [...(match?.team1?.players || []), ...(match?.team2?.players || [])]
+                      .find((p: any) => (p.playerId || p.id) === playerId);
+                    
+                    if (!player) return null;
+                    
+                    return (
+                      <Box 
+                        key={playerId}
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          p: 1,
+                          mb: 0.5,
+                          bgcolor: 'white',
+                          borderRadius: 1,
+                          border: '1px solid #90caf9'
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Chip label={index + 1} size="small" sx={{ minWidth: 30 }} />
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {player.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {player.role}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => setTeam1PlayingMembers(prev => prev.filter(id => id !== playerId))}
+                        >
+                          <Stop fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    );
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                    No players selected
                   </Typography>
                 )}
               </Box>
             </Box>
 
-            {/* Team 2 Players */}
+            {/* Team 2 Playing XI */}
             <Box sx={{ flex: 1 }}>
-              <Typography variant="subtitle1" sx={{ mb: 1 }}>
-                {match?.team2?.name} Players
-              </Typography>
-              <Box sx={{ maxHeight: 300, overflow: 'auto', border: '1px solid #ccc', borderRadius: 1, p: 1 }}>
-                {(() => {
-                  console.log('Team 2 players:', match?.team2?.players);
-                  return null;
-                })()}
-                {match?.team2?.players?.length ? match.team2.players.map((player: any) => (
-                  <FormControlLabel
-                    key={player.id}
-                    control={
-                      <Checkbox
-                        checked={team2PlayingMembers.includes(player.id)}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          const checked = e.target.checked;
-                          console.log('Team 2 checkbox change:', player.name, checked);
-                          if (checked) {
-                            setTeam2PlayingMembers(prev => [...prev, player.id]);
-                          } else {
-                            setTeam2PlayingMembers(prev => prev.filter(id => id !== player.id));
-                          }
-                          console.log('Team 2 playing members after change:', team2PlayingMembers);
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  {match?.team2?.name}
+                </Typography>
+                <Chip 
+                  label={`${team2PlayingMembers.length}/11`}
+                  size="small" 
+                  color={team2PlayingMembers.length === 11 ? "success" : "default"}
+                />
+              </Box>
+              <Box sx={{ 
+                minHeight: 200,
+                maxHeight: 300, 
+                overflow: 'auto', 
+                border: '2px solid #9c27b0', 
+                borderRadius: 1, 
+                bgcolor: '#f3e5f5',
+                p: 1
+              }}>
+                {team2PlayingMembers.length > 0 ? (
+                  team2PlayingMembers.map((playerId, index) => {
+                    // Find player from either team
+                    const player = [...(match?.team1?.players || []), ...(match?.team2?.players || [])]
+                      .find((p: any) => (p.playerId || p.id) === playerId);
+                    
+                    if (!player) return null;
+                    
+                    return (
+                      <Box 
+                        key={playerId}
+                        sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          p: 1,
+                          mb: 0.5,
+                          bgcolor: 'white',
+                          borderRadius: 1,
+                          border: '1px solid #ce93d8'
                         }}
-                      />
-                    }
-                    label={player.name}
-                  />
-                )) : (
-                  <Typography variant="body2" color="text.secondary">
-                    No players available
+                      >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Chip label={index + 1} size="small" sx={{ minWidth: 30 }} />
+                          <Box>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {player.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {player.role}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        <IconButton 
+                          size="small" 
+                          color="error"
+                          onClick={() => setTeam2PlayingMembers(prev => prev.filter(id => id !== playerId))}
+                        >
+                          <Stop fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    );
+                  })
+                ) : (
+                  <Typography variant="body2" color="text.secondary" sx={{ p: 2, textAlign: 'center' }}>
+                    No players selected
                   </Typography>
                 )}
               </Box>

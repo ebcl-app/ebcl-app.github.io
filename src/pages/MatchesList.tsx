@@ -8,105 +8,28 @@ import {
   Typography,
   Chip,
   Avatar,
-  Container,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Alert,
-  Pagination,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Button,
-  ToggleButtonGroup,
-  ToggleButton,
-  IconButton,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
-import ScheduleIcon from '@mui/icons-material/Schedule';
 import SportsIcon from '@mui/icons-material/Sports';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import SearchIcon from '@mui/icons-material/Search';
 import { CricketApiService, type ApiMatch } from '../api/cricketApi';
-
-interface Match {
-  id: number;
-  numericId: number;
-  stringId: string; // Add string ID for API calls
-  team1: {
-    name: string;
-    logo?: string;
-    score?: string;
-    overs?: string;
-    color?: string;
-  };
-  team2: {
-    name: string;
-    logo?: string;
-    score?: string;
-    overs?: string;
-    color?: string;
-  };
-  date: string;
-  time: string;
-  venue: string;
-  status: 'Live' | 'Upcoming' | 'Completed';
-  matchType: string;
-  winner?: string | { id: number; name: string; shortName?: string };
-  result?: string | { winner: string | { id: number; name: string; shortName?: string }; margin: string };
-  currentInnings?: string;
-  title?: string;
-  manOfTheMatch?: {
-    player: {
-      id: string | number;
-      name: string;
-      teamName?: string;
-    };
-    netImpact: number;
-    batting: {
-      runs: number;
-      balls: number;
-      fours: number;
-      sixes: number;
-      strikeRate: string;
-    };
-    bowling: {
-      wickets: number;
-      runs: number;
-      overs: string;
-      economy: string;
-    };
-    fielding: {
-      catches: number;
-      runOuts: number;
-      stumpings: number;
-    };
-  };
-}
 
 const MatchesList: React.FC = () => {
   const [statusFilter, setStatusFilter] = React.useState<'Live' | 'Upcoming' | 'Completed' | 'All'>('All');
-  const [matches, setMatches] = React.useState<Match[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [matches, setMatches] = React.useState<ApiMatch[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const [totalPages, setTotalPages] = React.useState(1);
-  const [viewMode, setViewMode] = React.useState<'table' | 'grid'>('grid');
-  const [liveMatchesCount, setLiveMatchesCount] = React.useState(0);
-  const [upcomingMatchesCount, setUpcomingMatchesCount] = React.useState(0);
-  const [completedMatchesCount, setCompletedMatchesCount] = React.useState(0);
+  const [hasMore, setHasMore] = React.useState(true);
   const navigate = useNavigate();
   const isFetchingRef = React.useRef(false);
+  const observerTarget = React.useRef<HTMLDivElement>(null);
 
-  const fetchData = async (page: number = 1) => {
+  const fetchData = React.useCallback(async (page: number = 1, append: boolean = false) => {
     // Prevent duplicate API calls
     if (isFetchingRef.current) return;
     
@@ -114,517 +37,568 @@ const MatchesList: React.FC = () => {
       isFetchingRef.current = true;
       setLoading(true);
       setError(null);
+      if (!append) {
+        setMatches([]); // Clear matches only when not appending
+      }
 
-      // Fetch only matches - team colors are included in match data
+      // Fetch matches with all required data flags
       const matchesResponse = await CricketApiService.getMatches(
         statusFilter !== 'All' ? statusFilter.toLowerCase() : undefined,
-        { page, limit: 4 }
+        { page, limit: 12 }, // Increased limit for better infinite scroll experience
+        true, // includePlayers
+        true, // includeImpactScores
+        true  // includeDismissals
       );
 
       if (matchesResponse.success) {
-        // Transform API data to component format
-        const transformedMatches: Match[] = matchesResponse.data.map((apiMatch: ApiMatch) => ({
-          id: apiMatch.numericId,
-          numericId: apiMatch.numericId,
-          stringId: apiMatch.displayId, // Use displayId for navigation
-          team1: {
-            name: apiMatch.team1?.name || 'Unknown Team',
-            score: apiMatch.team1Score ? `${apiMatch.team1Score}` : undefined,
-            overs: undefined, // API doesn't provide overs breakdown
-            color: apiMatch.team1?.color,
-          },
-          team2: {
-            name: apiMatch.team2?.name || 'Unknown Team',
-            score: apiMatch.team2Score ? `${apiMatch.team2Score}` : undefined,
-            overs: undefined,
-            color: apiMatch.team2?.color,
-          },
-          date: apiMatch.scheduledDate ? new Date(apiMatch.scheduledDate).toISOString().split('T')[0] : '',
-          time: apiMatch.scheduledDate ? new Date(apiMatch.scheduledDate).toTimeString().slice(0, 5) : '',
-          venue: apiMatch.venue,
-          status: apiMatch.status === 'live' ? 'Live' :
-                  apiMatch.status === 'scheduled' ? 'Upcoming' : 'Completed',
-          matchType: apiMatch.matchType,
-          winner: apiMatch.winner || apiMatch.result?.winner,
-          result: apiMatch.result,
-          currentInnings: apiMatch.currentInnings ? `Innings ${apiMatch.currentInnings}` : undefined,
-          title: apiMatch.title || `${apiMatch.team1?.name || 'Unknown'} vs ${apiMatch.team2?.name || 'Unknown'}`,
-          manOfTheMatch: apiMatch.manOfTheMatch,
-        }));
-
-        setMatches(transformedMatches);
-        setTotalPages(matchesResponse.pagination?.totalPages || 1);
-
-        // Use total counts from the main API response instead of separate calls
-        if (matchesResponse.totalCounts) {
-          setLiveMatchesCount(matchesResponse.totalCounts.live || 0);
-          setUpcomingMatchesCount(matchesResponse.totalCounts.scheduled || 0);
-          setCompletedMatchesCount(matchesResponse.totalCounts.completed || 0);
+        // Deduplicate matches by id to prevent duplicate key errors
+        const uniqueMatches = matchesResponse.data.filter((match, index, self) => 
+          index === self.findIndex(m => m.id === match.id)
+        );
+        
+        if (append) {
+          setMatches(prev => {
+            const combined = [...prev, ...uniqueMatches];
+            // Remove duplicates from combined array
+            return combined.filter((match, index, self) => 
+              index === self.findIndex(m => m.id === match.id)
+            );
+          });
         } else {
-          // Fallback to separate calls if totalCounts not available
-          await fetchTotalCounts();
+          setMatches(uniqueMatches);
         }
+        
+        // Check if there are more pages
+        const totalPages = matchesResponse.pagination?.totalPages || 1;
+        setHasMore(page < totalPages);
       } else {
         setError('Failed to load matches. Please try again later.');
+        setHasMore(false);
       }
     } catch (err) {
       setError('Failed to load data. Please try again later.');
       console.error('Error fetching data:', err);
+      setHasMore(false);
     } finally {
       setLoading(false);
       isFetchingRef.current = false;
     }
-  };
-
-  const fetchTotalCounts = async () => {
-    try {
-      // This function is now deprecated - total counts come from main API response
-      // Keeping for backward compatibility if needed
-      console.warn('fetchTotalCounts is deprecated - using totalCounts from main API response');
-    } catch (error) {
-      console.error('Error in deprecated fetchTotalCounts:', error);
-    }
-  };
-
-  React.useEffect(() => {
-    fetchData(1);
   }, [statusFilter]);
 
-  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-    setCurrentPage(page);
-    fetchData(page);
-  };
+  React.useEffect(() => {
+    setCurrentPage(1);
+    setHasMore(true);
+    setMatches([]); // Clear matches when filter changes
+    fetchData(1, false);
+  }, [statusFilter, fetchData]); // Depend on both statusFilter and fetchData
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Live':
-        return 'error';
-      case 'Completed':
-        return 'success';
-      case 'Upcoming':
-        return 'warning';
-      default:
-        return 'default';
+  // Infinite scroll observer
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          const nextPage = currentPage + 1;
+          setCurrentPage(nextPage);
+          fetchData(nextPage, true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
     }
-  };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Live':
-        return <PlayArrowIcon sx={{ fontSize: 16 }} />;
-      case 'Completed':
-        return <CheckCircleIcon sx={{ fontSize: 16 }} />;
-      case 'Upcoming':
-        return <ScheduleIcon sx={{ fontSize: 16 }} />;
-      default:
-        return undefined;
-    }
-  };
-
-  // Create a team color map from current matches data
-  const teamColorMap = React.useMemo(() => {
-    const map: { [key: string]: string } = {};
-    matches.forEach(match => {
-      if (match.team1?.name && match.team1.color) {
-        map[match.team1.name] = match.team1.color;
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
       }
-      if (match.team2?.name && match.team2.color) {
-        map[match.team2.name] = match.team2.color;
-      }
-    });
-    return map;
-  }, [matches]);
+    };
+  }, [hasMore, loading, currentPage, fetchData]); // Include fetchData to prevent stale closures
 
-  const getTeamColor = (teamName: string) => {
-    return teamColorMap[teamName] || '#6B7280'; // Default gray if no color found
-  };
-
-  const filterMatchesByStatus = (match: Match) => {
+  const filterMatchesByStatus = (match: ApiMatch) => {
     if (statusFilter === 'All') return true;
-    return match.status === statusFilter;
+    const statusMap = {
+      'Live': 'live',
+      'Upcoming': 'scheduled',
+      'Completed': 'completed'
+    };
+    return match.status === statusMap[statusFilter as keyof typeof statusMap];
   };
 
-  const filteredMatches = matches.filter(filterMatchesByStatus);
+  const filterMatchesBySearch = (match: ApiMatch) => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      match.team1?.name?.toLowerCase().includes(query) ||
+      match.team2?.name?.toLowerCase().includes(query) ||
+      match.venue?.toLowerCase().includes(query)
+    );
+  };
 
-  const renderMatchCard = (match: Match) => {
+  // Filter and sort matches
+  const filteredMatches = matches
+    .filter(filterMatchesByStatus)
+    .filter(filterMatchesBySearch)
+    .sort((a, b) => {
+    // For completed matches, sort by date descending (most recent first)
+    if (statusFilter === 'Completed' && a.scheduledDate && b.scheduledDate) {
+      return new Date(b.scheduledDate).getTime() - new Date(a.scheduledDate).getTime();
+    }
+    // For other statuses, keep original order
+    return 0;
+  });
+
+  const renderMatchCard = (match: ApiMatch) => {
+    const isLive = match.status === 'live';
+    const isUpcoming = match.status === 'scheduled';
+    const isCompleted = match.status === 'completed';
+
     return (
       <Card
         key={match.id}
-        sx={{ minWidth: 320, '&:hover': { boxShadow: 4 }, cursor: 'pointer' }}
-        onClick={() => navigate(`/matches/${match.numericId}`)}
+        sx={{ 
+          borderRadius: 2,
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.2s ease',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          '&:hover': { 
+            transform: 'translateY(-2px)', 
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            cursor: 'pointer'
+          }
+        }}
+        onClick={() => navigate(`/matches/${match.displayId}`)}
       >
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Avatar sx={{ width: 48, height: 48, bgcolor: match.status === 'Completed' ? '#2e7d32' : match.status === 'Live' ? '#d32f2f' : '#ed6c02' }}>
-              {match.matchType === 'T20' ? 'T20' : match.matchType === 'ODI' ? 'ODI' : 'CRIC'}
-            </Avatar>
-            <Box>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                {match.team1?.name || 'TBD'} vs {match.team2?.name || 'TBD'}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {match.venue || 'Venue TBD'}
-              </Typography>
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        <CardContent sx={{ p: { xs: 2, md: 2.5 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          {/* Status Tag */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
             <Chip
-              label={match.status}
+              label={isLive ? 'LIVE' : isUpcoming ? 'UPCOMING' : 'PAST MATCH'}
               size="small"
-              color={
-                match.status === 'Completed' ? 'success' :
-                match.status === 'Live' ? 'error' : 'warning'
-              }
-              variant="outlined"
+              sx={{
+                backgroundColor: isLive ? '#ef4444' : isUpcoming ? '#6b7280' : '#6b7280',
+                color: '#ffffff',
+                fontWeight: 600,
+                fontSize: '0.75rem',
+                height: 24
+              }}
             />
-            <Chip
-              label={match.matchType}
-              size="small"
-              variant="outlined"
-            />
-          </Box>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 2 }}>
-            <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                {match.date ? new Date(match.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'TBD'}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Date
-              </Typography>
-            </Box>
-            <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                {match.time}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Time
-              </Typography>
-            </Box>
-            {match.status === 'Completed' && match.result && typeof match.result === 'object' && match.result.winner && match.result.margin && (
-              <>
-                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#e8f5e8', borderRadius: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#2e7d32' }}>
-                    {typeof match.result.winner === 'object' 
-                      ? (match.result.winner?.name || match.result.winner?.shortName || `Team ${match.result.winner?.id || 'Unknown'}`)
-                      : (match.result.winner || 'N/A')}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Winner
-                  </Typography>
-                </Box>
-                <Box sx={{ textAlign: 'center', p: 1, bgcolor: '#F9FAFB', borderRadius: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#1F2937' }}>
-                    {match.result.margin}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Margin
-                  </Typography>
-                </Box>
-              </>
+            {isCompleted && (
+              <Chip
+                label="RESULT"
+                size="small"
+                sx={{
+                  backgroundColor: '#f3f4f6',
+                  color: '#6b7280',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                  height: 24
+                }}
+              />
             )}
           </Box>
-          {match.status === 'Completed' && match.manOfTheMatch && (() => {
-            const mom = match.manOfTheMatch;
-            const hasBatting = mom.batting.runs > 0 || mom.batting.balls > 0;
-            const hasBowling = mom.bowling.wickets > 0 || parseFloat(mom.bowling.overs) > 0;
-            const hasFielding = mom.fielding && (mom.fielding.catches > 0 || mom.fielding.runOuts > 0 || mom.fielding.stumpings > 0);
 
-            let performance = '';
-            let bgColor = '#e3f2fd';
-
-            if (hasBatting && hasBowling && hasFielding) {
-              // All-rounder with fielding performance
-              performance = `${mom.batting.runs} runs, ${mom.bowling.wickets} wickets & ${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding`;
-              bgColor = '#e1f5fe';
-            } else if (hasBatting && hasBowling) {
-              // All-rounder performance
-              performance = `${mom.batting.runs} runs & ${mom.bowling.wickets} wickets`;
-              bgColor = '#f3e5f5';
-            } else if (hasBatting && hasFielding) {
-              // Batting with fielding
-              performance = `${mom.batting.runs} runs & ${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding`;
-              bgColor = '#e8f5e8';
-            } else if (hasBowling && hasFielding) {
-              // Bowling with fielding
-              performance = `${mom.bowling.wickets} wickets & ${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding`;
-              bgColor = '#fff3e0';
-            } else if (hasBatting) {
-              // Batting performance
-              performance = `${mom.batting.runs} runs (${mom.batting.strikeRate} SR)`;
-              bgColor = '#e3f2fd';
-            } else if (hasBowling) {
-              // Bowling performance
-              performance = `${mom.bowling.wickets} wickets (${mom.bowling.economy} econ)`;
-              bgColor = '#ffebee';
-            } else if (hasFielding) {
-              // Fielding only performance
-              performance = `${mom.fielding.catches + mom.fielding.runOuts + mom.fielding.stumpings} fielding contributions`;
-              bgColor = '#f3e5f5';
-            }
-
-            return (
-              <Box sx={{ mb: 2 }}>
-                <Box sx={{ textAlign: 'center', p: 1.5, bgcolor: bgColor, borderRadius: 1, border: '2px solid #1976d2' }}>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontWeight: 600, mb: 0.5 }}>
-                    🏆 Man of the Match
+          {/* Match Content */}
+          {isLive ? (
+            // Live Match Card
+            <Box>
+              {/* Scores with grey background */}
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, py: 1.5, bgcolor: '#f9fafb', borderRadius: 1, px: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: match.team1?.color || '#1e3a8a', fontSize: '0.75rem', fontWeight: 700 }}>
+                    {match.team1?.shortName || match.team1?.name?.substring(0, 2).toUpperCase() || 'T1'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                      {match.team1?.name || 'Team 1'}
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a8a' }}>
+                      {match.team1Score || '0/0'}
+                    </Typography>
+                  </Box>
+                </Box>
+                
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#6b7280' }}>
+                  VS
+                </Typography>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Box sx={{ textAlign: 'right' }}>
+                    <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                      {match.team2?.name || 'Team 2'}
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a8a' }}>
+                      {match.team2Score || '0/0'}
+                    </Typography>
+                  </Box>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: match.team2?.color || '#f97316', fontSize: '0.75rem', fontWeight: 700 }}>
+                    {match.team2?.shortName || match.team2?.name?.substring(0, 2).toUpperCase() || 'T2'}
+                  </Avatar>
+                </Box>
+              </Box>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                    Match in progress
                   </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, color: '#1a237e', fontSize: '1rem' }}>
-                    {mom.player.name}
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                    {match.venue || 'Venue TBD'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    {performance}
+                </Box>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/matches/${match.displayId}`); }}
+                  sx={{
+                    backgroundColor: '#1e3a8a',
+                    color: '#ffffff',
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    px: 2,
+                    py: 1,
+                    borderRadius: 1
+                  }}
+                >
+                  VIEW DETAILS
+                </Button>
+              </Box>
+            </Box>
+          ) : isUpcoming ? (
+            // Upcoming Match Card
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: match.team1?.color || '#10b981', fontSize: '0.75rem', fontWeight: 700 }}>
+                    {match.team1?.shortName || match.team1?.name?.substring(0, 2).toUpperCase() || 'T1'}
+                  </Avatar>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                    {match.team1?.name || 'Team 1'}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem', mt: 0.5 }}>
-                    Net Impact: {mom.netImpact}
+                </Box>
+                
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#6b7280' }}>
+                  VS
+                </Typography>
+                
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
+                    {match.team2?.name || 'Team 2'}
+                  </Typography>
+                  <Avatar sx={{ width: 32, height: 32, bgcolor: match.team2?.color || '#fbbf24', fontSize: '0.75rem', fontWeight: 700 }}>
+                    {match.team2?.shortName || match.team2?.name?.substring(0, 2).toUpperCase() || 'T2'}
+                  </Avatar>
+                </Box>
+              </Box>
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                    {match.scheduledDate ? new Date(match.scheduledDate).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : 'Date TBD'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.8rem' }}>
+                    {match.venue || 'Venue TBD'}
+                  </Typography>
+                </Box>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={(e) => { e.stopPropagation(); navigate(`/matches/${match.displayId}`); }}
+                  sx={{
+                    minWidth: 'auto',
+                    color: '#6b7280',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    textTransform: 'none'
+                  }}
+                >
+                  View →
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            // Past Match Card
+            <Box>
+              {/* Result/Winner */}
+              <Typography variant="body1" sx={{ fontWeight: 700, mb: 1.5, textAlign: 'center', color: '#1e3a8a', fontSize: '0.95rem' }}>
+                {typeof match.result === 'string' 
+                  ? match.result 
+                  : match.result && typeof match.result === 'object' && match.result.winner 
+                    ? (typeof match.result.winner === 'string' 
+                        ? `${match.result.winner} won by ${match.result.margin}` 
+                        : `${match.result.winner.name || match.result.winner.shortName} won by ${match.result.margin}`
+                      )
+                    : match.winner 
+                      ? (typeof match.winner === 'string' 
+                          ? `${match.winner} won` 
+                          : `${match.winner.name || match.winner.shortName} won`
+                        )
+                      : `${match.team1?.name || 'Team 1'} vs ${match.team2?.name || 'Team 2'}`
+                }
+              </Typography>
+              
+              {/* Teams and Scores - with grey stats box */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', py: 1.5, bgcolor: '#f9fafb', borderRadius: 1, mb: 1.5 }}>
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                  <Avatar sx={{ width: 40, height: 40, bgcolor: match.team1?.color || '#f97316', fontSize: '1rem', fontWeight: 700, mx: 'auto', mb: 0.5 }}>
+                    {match.team1?.shortName || match.team1?.name?.substring(0, 2).toUpperCase() || 'T1'}
+                  </Avatar>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem', display: 'block', mb: 0.5 }}>
+                    {match.team1?.name || 'Team 1'}
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a8a', fontSize: '1.1rem' }}>
+                    {match.team1?.score 
+                      ? `${match.team1.score.runs}/${match.team1.score.wickets}` 
+                      : match.team1Score || '0'}
+                  </Typography>
+                </Box>
+                
+                <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.8rem', fontWeight: 600 }}>
+                  vs
+                </Typography>
+                
+                <Box sx={{ textAlign: 'center', flex: 1 }}>
+                  <Avatar sx={{ width: 40, height: 40, bgcolor: match.team2?.color || '#f97316', fontSize: '1rem', fontWeight: 700, mx: 'auto', mb: 0.5 }}>
+                    {match.team2?.shortName || match.team2?.name?.substring(0, 2).toUpperCase() || 'T2'}
+                  </Avatar>
+                  <Typography variant="caption" sx={{ color: '#6b7280', fontSize: '0.7rem', display: 'block', mb: 0.5 }}>
+                    {match.team2?.name || 'Team 2'}
+                  </Typography>
+                  <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e3a8a', fontSize: '1.1rem' }}>
+                    {match.team2?.score 
+                      ? `${match.team2.score.runs}/${match.team2.score.wickets}` 
+                      : match.team2Score || '0'}
                   </Typography>
                 </Box>
               </Box>
-            );
-          })()}
-          <Button fullWidth variant="outlined" onClick={(e: React.MouseEvent) => { e.stopPropagation(); navigate(`/matches/${match.numericId}`); }}>
-            View Match
-          </Button>
+
+              {/* Player of the Match */}
+              {match.result && typeof match.result === 'object' && match.result.playerOfMatch && (
+                <Box sx={{ 
+                  backgroundColor: '#fef3c7', 
+                  borderRadius: 1, 
+                  px: 1.5,
+                  py: 1,
+                  mb: 1.5,
+                  border: '1px solid #fbbf24',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+                    <Typography variant="caption" sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#92400e', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                      ⭐ POTM:
+                    </Typography>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, color: '#92400e', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {match.result.playerOfMatch.name}
+                      </Typography>
+                      {match.result.playerOfMatch.teamName && (
+                        <Typography variant="caption" sx={{ color: '#92400e', fontSize: '0.65rem', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {match.result.playerOfMatch.teamName}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                  {match.result.playerOfMatch.impact && (
+                    <Typography variant="caption" sx={{ color: '#92400e', fontSize: '0.65rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                      {match.result.playerOfMatch.impact.toFixed(1)}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+              
+              {/* Venue and Date */}
+              <Typography variant="body2" sx={{ color: '#6b7280', fontSize: '0.75rem', textAlign: 'center' }}>
+                {match.venue || 'Venue TBD'} • {match.scheduledDate ? new Date(match.scheduledDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Date TBD'}
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
     );
   };
 
-  const renderTableView = () => (
-    <TableContainer component={Paper} sx={{ mt: 2 }}>
-      <Table>
-        <TableHead>
-          <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-            <TableCell sx={{ fontWeight: 700 }}>Match</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Teams</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Status</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Date & Time</TableCell>
-            <TableCell sx={{ fontWeight: 700 }}>Venue</TableCell>
-            <TableCell sx={{ fontWeight: 700, textAlign: 'center' }}>Action</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredMatches.map((match) => (
-            <TableRow key={match.id} hover>
-              <TableCell>
-                <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {match.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {match.matchType}
-                  </Typography>
-                </Box>
-              </TableCell>
-              <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Avatar sx={{ bgcolor: getTeamColor(match.team1.name), width: 32, height: 32, fontSize: '0.75rem', fontWeight: 700 }}>
-                    {match.team1.name.substring(0, 2).toUpperCase()}
-                  </Avatar>
-                  <Typography variant="body2">
-                    {match.team1.name} vs {match.team2.name}
-                  </Typography>
-                  <Avatar sx={{ bgcolor: getTeamColor(match.team2.name), width: 32, height: 32, fontSize: '0.75rem', fontWeight: 700 }}>
-                    {match.team2.name.substring(0, 2).toUpperCase()}
-                  </Avatar>
-                </Box>
-                {(match.team1.score || match.team2.score) && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    {match.team1.score || '0'} - {match.team2.score || '0'}
-                  </Typography>
-                )}
-              </TableCell>
-              <TableCell>
-                <Chip
-                  icon={getStatusIcon(match.status)}
-                  label={match.status}
-                  size="small"
-                  color={getStatusColor(match.status)}
-                  sx={{ fontWeight: 600 }}
-                />
-              </TableCell>
-              <TableCell>
-                <Typography variant="body2">
-                  {match.date} at {match.time}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Typography variant="body2" color="text.secondary">
-                  {match.venue}
-                </Typography>
-              </TableCell>
-              <TableCell sx={{ textAlign: 'center' }}>
-                <Typography
-                  variant="body2"
-                  sx={{
-                    color: '#2563EB',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    '&:hover': { textDecoration: 'underline' }
-                  }}
-                  onClick={() => navigate(`/matches/${match.numericId}`)}
-                >
-                  View Details
-                </Typography>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
-  );
-
-  const renderCardView = () => (
-    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 2 }}>
-      {filteredMatches.map((match) => renderMatchCard(match))}
-    </Box>
-  );
-
-  // Keep shell; show overlay and inline alerts for consistency
-
+  // Categorize matches by status
   return (
-    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh', py: 4 }}>
+    <Box sx={{ bgcolor: '#f5f5f5', minHeight: '100vh', maxWidth: { xs: '100%', md: 1280 }, mx: { xs: 0, md: 'auto' }, pb: { xs: 10, md: 4 }, width: '100%' }}>
       <BusyOverlay open={loading} label="Loading matches..." />
-      <Container maxWidth="md">
-        {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <IconButton onClick={() => navigate(-1)} size="small" sx={{ mr: 1 }}>
-            <ArrowBackIosNewIcon fontSize="small" />
-          </IconButton>
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>Matches</Typography>
+      
+      {/* Filter Pills - Below Header */}
+      <Box sx={{ px: { xs: 2, md: 4 }, pt: { xs: 1, md: 2 }, pb: { xs: 2, md: 3 }, bgcolor: '#f5f5f5' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          gap: { xs: 1, md: 1.5 }, 
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexWrap: 'wrap'
+        }}>
+          <Chip
+            label="All Matches"
+            onClick={() => setStatusFilter('All')}
+            sx={{
+              bgcolor: statusFilter === 'All' ? '#1e40af' : '#ffffff',
+              color: statusFilter === 'All' ? '#ffffff' : '#64748b',
+              fontWeight: statusFilter === 'All' ? 600 : 500,
+              fontSize: { xs: '0.875rem', md: '0.9375rem' },
+              height: { xs: 32, md: 36 },
+              px: { xs: 0, md: 1 },
+              borderRadius: '16px',
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: statusFilter === 'All' ? '#1e3a8a' : '#f1f5f9',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          />
+          <Chip
+            label="Upcoming"
+            onClick={() => setStatusFilter('Upcoming')}
+            sx={{
+              bgcolor: statusFilter === 'Upcoming' ? '#1e40af' : '#ffffff',
+              color: statusFilter === 'Upcoming' ? '#ffffff' : '#64748b',
+              fontWeight: statusFilter === 'Upcoming' ? 600 : 500,
+              fontSize: { xs: '0.875rem', md: '0.9375rem' },
+              height: { xs: 32, md: 36 },
+              px: { xs: 0, md: 1 },
+              borderRadius: '16px',
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: statusFilter === 'Upcoming' ? '#1e3a8a' : '#f1f5f9',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          />
+          <Chip
+            label="Live"
+            onClick={() => setStatusFilter('Live')}
+            sx={{
+              bgcolor: statusFilter === 'Live' ? '#1e40af' : '#ffffff',
+              color: statusFilter === 'Live' ? '#ffffff' : '#64748b',
+              fontWeight: statusFilter === 'Live' ? 600 : 500,
+              fontSize: { xs: '0.875rem', md: '0.9375rem' },
+              height: { xs: 32, md: 36 },
+              px: { xs: 0, md: 1 },
+              borderRadius: '16px',
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: statusFilter === 'Live' ? '#1e3a8a' : '#f1f5f9',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          />
+          <Chip
+            label="Completed"
+            onClick={() => setStatusFilter('Completed')}
+            sx={{
+              bgcolor: statusFilter === 'Completed' ? '#1e40af' : '#ffffff',
+              color: statusFilter === 'Completed' ? '#ffffff' : '#64748b',
+              fontWeight: statusFilter === 'Completed' ? 600 : 500,
+              fontSize: { xs: '0.875rem', md: '0.9375rem' },
+              height: { xs: 32, md: 36 },
+              px: { xs: 0, md: 1 },
+              borderRadius: '16px',
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: statusFilter === 'Completed' ? '#1e3a8a' : '#f1f5f9',
+              },
+              transition: 'all 0.2s ease',
+            }}
+          />
+          <TextField
+            placeholder="Search matches..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="small"
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ fontSize: 18 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{ 
+              width: { xs: 'auto', sm: 250 },
+              flex: { xs: 1, sm: 0 },
+              '& .MuiOutlinedInput-root': {
+                bgcolor: '#ffffff',
+                borderRadius: '16px',
+                height: { xs: 32, md: 36 },
+                fontSize: { xs: '0.875rem', md: '0.9375rem' }
+              }
+            }}
+          />
         </Box>
+      </Box>
 
+      {/* Main Content */}
+      <Box sx={{ 
+        px: { xs: 3, md: 4 }, 
+        pt: { xs: 3, md: 0 }, 
+        pb: { xs: 2, md: 2 },
+        display: { xs: 'flex', md: 'grid' },
+        flexDirection: { xs: 'column', md: 'initial' },
+        gridTemplateColumns: { md: 'repeat(auto-fill, minmax(380px, 1fr))' },
+        gap: { xs: 2, md: 3 }
+      }}>
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2, gridColumn: { md: '1 / -1' } }}>
             {error}
           </Alert>
         )}
 
-        {/* Stats Cards */}
-        <Box sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: 2,
-          mb: 3
-        }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <PlayArrowIcon sx={{ fontSize: 32, color: '#EF4444', mb: 1 }} />
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#EF4444' }}>
-                {liveMatchesCount}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Live Matches
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <ScheduleIcon sx={{ fontSize: 32, color: '#F59E0B', mb: 1 }} />
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#F59E0B' }}>
-                {upcomingMatchesCount}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Upcoming Matches
-              </Typography>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <CheckCircleIcon sx={{ fontSize: 32, color: '#10B981', mb: 1 }} />
-              <Typography variant="h4" sx={{ fontWeight: 700, color: '#10B981' }}>
-                {completedMatchesCount}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Completed Matches
-              </Typography>
-            </CardContent>
-          </Card>
-        </Box>
-
-        {/* Filter Section */}
-        <Card sx={{ mb: 3, p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Status Filter</InputLabel>
-              <Select
-                value={statusFilter}
-                label="Status Filter"
-                onChange={(e) => setStatusFilter(e.target.value as 'Live' | 'Upcoming' | 'Completed' | 'All')}
-                startAdornment={<FilterListIcon sx={{ ml: 1, mr: -0.5, color: 'action.active' }} />}
-              >
-                <MenuItem value="All">All Matches ({matches.length})</MenuItem>
-                <MenuItem value="Live">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    Live Matches ({liveMatchesCount})
-                    {liveMatchesCount > 0 && (
-                      <Box
-                        sx={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: '50%',
-                          bgcolor: '#EF4444',
-                          animation: 'pulse 2s ease-in-out infinite',
-                          '@keyframes pulse': {
-                            '0%, 100%': { opacity: 1 },
-                            '50%': { opacity: 0.5 },
-                          },
-                        }}
-                      />
-                    )}
-                  </Box>
-                </MenuItem>
-                <MenuItem value="Upcoming">Upcoming Matches ({upcomingMatchesCount})</MenuItem>
-                <MenuItem value="Completed">Completed Matches ({completedMatchesCount})</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* View Toggle */}
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(_, newView) => newView && setViewMode(newView)}
-              sx={{ ml: 'auto' }}
-            >
-              <ToggleButton value="table">
-                <ViewListIcon />
-              </ToggleButton>
-              <ToggleButton value="grid">
-                <ViewModuleIcon />
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        </Card>
-
         {/* Matches List */}
         {filteredMatches.length > 0 ? (
-          viewMode === 'table' ? renderTableView() : renderCardView()
+          filteredMatches.map((match) => renderMatchCard(match))
         ) : (
-          <Card>
-            <CardContent sx={{ textAlign: 'center', py: 8 }}>
-              <SportsIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary" gutterBottom>
+          <Card sx={{ boxShadow: 2, borderRadius: 2, gridColumn: { md: '1 / -1' } }}>
+            <CardContent sx={{ textAlign: 'center', py: 6 }}>
+              <SportsIcon sx={{ fontSize: { xs: 48, md: 56 }, color: '#6b7280', mb: 2, opacity: 0.5 }} />
+              <Typography variant="h6" color="text.secondary" gutterBottom sx={{ fontSize: { xs: '1.125rem', md: '1.25rem' } }}>
                 No matches found
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                There are no {statusFilter.toLowerCase()} matches at the moment.
+              <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.875rem', md: '0.9375rem' } }}>
+                {statusFilter === 'All' ? 'There are no matches available at the moment.' : `There are no ${statusFilter.toLowerCase()} matches at the moment.`}
               </Typography>
             </CardContent>
           </Card>
         )}
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Pagination
-              count={totalPages}
-              page={currentPage}
-              onChange={handlePageChange}
-              color="primary"
-              size="large"
-            />
+        {/* Infinite Scroll Trigger */}
+        {hasMore && !loading && matches.length > 0 && (
+          <Box 
+            ref={observerTarget} 
+            sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              mt: { xs: 2, md: 3 },
+              mb: { xs: 2, md: 3 },
+              py: 2,
+              gridColumn: { md: '1 / -1' }
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              Scroll for more...
+            </Typography>
           </Box>
         )}
-      </Container>
+
+        {/* Loading more indicator */}
+        {loading && matches.length > 0 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
+            <Typography variant="body2" color="text.secondary">
+              Loading more matches...
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
     </Box>
   );
 };

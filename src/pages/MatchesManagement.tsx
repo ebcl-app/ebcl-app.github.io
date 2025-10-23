@@ -46,7 +46,7 @@ import ScheduleIcon from '@mui/icons-material/Schedule';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
-import { CricketApiService, type ApiMatch, type ApiTeam } from '../api/cricketApi';
+import { CricketApiService, type ApiMatch, type ApiTeam, type ApiTournament } from '../api/cricketApi';
 import { useAuth } from '../contexts/AuthContext';
 
 interface Match {
@@ -85,6 +85,7 @@ const MatchesManagement: React.FC = () => {
   }
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [teams, setTeams] = React.useState<ApiTeam[]>([]);
+  const [tournaments, setTournaments] = React.useState<ApiTournament[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [matchesPagination, setMatchesPagination] = React.useState({
@@ -114,6 +115,7 @@ const MatchesManagement: React.FC = () => {
     time: '',
     venue: '',
     matchType: 'T20',
+    tournament: '',
   });
 
   const availableTeams = teams.map(team => team.name);
@@ -122,12 +124,13 @@ const MatchesManagement: React.FC = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [matchesResponse, teamsResponse] = await Promise.all([
+        const [matchesResponse, teamsResponse, tournamentsResponse] = await Promise.all([
           CricketApiService.getMatches(undefined, { page: matchesPagination.page, limit: matchesPagination.limit }),
-          CricketApiService.getTeams({ page: teamsPagination.page, limit: teamsPagination.limit })
+          CricketApiService.getTeams({ page: teamsPagination.page, limit: teamsPagination.limit }),
+          CricketApiService.getTournaments()
         ]);
 
-        if (matchesResponse.success && teamsResponse.success) {
+        if (matchesResponse.success && teamsResponse.success && tournamentsResponse.success) {
           // Transform API matches to component format
           const transformedMatches: Match[] = matchesResponse.data.map((apiMatch: ApiMatch) => ({
             id: apiMatch.numericId,
@@ -152,15 +155,16 @@ const MatchesManagement: React.FC = () => {
 
           setMatches(transformedMatches);
           setTeams(teamsResponse.data);
+          setTournaments(tournamentsResponse.data);
           setMatchesPagination(prev => ({
             ...prev,
             total: matchesResponse.pagination.total,
-            totalPages: matchesResponse.pagination.totalPages,
+            totalPages: matchesResponse.pagination.pages,
           }));
           setTeamsPagination(prev => ({
             ...prev,
             total: teamsResponse.pagination.total,
-            totalPages: teamsResponse.pagination.totalPages,
+            totalPages: teamsResponse.pagination.pages,
           }));
           setError(null);
         } else {
@@ -187,6 +191,7 @@ const MatchesManagement: React.FC = () => {
         time: match.time,
         venue: match.venue,
         matchType: match.matchType,
+        tournament: '', // TODO: Extract from match data if available
       });
     } else {
       setSelectedMatch(null);
@@ -197,6 +202,7 @@ const MatchesManagement: React.FC = () => {
         time: '',
         venue: '',
         matchType: 'T20',
+        tournament: '',
       });
     }
     setOpenDialog(true);
@@ -212,6 +218,7 @@ const MatchesManagement: React.FC = () => {
       time: '',
       venue: '',
       matchType: 'T20',
+      tournament: '',
     });
   };
 
@@ -232,10 +239,18 @@ const MatchesManagement: React.FC = () => {
 
         // Only include team IDs if teams were actually changed
         if (team1Obj && team1Obj.name !== selectedMatch.team1.name) {
-          updateData.team1Id = team1Obj.numericId;
+          updateData.team1Id = team1Obj.displayId;
         }
         if (team2Obj && team2Obj.name !== selectedMatch.team2.name) {
-          updateData.team2Id = team2Obj.numericId;
+          updateData.team2Id = team2Obj.displayId;
+        }
+
+        // Add tournamentId if selected
+        if (formData.tournament) {
+          const selectedTournament = tournaments.find(t => t.displayId === formData.tournament);
+          if (selectedTournament) {
+            updateData.tournamentId = selectedTournament.displayId;
+          }
         }
 
         const response = await CricketApiService.updateMatch(selectedMatch.id, updateData);
@@ -268,15 +283,25 @@ const MatchesManagement: React.FC = () => {
           return;
         }
 
-        const response = await CricketApiService.createMatch({
+        const createData: any = {
           title: `${formData.team1} vs ${formData.team2}`,
-          team1Id: team1Obj.numericId,
-          team2Id: team2Obj.numericId,
+          team1Id: team1Obj.displayId,
+          team2Id: team2Obj.displayId,
           scheduledDate: formData.date,
           venue: formData.venue,
           matchType: formData.matchType,
           status: 'scheduled',
-        } as any);
+        };
+
+        // Add tournamentId if selected
+        if (formData.tournament) {
+          const selectedTournament = tournaments.find(t => t.displayId === formData.tournament);
+          if (selectedTournament) {
+            createData.tournamentId = selectedTournament.displayId;
+          }
+        }
+
+        const response = await CricketApiService.createMatch(createData);
 
         if (response.success) {
           // Transform API response to component format
@@ -720,6 +745,24 @@ const MatchesManagement: React.FC = () => {
                 <MenuItem value="T20">T20</MenuItem>
                 <MenuItem value="ODI">ODI (50 Overs)</MenuItem>
                 <MenuItem value="Test">Test Match</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth>
+              <InputLabel>Tournament (Optional)</InputLabel>
+              <Select
+                value={formData.tournament}
+                label="Tournament (Optional)"
+                onChange={(e) => setFormData({ ...formData, tournament: e.target.value })}
+              >
+                <MenuItem value="">
+                  <em>No Tournament</em>
+                </MenuItem>
+                {tournaments.map((tournament) => (
+                  <MenuItem key={tournament.id} value={tournament.displayId}>
+                    {tournament.name} ({tournament.season})
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>

@@ -4,13 +4,15 @@ import {
   Typography,
   Card,
   CardContent,
+  CardActionArea,
   Avatar,
   Chip,
   Container,
   IconButton,
   Tabs,
   Tab,
-  Pagination
+  Pagination,
+  Button,
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import SportsIcon from '@mui/icons-material/Sports';
@@ -20,6 +22,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
+import GavelIcon from '@mui/icons-material/Gavel';
 import { useNavigate } from 'react-router-dom';
 import TeamManagement from './TeamManagement';
 import MatchesManagement from './MatchesManagement';
@@ -358,6 +361,97 @@ const AdminPanel: React.FC = () => {
                           </Typography>
                         );
                       })()}
+                    </Box>
+                  </CardContent>
+                </Card>
+              </Box>
+
+              {/* Quick Actions */}
+              <Box sx={{ flex: { xs: '1 1 100%', md: '1 1 calc(33.33% - 12px)' }, minWidth: 0 }}>
+                <Card sx={{ boxShadow: 2 }}>
+                  <CardContent>
+                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                      Quick Actions
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Card 
+                        sx={{ 
+                          boxShadow: 1, 
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: 3,
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        <CardActionArea onClick={() => navigate('/admin/auction')}>
+                          <CardContent sx={{ p: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Avatar sx={{ bgcolor: '#9333EA', width: 48, height: 48 }}>
+                                <GavelIcon />
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                  Player Auction
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  IPL-style auction system
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+
+                      <Card 
+                        sx={{ 
+                          boxShadow: 1, 
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            boxShadow: 3,
+                            transform: 'translateY(-2px)'
+                          }
+                        }}
+                      >
+                        <CardActionArea onClick={() => navigate('/admin/matches')}>
+                          <CardContent sx={{ p: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <Avatar sx={{ bgcolor: '#4A90E2', width: 48, height: 48 }}>
+                                <SportsIcon />
+                              </Avatar>
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                                  Manage Matches
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  Create and manage matches
+                                </Typography>
+                              </Box>
+                            </Box>
+                          </CardContent>
+                        </CardActionArea>
+                      </Card>
+
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        startIcon={<PeopleIcon />}
+                        onClick={() => setSelectedTab(1)}
+                        sx={{ mt: 1 }}
+                      >
+                        Manage Teams
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        fullWidth
+                        startIcon={<PersonIcon />}
+                        onClick={() => setSelectedTab(2)}
+                      >
+                        Manage Players
+                      </Button>
                     </Box>
                   </CardContent>
                 </Card>

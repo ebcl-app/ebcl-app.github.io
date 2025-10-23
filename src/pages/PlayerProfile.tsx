@@ -12,6 +12,7 @@ import {
   IconButton,
   CircularProgress,
   Alert,
+  Button,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EmailIcon from '@mui/icons-material/Email';
@@ -27,6 +28,7 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 6, onBack }) =
   const [player, setPlayer] = React.useState<ApiPlayer | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [tab, setTab] = React.useState('summary');
 
   React.useEffect(() => {
     const fetchPlayerData = async () => {
@@ -186,8 +188,72 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 6, onBack }) =
         </Box>
       </Card>
 
-      {/* Stats Overview */}
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
+      {/* Tab Buttons */}
+      <Box sx={{ display: 'flex', gap: 0, backgroundColor: '#f1f5f9', borderRadius: 1, p: 0.5, mb: 3 }}>
+        <Button
+          variant="text"
+          onClick={() => setTab('summary')}
+          sx={{
+            flex: 1,
+            textTransform: 'none',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            py: 0.8,
+            borderRadius: 0.8,
+            backgroundColor: tab === 'summary' ? '#2c3e5f' : 'transparent',
+            color: tab === 'summary' ? '#ffffff' : '#64748b',
+            '&:hover': {
+              backgroundColor: tab === 'summary' ? '#253451' : 'rgba(0,0,0,0.04)'
+            }
+          }}
+        >
+          Summary
+        </Button>
+        <Button
+          variant="text"
+          onClick={() => setTab('matches')}
+          sx={{
+            flex: 1,
+            textTransform: 'none',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            py: 0.8,
+            borderRadius: 0.8,
+            backgroundColor: tab === 'matches' ? '#2c3e5f' : 'transparent',
+            color: tab === 'matches' ? '#ffffff' : '#64748b',
+            '&:hover': {
+              backgroundColor: tab === 'matches' ? '#253451' : 'rgba(0,0,0,0.04)'
+            }
+          }}
+        >
+          Matches
+        </Button>
+        <Button
+          variant="text"
+          onClick={() => setTab('teams')}
+          sx={{
+            flex: 1,
+            textTransform: 'none',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            py: 0.8,
+            borderRadius: 0.8,
+            backgroundColor: tab === 'teams' ? '#2c3e5f' : 'transparent',
+            color: tab === 'teams' ? '#ffffff' : '#64748b',
+            '&:hover': {
+              backgroundColor: tab === 'teams' ? '#253451' : 'rgba(0,0,0,0.04)'
+            }
+          }}
+        >
+          Teams
+        </Button>
+      </Box>
+
+      {/* Summary Tab Content */}
+      {tab === 'summary' && (
+        <>
+          {/* Stats Overview */}
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3, mb: 3 }}>
         <Card sx={{ flex: '1 1 200px', minWidth: 0 }}>
           <CardContent>
             <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -443,6 +509,201 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 6, onBack }) =
           </Card>
         </Box>
       </Box>
+        </>
+      )}
+
+      {/* Matches Tab Content */}
+      {tab === 'matches' && (
+        <Box sx={{ mb: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#1e293b' }}>
+                Match History
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {sortedMatchHistory.length > 0 ? (
+                  sortedMatchHistory.map((match, index) => {
+                    // Determine opponent team
+                    const opponent = match.team1 === player.name ? match.team2 : match.team1;
+                    // Determine result
+                    const isWinner = match.result.winner === player.name;
+                    
+                    return (
+                      <Paper
+                        key={`${match.matchId}-${index}`}
+                        elevation={0}
+                        sx={{
+                          p: 3,
+                          bgcolor: '#F9FAFB',
+                          borderLeft: `4px solid ${
+                            isWinner ? '#10B981' : '#EF4444'
+                          }`,
+                          borderRadius: 2,
+                        }}
+                      >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                          <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 1, color: '#1e293b' }}>
+                              vs {opponent}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                              {new Date(match.matchDate).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </Typography>
+                            <Chip
+                              label={isWinner ? 'Won' : 'Lost'}
+                              size="small"
+                              color={isWinner ? 'success' : 'error'}
+                              sx={{ fontWeight: 600 }}
+                            />
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            {match.venue || 'Venue TBA'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {/* Show batting contribution */}
+                          {match.contributions
+                            .filter(c => c.type === 'batting')
+                            .map((contrib, contribIndex) => (
+                              <Box key={contribIndex} sx={{ textAlign: 'center' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                  Runs
+                                </Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 700, color: '#4A90E2' }}>
+                                  {contrib.runs || 0}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {contrib.balls || 0} balls
+                                </Typography>
+                              </Box>
+                            ))}
+                          
+                          {/* Show bowling contribution */}
+                          {match.contributions
+                            .filter(c => c.type === 'bowling')
+                            .map((contrib, contribIndex) => (
+                              <Box key={contribIndex} sx={{ textAlign: 'center' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                  Wickets
+                                </Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 700, color: '#EF4444' }}>
+                                  {contrib.wickets || 0}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {contrib.overs || '0'} overs
+                                </Typography>
+                              </Box>
+                            ))}
+                          
+                          {/* Show fielding contribution */}
+                          {match.contributions
+                            .filter(c => c.type === 'fielding')
+                            .map((contrib, contribIndex) => (
+                              <Box key={contribIndex} sx={{ textAlign: 'center' }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                  Fielding
+                                </Typography>
+                                <Typography variant="h5" sx={{ fontWeight: 700, color: '#10B981' }}>
+                                  {contrib.count || 0}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {contrib.action || 'catches'}
+                                </Typography>
+                              </Box>
+                            ))}
+                        </Box>
+                      </Paper>
+                    );
+                  })
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 4 }}>
+                    <Typography variant="body1" color="text.secondary">
+                      No match history available
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+
+      {/* Teams Tab Content */}
+      {tab === 'teams' && (
+        <Box sx={{ mb: 3 }}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#1e293b' }}>
+                Teams Played For
+              </Typography>
+              
+              {player.recentTeams && player.recentTeams.length > 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {player.recentTeams.map((team, index) => (
+                    <Paper
+                      key={`${team.teamId}-${index}`}
+                      elevation={0}
+                      sx={{
+                        p: 3,
+                        bgcolor: '#F9FAFB',
+                        borderRadius: 2,
+                        border: '1px solid #E5E7EB',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Avatar sx={{ 
+                            bgcolor: '#4A90E2', 
+                            width: 48, 
+                            height: 48,
+                            fontWeight: 700,
+                            fontSize: '1.2rem'
+                          }}>
+                            {team.teamName.charAt(0)}
+                          </Avatar>
+                          <Box>
+                            <Typography variant="h6" sx={{ fontWeight: 600, color: '#1e293b', mb: 0.5 }}>
+                              {team.teamName}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              Last played: {new Date(team.lastPlayed).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric',
+                              })}
+                            </Typography>
+                          </Box>
+                        </Box>
+                        
+                        <Box sx={{ textAlign: 'right' }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700, color: '#4A90E2', mb: 0.5 }}>
+                            {team.matchesPlayed}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Matches Played
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="body1" color="text.secondary">
+                    No team information available
+                  </Typography>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Box>
+      )}
     </Box>
   );
 };

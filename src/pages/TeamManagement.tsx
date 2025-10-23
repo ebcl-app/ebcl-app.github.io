@@ -84,12 +84,12 @@ const TeamManagement: React.FC = () => {
           setTeamsPagination(prev => ({
             ...prev,
             total: teamsResponse.pagination.total,
-            totalPages: teamsResponse.pagination.totalPages,
+            totalPages: teamsResponse.pagination.pages,
           }));
           setPlayersPagination(prev => ({
             ...prev,
             total: playersResponse.pagination.total,
-            totalPages: playersResponse.pagination.totalPages,
+            totalPages: playersResponse.pagination.pages,
           }));
         } else {
           setError('Failed to load teams data');
@@ -142,14 +142,14 @@ const TeamManagement: React.FC = () => {
     try {
       if (selectedTeam) {
         // Update existing team
-        const response = await CricketApiService.updateTeam(selectedTeam.numericId, {
+        const response = await CricketApiService.updateTeam(selectedTeam.id, {
           name: formData.name,
           captainId: formData.captain ? formData.captain : undefined,
         });
 
         if (response.success) {
           setTeams(teams.map(team => 
-            team.numericId === selectedTeam.numericId ? response.data : team
+            team.id === selectedTeam.id ? response.data : team
           ));
           handleCloseDialog();
         } else {
