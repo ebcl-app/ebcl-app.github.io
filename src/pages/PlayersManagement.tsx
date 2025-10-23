@@ -53,16 +53,6 @@ const PlayersManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  if (!isAuthenticated) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="error">
-          Access denied. Please log in as an administrator.
-        </Typography>
-      </Box>
-    );
-  }
-
   const [players, setPlayers] = React.useState<ApiPlayer[]>([]);
   const [teams, setTeams] = React.useState<ApiTeam[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -136,6 +126,16 @@ const PlayersManagement: React.FC = () => {
     isActive: true,
     preferredTeamId: '',
   });
+
+  if (!isAuthenticated) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Access denied. Please log in as an administrator.
+        </Typography>
+      </Box>
+    );
+  }
 
 
 

@@ -42,7 +42,7 @@ const SplashScreen = () => (
       src={illustrationSrc}
       alt="Cricket illustration"
       sx={{ width: '75%', maxWidth: 280, filter: 'drop-shadow(0 12px 24px rgba(15, 23, 42, 0.35))' }}
-      onError={(e: any) => {
+      onError={(e: React.SyntheticEvent<HTMLImageElement, Event>) => {
         if (e.currentTarget && e.currentTarget.src.indexOf('logo.png') !== -1) {
           e.currentTarget.src = '/landingpage-512x512.png';
         }

@@ -15,13 +15,24 @@ import StarOutlined from '@mui/icons-material/Star';
 import { CricketApiService } from '../api/cricketApi';
 import type { ApiMatch } from '../api/cricketApi';
 import { useNavigate } from 'react-router-dom';
-import { calculateBattingImpactScore, calculateBowlingImpactScore, calculateFieldingImpactScore } from '../utils/impactCalculation';
+import { calculateBattingImpactScore, calculateBowlingImpactScore, calculateFieldingImpactScore, type PlayerStats } from '../utils/impactCalculation';
+
+interface LeaderboardPlayer extends PlayerStats {
+  id: string | number;
+  player?: {
+    id: string | number;
+    name: string;
+  };
+  battingImpact: number;
+  bowlingImpact: number;
+  fieldingImpact: number;
+}
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [recentMatches, setRecentMatches] = useState<ApiMatch[]>([]);
   const [leaderboardFilter, setLeaderboardFilter] = useState<'batsman' | 'bowler' | 'fielder'>('batsman');
-  const [leaderboardData, setLeaderboardData] = useState<any[]>([]);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardPlayer[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -131,7 +142,7 @@ const Dashboard: React.FC = () => {
   const getFilteredLeaderboard = () => {
     if (!leaderboardData.length) return [];
 
-    let sortedData = [...leaderboardData];
+    const sortedData = [...leaderboardData];
 
     switch (leaderboardFilter) {
       case 'batsman':

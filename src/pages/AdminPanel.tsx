@@ -29,6 +29,13 @@ import MatchesManagement from './MatchesManagement';
 import PlayersManagement from './PlayersManagement';
 import { CricketApiService, type ApiMatch } from '../api/cricketApi';
 
+interface ProcessedMatch {
+  team1: string;
+  team2: string;
+  score: string;
+  status: string;
+}
+
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -79,7 +86,7 @@ const AdminPanel: React.FC = () => {
     error: null as string | null,
   });
   const [viewMode, setViewMode] = React.useState<'list' | 'grid'>('list');
-  const [recentMatches, setRecentMatches] = React.useState<any[]>([]);
+  const [recentMatches, setRecentMatches] = React.useState<ProcessedMatch[]>([]);
   // Pagination constants
   const MATCHES_PER_PAGE = 10;
 
@@ -289,7 +296,7 @@ const AdminPanel: React.FC = () => {
                         
                         return paginatedMatches.length > 0 ? (
                           <>
-                            {paginatedMatches.map((match: any, index: number) => (
+                            {paginatedMatches.map((match: ProcessedMatch, index: number) => (
                               viewMode === 'grid' ? (
                                 <Card key={startIndex + index} sx={{ boxShadow: 1 }}>
                                   <CardContent sx={{ p: 2 }}>

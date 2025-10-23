@@ -40,6 +40,29 @@ export interface AggregatedPerformance {
   };
 }
 
+export interface PlayerStats {
+  name: string;
+  // Batting stats
+  totalRuns?: number;
+  totalBalls?: number;
+  totalFours?: number;
+  totalSixes?: number;
+  totalNotOuts?: number;
+  battingAverage?: number;
+  battingStrikeRate?: number;
+  // Bowling stats
+  totalWickets?: number;
+  totalOvers?: number;
+  totalRunsConceded?: number;
+  bowlingEconomy?: number;
+  // Fielding stats
+  totalCatches?: number;
+  totalRunOuts?: number;
+  totalStumpings?: number;
+  // General stats
+  matchesPlayed?: number;
+}
+
 /**
  * Calculate impact score for individual player contributions in a match
  * Used in PlayerDetails for per-match impact scores
@@ -168,7 +191,7 @@ const calculateFieldingContribution = (catches: number, runOuts: number, stumpin
  * Calculate batting-specific impact score for leaderboard rankings
  * Focuses on batting performance metrics
  */
-export const calculateBattingImpactScore = (player: any): number => {
+export const calculateBattingImpactScore = (player: PlayerStats): number => {
   if (!player) return 0;
 
   const runs = player.totalRuns || 0;
@@ -196,7 +219,7 @@ export const calculateBattingImpactScore = (player: any): number => {
  * Calculate bowling-specific impact score for leaderboard rankings
  * Focuses on bowling performance metrics
  */
-export const calculateBowlingImpactScore = (player: any): number => {
+export const calculateBowlingImpactScore = (player: PlayerStats): number => {
   if (!player) return 0;
 
   const wickets = player.totalWickets || 0;
@@ -219,7 +242,7 @@ export const calculateBowlingImpactScore = (player: any): number => {
  * Calculate fielding-specific impact score for leaderboard rankings
  * Focuses on fielding performance metrics
  */
-export const calculateFieldingImpactScore = (player: any): number => {
+export const calculateFieldingImpactScore = (player: PlayerStats): number => {
   if (!player) return 0;
 
   const catches = player.totalCatches || 0;
@@ -235,7 +258,7 @@ export const calculateFieldingImpactScore = (player: any): number => {
  * Calculate overall impact score combining all aspects
  * Used for Rising Stars and general rankings
  */
-export const calculateOverallImpactScore = (player: any): number => {
+export const calculateOverallImpactScore = (player: PlayerStats): number => {
   if (!player) return 0;
 
   const battingImpact = calculateBattingImpactScore(player);

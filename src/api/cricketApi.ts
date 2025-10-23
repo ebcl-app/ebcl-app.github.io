@@ -79,6 +79,86 @@ export interface ApiMatchHistoryEntry {
     economy: number;
   };
 }
+
+export interface ApiLiveScore {
+  matchId: string;
+  status: 'scheduled' | 'live' | 'completed';
+  team1: {
+    name: string;
+    score?: string;
+  };
+  team2: {
+    name: string;
+    score?: string;
+  };
+  venue?: string;
+  currentInnings?: number;
+  overs?: string;
+  target?: number;
+}
+
+export interface MatchAnalysisData {
+  matchId: string;
+  team1: string;
+  team2: string;
+  venue: string;
+  result: {
+    winner: string;
+    margin: string;
+  };
+  contributions: Array<{
+    type: 'batting' | 'bowling' | 'fielding';
+    inningNumber: number;
+    player: {
+      id: string;
+      name: string;
+    };
+    runs?: number;
+    balls?: number;
+    fours?: number;
+    sixes?: number;
+    wickets?: number;
+    overs?: string;
+    maidens?: number;
+    runsConceded?: number;
+    catches?: number;
+    runOuts?: number;
+    stumpings?: number;
+    impactScore?: number;
+  }>;
+}
+
+export interface PlayerAnalysisData {
+  playerId: string;
+  name: string;
+  role: string;
+  matchHistory: MatchAnalysisData[];
+}
+
+export interface MatchAnalysisResult {
+  matchId: string;
+  analysis: {
+    keyMoments: string[];
+    playerPerformances: Array<{
+      playerId: string;
+      name: string;
+      impact: number;
+      highlights: string[];
+    }>;
+    matchSummary: string;
+  };
+}
+
+export interface PlayerAnalysisResult {
+  playerId: string;
+  analysis: {
+    strengths: string[];
+    weaknesses: string[];
+    recommendations: string[];
+    playerDescription: string;
+    potentialRating: number;
+  };
+}
 export interface ApiPlayerPerformance {
   player: {
     id: string | number;
@@ -335,12 +415,39 @@ export interface ApiMatch {
         name: string;
         role: string;
         impactScore?: number;
-        batting?: any;
-        bowling?: any;
-        fielding?: any;
+        batting?: {
+          runs: number;
+          balls: number;
+          fours: number;
+          sixes: number;
+          notOuts?: number;
+          strikeRate?: string;
+          impact?: number;
+        };
+        bowling?: {
+          wickets: number;
+          runs: number;
+          overs: number;
+          economy?: string;
+          impact?: number;
+        };
+        fielding?: {
+          catches: number;
+          runOuts: number;
+          stumpings?: number;
+          impact?: number;
+        };
       }>;
-      captain?: any;
-      wicketKeeper?: any;
+      captain?: {
+        id: string;
+        name: string;
+        role?: string;
+      };
+      wicketKeeper?: {
+        id: string;
+        name: string;
+        role?: string;
+      };
     };
   };
   // Player performances (v2 structure)
@@ -531,17 +638,42 @@ export interface ApiPlayer {
   // Recent matches and teams
   recentMatches?: Array<{
     matchId: string;
-    date: string;
+    date: {
+      _seconds: number;
+      _nanoseconds: number;
+    };
     opponent: string;
     result: string;
-    batting?: any;
-    bowling?: any;
-    fielding?: any;
+    batting?: {
+      runs: number;
+      balls: number;
+      fours: number;
+      sixes: number;
+    };
+    bowling?: {
+      wickets: number;
+      runs: number;
+      overs: string;
+      maidens: number;
+    };
+    fielding?: {
+      catches: number;
+      runOuts: number;
+    };
+    impact: {
+      batting: number;
+      bowling: number;
+      fielding: number;
+      total: number;
+    };
   }>;
   recentTeams?: Array<{
     teamId: string;
     teamName: string;
-    lastPlayed: string;
+    lastPlayed: {
+      _seconds: number;
+      _nanoseconds: number;
+    };
     matchesPlayed: number;
   }>;
   // Preferred team
@@ -713,8 +845,19 @@ export interface ApiTeam {
       wickets: number;
       economy: number;
     };
-    allRounder?: any;
-    wicketKeeper?: any;
+    allRounder?: {
+      id: string;
+      name: string;
+      runs: number;
+      wickets: number;
+    };
+    wicketKeeper?: {
+      id: string;
+      name: string;
+      dismissals: number;
+      catches: number;
+      stumpings: number;
+    };
   };
   teamPlayers?: Array<{
     id: string;
@@ -1188,7 +1331,7 @@ export class CricketApiService {
   }
 
   // Live Scores API
-  static async getLiveScores(pagination?: PaginationParams): Promise<ApiResponse<any[]>> {
+  static async getLiveScores(pagination?: PaginationParams): Promise<ApiResponse<ApiLiveScore[]>> {
     let queryParams = '';
     const params: string[] = [];
 
@@ -1199,11 +1342,11 @@ export class CricketApiService {
       queryParams = '?' + params.join('&');
     }
 
-    return await this.request<any[]>(`/live-scores${queryParams}`);
+    return await this.request<ApiLiveScore[]>(`/live-scores${queryParams}`);
   }
 
   // Analysis APIs
-  static async analyzeMatch(matchData: any): Promise<ApiResponse<any>> {
+  static async analyzeMatch(matchData: MatchAnalysisData): Promise<ApiResponse<MatchAnalysisResult>> {
     const response = await fetch(`${API_BASE_URL}/match-analysis`, {
       method: 'POST',
       headers: {
@@ -1219,7 +1362,7 @@ export class CricketApiService {
     return await response.json();
   }
 
-  static async analyzePlayer(playerData: any): Promise<ApiResponse<any>> {
+  static async analyzePlayer(playerData: PlayerAnalysisData): Promise<ApiResponse<PlayerAnalysisResult>> {
     const response = await fetch(`${API_BASE_URL}/player-analysis`, {
       method: 'POST',
       headers: {
