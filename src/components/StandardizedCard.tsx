@@ -22,7 +22,7 @@ interface BaseCardProps {
   expandable?: boolean;
   expandedContent?: React.ReactNode;
   onClick?: () => void;
-  sx?: any;
+  sx?: import("@mui/material").SxProps;
 }
 
 export const StandardizedCard: React.FC<BaseCardProps> = ({

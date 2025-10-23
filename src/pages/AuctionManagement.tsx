@@ -48,7 +48,7 @@ import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import StarsIcon from '@mui/icons-material/Stars';
 import ShieldIcon from '@mui/icons-material/Shield';
 import { CricketApiService } from '../api/cricketApi';
-import type { AuctionBid, CreateAuctionRequest } from '../api/cricketApi';
+import type { AuctionBid, CreateAuctionRequest, ApiTournament, ApiPlayer, ApiTeam } from '../api/cricketApi';
 
 interface AuctionState {
   id?: string;
@@ -136,10 +136,10 @@ const AuctionManagement: React.FC = () => {
   
   // Auction Setup States
   const [setupDialogOpen, setSetupDialogOpen] = React.useState(false);
-  const [tournaments, setTournaments] = React.useState<any[]>([]);
+  const [tournaments, setTournaments] = React.useState<ApiTournament[]>([]);
   const [allTeams, setAllTeams] = React.useState<Team[]>([]);
   const [teams, setTeams] = React.useState<Team[]>([]);
-  const [availablePlayers, setAvailablePlayers] = React.useState<any[]>([]);
+  const [availablePlayers, setAvailablePlayers] = React.useState<ApiPlayer[]>([]);
   
   // Current Auction States
   const [auctionConfig, setAuctionConfig] = React.useState<AuctionState | null>(null);
@@ -182,8 +182,8 @@ const AuctionManagement: React.FC = () => {
     try {
       const response = await CricketApiService.getTeams();
       if (response.success) {
-        const teamsData: Team[] = response.data.map((team: any) => ({
-          id: team.id || team.numericId.toString(),
+        const teamsData: Team[] = response.data.map((team: ApiTeam) => ({
+          id: team.id || team.numericId?.toString() || '',
           name: team.name,
           shortName: team.shortName || team.name.substring(0, 3).toUpperCase(),
           remainingBudget: totalBudget,

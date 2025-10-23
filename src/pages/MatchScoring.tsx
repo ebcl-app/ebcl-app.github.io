@@ -95,6 +95,60 @@ interface FallOfWicket {
   over: string;
 }
 
+interface MatchPlayer {
+  playerId: string;
+  name: string;
+  role: string;
+  batting?: {
+    runs: number;
+    balls: number;
+    fours: number;
+    sixes: number;
+    notOuts?: number;
+    strikeRate?: string;
+    impact?: number;
+  };
+  bowling?: {
+    wickets: number;
+    runs: number;
+    overs: number;
+    economy?: string;
+    impact?: number;
+  };
+  fielding?: {
+    catches: number;
+    runOuts: number;
+    stumpings?: number;
+    impact?: number;
+  };
+  overall?: {
+    impact: number;
+  };
+  sourceTeam?: string; // Added for combined player lists
+  careerStats?: {
+    batting?: {
+      matchesPlayed?: number;
+      runs?: number;
+      average?: number;
+      strikeRate?: number;
+      centuries?: number;
+      fifties?: number;
+    };
+    bowling?: {
+      wickets?: number;
+      average?: number;
+      economyRate?: number;
+      fiveWicketHauls?: number;
+    };
+    overall?: {
+      matchesPlayed?: number;
+      wins?: number;
+    };
+  };
+  finalImpactScore?: number;
+  impactScore?: number;
+}
+
 const MatchScoring: React.FC = () => {
   const { matchId } = useParams<{ matchId: string }>();
   const navigate = useNavigate();
@@ -164,7 +218,7 @@ const MatchScoring: React.FC = () => {
       let team2Players: Array<{playerId: string, name: string, role: string}> = [];
       
       // Check for team1 ID (prefer displayId, then teamId, avoid internal id)
-      let team1Id = match.team1?.displayId?.toString() || match.team1?.teamId;
+      const team1Id = match.team1?.displayId?.toString() || match.team1?.teamId;
       const isTeam1IdInternal = team1Id && team1Id.toString().match(/^\d{19,}$/);
       
       console.log('Team 1 ID check:', { 
@@ -202,7 +256,7 @@ const MatchScoring: React.FC = () => {
       }
       
       // Check for team2 ID (prefer displayId, then teamId, avoid internal id)
-      let team2Id = match.team2?.displayId?.toString() || match.team2?.teamId;
+      const team2Id = match.team2?.displayId?.toString() || match.team2?.teamId;
       const isTeam2IdInternal = team2Id && team2Id.toString().match(/^\d{19,}$/);
       
       console.log('Team 2 ID check:', { 
@@ -853,14 +907,14 @@ const MatchScoring: React.FC = () => {
               {(() => {
                 // Combine all players from both teams
                 const allPlayers = [
-                  ...(match?.team1?.players || []).map((p: any) => ({ ...p, sourceTeam: match?.team1?.name })),
-                  ...(match?.team2?.players || []).map((p: any) => ({ ...p, sourceTeam: match?.team2?.name }))
+                  ...(match?.team1?.players || []).map((p: MatchPlayer) => ({ ...p, sourceTeam: match?.team1?.name })),
+                  ...(match?.team2?.players || []).map((p: MatchPlayer) => ({ ...p, sourceTeam: match?.team2?.name }))
                 ];
 
                 // Deduplicate players based on playerId
-                const uniquePlayers = allPlayers.reduce((acc: any[], player: any) => {
-                  const playerId = player.playerId || player.id;
-                  const exists = acc.find(p => (p.playerId || p.id) === playerId);
+                const uniquePlayers = allPlayers.reduce((acc: MatchPlayer[], player: MatchPlayer) => {
+                  const playerId = player.playerId;
+                  const exists = acc.find(p => p.playerId === playerId);
                   if (!exists) {
                     acc.push(player);
                   }
@@ -868,8 +922,8 @@ const MatchScoring: React.FC = () => {
                 }, []);
 
                 // Apply filters
-                let filteredPlayers = uniquePlayers.filter((player: any) => {
-                  const playerId = player.playerId || player.id;
+                const filteredPlayers = uniquePlayers.filter((player: MatchPlayer) => {
+                  const playerId = player.playerId;
                   const isAlreadySelected = team1PlayingMembers.includes(playerId) || team2PlayingMembers.includes(playerId);
                   
                   // Don't show already selected players
@@ -889,11 +943,11 @@ const MatchScoring: React.FC = () => {
                 });
 
                 // Sort by name
-                filteredPlayers.sort((a: any, b: any) => a.name.localeCompare(b.name));
+                filteredPlayers.sort((a: MatchPlayer, b: MatchPlayer) => a.name.localeCompare(b.name));
 
                 return filteredPlayers.length > 0 ? (
-                  filteredPlayers.map((player: any) => {
-                    const playerId = player.playerId || player.id;
+                  filteredPlayers.map((player: MatchPlayer) => {
+                    const playerId = player.playerId;
                     // Debug: Log player data structure
                     if (filteredPlayers.indexOf(player) === 0) {
                       console.log('Sample player data:', player);
@@ -968,7 +1022,7 @@ const MatchScoring: React.FC = () => {
                                   variant="outlined"
                                   sx={{ height: 20, fontSize: '0.7rem' }}
                                 />
-                                {player.careerStats.batting.centuries > 0 && (
+                                {player.careerStats?.batting?.centuries && player.careerStats.batting.centuries > 0 && (
                                   <Chip 
                                     label={`100s: ${player.careerStats.batting.centuries}`}
                                     size="small"
@@ -976,7 +1030,7 @@ const MatchScoring: React.FC = () => {
                                     sx={{ height: 20, fontSize: '0.7rem' }}
                                   />
                                 )}
-                                {player.careerStats.batting.fifties > 0 && (
+                                {player.careerStats?.batting?.fifties && player.careerStats.batting.fifties > 0 && (
                                   <Chip 
                                     label={`50s: ${player.careerStats.batting.fifties}`}
                                     size="small"
@@ -988,7 +1042,7 @@ const MatchScoring: React.FC = () => {
                             )}
                             
                             {/* Bowling Stats */}
-                            {player.careerStats?.bowling && player.careerStats.bowling.wickets > 0 && (
+                            {player.careerStats?.bowling && player.careerStats.bowling.wickets && player.careerStats.bowling.wickets > 0 && (
                               <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                                 <Typography variant="caption" sx={{ fontWeight: 600, color: '#9c27b0' }}>BOWL:</Typography>
                                 <Chip 
@@ -1012,7 +1066,7 @@ const MatchScoring: React.FC = () => {
                                   variant="outlined"
                                   sx={{ height: 20, fontSize: '0.7rem' }}
                                 />
-                                {player.careerStats.bowling.fiveWicketHauls > 0 && (
+                                {player.careerStats?.bowling?.fiveWicketHauls && player.careerStats.bowling.fiveWicketHauls > 0 && (
                                   <Chip 
                                     label={`5W: ${player.careerStats.bowling.fiveWicketHauls}`}
                                     size="small"
@@ -1113,7 +1167,7 @@ const MatchScoring: React.FC = () => {
                   team1PlayingMembers.map((playerId, index) => {
                     // Find player from either team
                     const player = [...(match?.team1?.players || []), ...(match?.team2?.players || [])]
-                      .find((p: any) => (p.playerId || p.id) === playerId);
+                      .find((p: MatchPlayer) => p.playerId === playerId);
                     
                     if (!player) return null;
                     
@@ -1185,7 +1239,7 @@ const MatchScoring: React.FC = () => {
                   team2PlayingMembers.map((playerId, index) => {
                     // Find player from either team
                     const player = [...(match?.team1?.players || []), ...(match?.team2?.players || [])]
-                      .find((p: any) => (p.playerId || p.id) === playerId);
+                      .find((p: MatchPlayer) => p.playerId === playerId);
                     
                     if (!player) return null;
                     

@@ -11,13 +11,28 @@ import {
   Stack,
   CircularProgress,
   Alert,
-  IconButton,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
 import SportsBaseballIcon from '@mui/icons-material/SportsBaseball';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
 import { CricketApiService, type ApiTeam, type ApiMatchHistoryEntry } from '../api/cricketApi';
+
+interface TeamPlayerData {
+  displayId?: string | number;
+  playerId?: string | number;
+  numericId?: number;
+  id?: string | number;
+  player?: {
+    name?: string;
+    role?: string;
+    displayId?: string | number;
+    playerId?: string | number;
+    numericId?: number;
+    id?: string | number;
+  };
+  name?: string;
+  role?: string;
+}
 
 const TeamDetails: React.FC = () => {
   const navigate = useNavigate();
@@ -320,7 +335,7 @@ const TeamDetails: React.FC = () => {
                     onClick={() => navigate(`/matches/${match.numericId}`)}
                   >
                     <Typography variant="body1" sx={{ fontWeight: 600, color: '#1e293b', mb: 0.5 }}>
-                      {match.matchTitle || 'Match'}
+                      {match.title || 'Match'}
                     </Typography>
                     <Typography variant="body2" sx={{ color: '#64748b' }}>
                       {match.scheduledDate ? new Date(match.scheduledDate).toLocaleDateString('en-US', {
@@ -349,7 +364,7 @@ const TeamDetails: React.FC = () => {
               </Typography>
               {((team.players && team.players.length > 0) || (team.teamPlayers && team.teamPlayers.length > 0)) ? (
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
-                  {(team.teamPlayers || team.players || []).map((playerData: any, index: number) => {
+                  {(team.teamPlayers || team.players || []).map((playerData: TeamPlayerData, index: number) => {
                     const player = playerData.player || playerData;
                     const playerName = player.name || '';
                     const playerRole = player.role || 'Player';

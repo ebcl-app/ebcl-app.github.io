@@ -47,6 +47,12 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { CricketApiService, type ApiMatch, type ApiTeam, type ApiTournament } from '../api/cricketApi';
+
+interface MatchUpdateData extends Partial<ApiMatch> {
+  team1Id?: string | number;
+  team2Id?: string | number;
+  tournamentId?: string | number;
+}
 import { useAuth } from '../contexts/AuthContext';
 
 interface Match {
@@ -74,15 +80,6 @@ const MatchesManagement: React.FC = () => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  if (!isAuthenticated) {
-    return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
-        <Typography variant="h6" color="error">
-          Access denied. Please log in as an administrator.
-        </Typography>
-      </Box>
-    );
-  }
   const [matches, setMatches] = React.useState<Match[]>([]);
   const [teams, setTeams] = React.useState<ApiTeam[]>([]);
   const [tournaments, setTournaments] = React.useState<ApiTournament[]>([]);
@@ -181,6 +178,16 @@ const MatchesManagement: React.FC = () => {
     fetchData();
   }, [matchesPagination.page, teamsPagination.page]);
 
+  if (!isAuthenticated) {
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Typography variant="h6" color="error">
+          Access denied. Please log in as an administrator.
+        </Typography>
+      </Box>
+    );
+  }
+
   const handleOpenDialog = (match?: Match) => {
     if (match) {
       setSelectedMatch(match);
@@ -230,7 +237,7 @@ const MatchesManagement: React.FC = () => {
         const team1Obj = teams.find(team => team.name === formData.team1);
         const team2Obj = teams.find(team => team.name === formData.team2);
 
-        const updateData: any = {
+        const updateData: MatchUpdateData = {
           title: `${formData.team1} vs ${formData.team2}`,
           scheduledDate: formData.date,
           venue: formData.venue,
@@ -283,7 +290,7 @@ const MatchesManagement: React.FC = () => {
           return;
         }
 
-        const createData: any = {
+        const createData: MatchUpdateData = {
           title: `${formData.team1} vs ${formData.team2}`,
           team1Id: team1Obj.displayId,
           team2Id: team2Obj.displayId,
