@@ -236,83 +236,64 @@ const TeamDetails: React.FC = () => {
 
         {/* Overview Tab Content */}
         {tab === 'overview' && team.teamStats && (
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: '#1e293b', fontSize: '1rem' }}>
-              Season Overview
-            </Typography>
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
-              gap: 2 
-            }}>
-              <Card sx={{ 
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #93c5fd',
-                borderRadius: 2
-              }}>
-                <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a5f', mb: 0.5 }}>
-                    {team.teamStats.matchesPlayed || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Matches Played
-                  </Typography>
-                </CardContent>
-              </Card>
-              
-              <Card sx={{ 
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #93c5fd',
-                borderRadius: 2
-              }}>
-                <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#2E7D32', mb: 0.5 }}>
-                    {team.teamStats.wins || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Wins
-                  </Typography>
-                </CardContent>
-              </Card>
-              
-              <Card sx={{ 
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #93c5fd',
-                borderRadius: 2
-              }}>
-                <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#D32F2F', mb: 0.5 }}>
-                    {team.teamStats.losses || 0}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Losses
-                  </Typography>
-                </CardContent>
-              </Card>
-              
-              <Card sx={{ 
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #93c5fd',
-                borderRadius: 2
-              }}>
-                <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                  <Typography variant="h4" sx={{ fontWeight: 700, color: '#1976D2', mb: 0.5 }}>
-                    {team.teamStats.winPercentage?.toFixed(0) || 0}%
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Win Rate
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Box>
+          <Box>
+            <Card sx={{ mb: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', borderRadius: 2, border: '1px solid #93c5fd' }}>
+              <CardContent sx={{ p: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1rem', mb: 2, color: '#1e293b' }}>
+                  Overview
+                </Typography>
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' },
+                  gap: 2 
+                }}>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e3a5f', mb: 0.5 }}>
+                      {team.teamStats.matchesPlayed || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Matches Played
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#2E7D32', mb: 0.5 }}>
+                      {team.teamStats.wins || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Wins
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#D32F2F', mb: 0.5 }}>
+                      {team.teamStats.losses || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Losses
+                    </Typography>
+                  </Box>
+                  
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1976D2', mb: 0.5 }}>
+                      {team.teamStats.winPercentage?.toFixed(0) || 0}%
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Win Rate
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </Card>
           </Box>
         )}
 
         {/* Matches Tab Content */}
         {tab === 'matches' && (
-          <Card sx={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', border: '1px solid #93c5fd', borderRadius: 2 }}>
+          <Box>
+            <Card sx={{ mb: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', borderRadius: 2, border: '1px solid #93c5fd' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>
                 Recent Matches
               </Typography>
               {teamMatches && teamMatches.length > 0 ? (
@@ -353,13 +334,15 @@ const TeamDetails: React.FC = () => {
               )}
             </CardContent>
           </Card>
+          </Box>
         )}
 
         {/* Players Tab Content */}
         {tab === 'players' && (
-          <Card sx={{ boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', border: '1px solid #93c5fd', borderRadius: 2 }}>
+          <Box>
+            <Card sx={{ mb: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', borderRadius: 2, border: '1px solid #93c5fd' }}>
             <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b' }}>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: '1rem', color: '#1e293b' }}>
                 Team Players
               </Typography>
               {((team.players && team.players.length > 0) || (team.teamPlayers && team.teamPlayers.length > 0)) ? (
@@ -398,6 +381,7 @@ const TeamDetails: React.FC = () => {
               )}
             </CardContent>
           </Card>
+          </Box>
         )}
       </Box>
     </Box>
