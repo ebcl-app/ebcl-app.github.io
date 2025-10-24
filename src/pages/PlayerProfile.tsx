@@ -672,11 +672,20 @@ const PlayerProfile: React.FC<PlayerProfileProps> = ({ playerId = 6, onBack }) =
                               {team.teamName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                              Last played: {new Date(team.lastPlayed).toLocaleDateString('en-US', {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric',
-                              })}
+                              Last played: {team.lastPlayed && typeof team.lastPlayed === 'object' && '_seconds' in team.lastPlayed
+                                ? new Date((team.lastPlayed as any)._seconds * 1000).toLocaleDateString('en-US', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    year: 'numeric',
+                                  })
+                                : team.lastPlayed
+                                  ? new Date(team.lastPlayed).toLocaleDateString('en-US', {
+                                      month: 'long',
+                                      day: 'numeric',
+                                      year: 'numeric',
+                                    })
+                                  : 'N/A'
+                              }
                             </Typography>
                           </Box>
                         </Box>

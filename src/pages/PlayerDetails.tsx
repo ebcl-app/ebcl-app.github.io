@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   Button,
-  Paper,
   CircularProgress,
   Alert,
   List,
@@ -19,14 +18,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  ToggleButton,
-  ToggleButtonGroup,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Stack,
 } from '@mui/material';
 import SportsCricketIcon from '@mui/icons-material/SportsCricket';
@@ -44,8 +35,6 @@ import StarIcon from '@mui/icons-material/Star';
 import WarningIcon from '@mui/icons-material/Warning';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import FlagIcon from '@mui/icons-material/Flag';
-import ViewListIcon from '@mui/icons-material/ViewList';
-import ViewModuleIcon from '@mui/icons-material/ViewModule';
 import { CricketApiService, type ApiPlayer } from '../api/cricketApi';
 
 interface PlayerAnalysis {
@@ -58,6 +47,56 @@ interface PlayerTeamData {
   name?: string;
   teamName?: string;
   shortName?: string;
+}
+
+interface PlayerMatchData {
+  matchId: string;
+  id?: string;
+  matchTitle?: string;
+  status?: string;
+  date: {
+    _seconds: number;
+    _nanoseconds: number;
+  };
+  opponent: string;
+  team1?: {
+    name: string;
+    shortName?: string;
+    score?: string;
+  };
+  team2?: {
+    name: string;
+    shortName?: string;
+    score?: string;
+  };
+  venue?: string;
+  batting?: {
+    runs: number;
+    balls: number;
+    fours: number;
+    sixes: number;
+  };
+  bowling?: {
+    wickets: number;
+    runs: number;
+    overs: string;
+    maidens: number;
+  };
+  fielding?: {
+    catches: number;
+    runOuts: number;
+    stumpings?: number;
+  };
+  impact: {
+    batting: number;
+    bowling: number;
+    fielding: number;
+    total: number;
+  };
+  result: string | {
+    winner: string;
+    margin: string;
+  };
 }
 
 interface PlayerAnalysis {
@@ -171,7 +210,7 @@ const getHighestImpactScore = (player: ApiPlayer): number => {
   const recentMatches = player.recentMatches || [];
   if (recentMatches.length === 0) return 0;
 
-  return Math.max(...recentMatches.map(match => match.impact || 0));
+  return Math.max(...recentMatches.map(match => match.impact?.total || 0));
 };
 
 // Dynamic bar chart component
@@ -227,16 +266,13 @@ const PlayerDetails: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<PlayerAnalysis | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [tab, setTab] = useState<'summary' | 'matches' | 'teams'>('summary');
+  const [mobileTab, setMobileTab] = useState(0); // For mobile view tabs
 
   // State to prevent duplicate API calls
   const [playerDataLoaded, setPlayerDataLoaded] = useState(false);
   const [analysisDataLoaded, setAnalysisDataLoaded] = useState(false);
   const lastFetchedPlayerId = React.useRef<string | null>(null);
   const lastAnalyzedPlayerId = React.useRef<string | null>(null);
-
-  // View mode for recent matches
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   // Reset state when playerId changes
   React.useEffect(() => {
@@ -287,21 +323,21 @@ const PlayerDetails: React.FC = () => {
     const matchesPlayed = matchHistory.length;
 
     matchHistory.forEach(match => {
-      if (match.contributions) {
-        match.contributions.forEach((contribution) => {
-          if (contribution.type === 'batting') {
-            totalRuns += contribution.runs || 0;
-            totalBalls += contribution.balls || 0;
-            // Count dismissals (not counting 'not out')
-            if (contribution.dismissal && contribution.dismissal !== 'not out') {
-              totalDismissals += 1;
-            }
-          } else if (contribution.type === 'bowling') {
-            totalWickets += contribution.wickets || 0;
-            totalBowlingRuns += contribution.runs || 0;
-            totalOvers += Number(contribution.overs) || 0;
-          }
-        });
+      // Use direct batting/bowling data from PlayerMatchData
+      if (match.batting) {
+        totalRuns += match.batting.runs || 0;
+        totalBalls += match.batting.balls || 0;
+        // Assume dismissal if runs > 0 (simplified logic)
+        if (match.batting.runs > 0) {
+          totalDismissals += 1;
+        }
+      }
+      if (match.bowling) {
+        totalWickets += match.bowling.wickets || 0;
+        totalBowlingRuns += match.bowling.runs || 0;
+        // Convert overs string to number (e.g., "4.2" -> 4.2)
+        const oversNum = parseFloat(match.bowling.overs || '0');
+        totalOvers += oversNum;
       }
     });
 
@@ -373,7 +409,7 @@ const PlayerDetails: React.FC = () => {
           };
         } else if (playerData.matchHistory && playerData.matchHistory.length > 0) {
           // Fallback to calculating from match history for v1 compatibility
-          const calculatedStats = calculatePlayerStats(playerData.matchHistory);
+          const calculatedStats = calculatePlayerStats(playerData.matchHistory as any);
           
           // Update player data with calculated stats
           finalPlayerData = {
@@ -435,18 +471,85 @@ const PlayerDetails: React.FC = () => {
 
       try {
         setAnalysisLoading(true);
-        const result = await CricketApiService.analyzePlayer(player);
+        
+        // Prepare player data for analysis - cast to satisfy type requirements
+        const playerAnalysisData = {
+          playerId: player.id || player.displayId,
+          name: player.name,
+          role: player.role,
+          matchHistory: (player.matchHistory || []) as any // Type cast due to structure mismatch
+        };
 
-        if (result.success) {
-          setAnalysis(result.data);
+        console.log('Fetching player analysis for:', playerAnalysisData.name);
+        const result = await CricketApiService.analyzePlayer(playerAnalysisData);
+        console.log('Analysis API result:', result);
+        
+        if (result.success && result.data) {
+          console.log('Analysis data received:', result.data);
+          // Map the API response to our PlayerAnalysis interface
+          setAnalysis({
+            playerDescription: result.data.analysis.playerDescription || '',
+            executiveSummary: result.data.analysis.playerDescription || '',
+            performanceAnalysis: {
+              battingAnalysis: result.data.analysis.strengths.join(', ') || '',
+              bowlingAnalysis: '',
+              fieldingAnalysis: '',
+              consistencyRating: '',
+              pressurePerformance: ''
+            },
+            technicalAssessment: {
+              strengths: result.data.analysis.strengths || [],
+              weaknesses: result.data.analysis.weaknesses || [],
+              techniqueEvolution: ''
+            },
+            tacticalInsights: {
+              roleInTeam: '',
+              matchSituations: '',
+              partnershipBuilding: '',
+              captaincyPotential: ''
+            },
+            performanceTrends: {
+              recentForm: '',
+              careerTrajectory: '',
+              venuePerformance: '',
+              oppositionAnalysis: ''
+            },
+            comparativeAnalysis: {
+              similarPlayers: '',
+              benchmarking: '',
+              marketValue: `Potential Rating: ${result.data.analysis.potentialRating || 0}`
+            },
+            developmentRecommendations: {
+              shortTerm: result.data.analysis.recommendations || [],
+              longTerm: [],
+              trainingFocus: '',
+              skillDevelopment: '',
+              performanceTargets: {
+                battingTargets: '',
+                bowlingTargets: '',
+                fieldingTargets: '',
+                consistencyTargets: ''
+              }
+            },
+            matchContribution: {
+              optimalConditions: '',
+              teamImpact: '',
+              versatility: '',
+              futurePotential: ''
+            }
+          });
           setAnalysisDataLoaded(true);
         } else {
-          throw new Error(result.message || 'Failed to get analysis');
+          // If API fails, set null
+          setAnalysis(null);
+          setAnalysisDataLoaded(true);
         }
       } catch (err) {
         console.error('Error fetching player analysis:', err);
         lastAnalyzedPlayerId.current = null;
-        // Analysis is optional, so we don't set an error state
+        // Set null on error - analysis is optional
+        setAnalysis(null);
+        setAnalysisDataLoaded(true);
       } finally {
         setAnalysisLoading(false);
       }
@@ -508,155 +611,220 @@ const PlayerDetails: React.FC = () => {
                 </Typography>
               </Box>
             </Stack>
+
+            {/* Tab Buttons */}
+            <Box sx={{ display: 'flex', gap: 0, backgroundColor: '#f1f5f9', borderRadius: 1, p: 0.5, mb: 0 }}>
+              <Button
+                variant="text"
+                onClick={() => setMobileTab(0)}
+                sx={{
+                  flex: 1,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  py: 0.8,
+                  borderRadius: 0.8,
+                  backgroundColor: mobileTab === 0 ? '#2c3e5f' : 'transparent',
+                  color: mobileTab === 0 ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: mobileTab === 0 ? '#253451' : 'rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                Stats
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => setMobileTab(1)}
+                sx={{
+                  flex: 1,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  py: 0.8,
+                  borderRadius: 0.8,
+                  backgroundColor: mobileTab === 1 ? '#2c3e5f' : 'transparent',
+                  color: mobileTab === 1 ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: mobileTab === 1 ? '#253451' : 'rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                Matches
+              </Button>
+              <Button
+                variant="text"
+                onClick={() => setMobileTab(2)}
+                sx={{
+                  flex: 1,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 600,
+                  py: 0.8,
+                  borderRadius: 0.8,
+                  backgroundColor: mobileTab === 2 ? '#2c3e5f' : 'transparent',
+                  color: mobileTab === 2 ? '#ffffff' : '#64748b',
+                  '&:hover': {
+                    backgroundColor: mobileTab === 2 ? '#253451' : 'rgba(0,0,0,0.04)'
+                  }
+                }}
+              >
+                Teams
+              </Button>
+            </Box>
           </CardContent>
         </Card>
-      </Box>
 
-      {/* Tab Buttons inside Main Card */}
-      <Box sx={{ px: 2.5, mt: 2, mb: 1 }}>
-        <Box sx={{ display: 'flex', gap: 0, backgroundColor: '#f1f5f9', borderRadius: 1, p: 0.5 }}>
-          <Button
-            variant="text"
-            onClick={() => setTab('summary')}
-            sx={{
-              flex: 1,
-              textTransform: 'none',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              py: 0.8,
-              borderRadius: 0.8,
-              backgroundColor: tab === 'summary' ? '#2c3e5f' : 'transparent',
-              color: tab === 'summary' ? '#ffffff' : '#64748b',
-              '&:hover': {
-                backgroundColor: tab === 'summary' ? '#253451' : 'rgba(0,0,0,0.04)'
-              }
-            }}
-          >
-            Summary
-          </Button>
-          <Button
-            variant="text"
-            onClick={() => setTab('matches')}
-            sx={{
-              flex: 1,
-              textTransform: 'none',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              py: 0.8,
-              borderRadius: 0.8,
-              backgroundColor: tab === 'matches' ? '#2c3e5f' : 'transparent',
-              color: tab === 'matches' ? '#ffffff' : '#64748b',
-              '&:hover': {
-                backgroundColor: tab === 'matches' ? '#253451' : 'rgba(0,0,0,0.04)'
-              }
-            }}
-          >
-            Matches
-          </Button>
-          <Button
-            variant="text"
-            onClick={() => setTab('teams')}
-            sx={{
-              flex: 1,
-              textTransform: 'none',
-              fontSize: '0.85rem',
-              fontWeight: 600,
-              py: 0.8,
-              borderRadius: 0.8,
-              backgroundColor: tab === 'teams' ? '#2c3e5f' : 'transparent',
-              color: tab === 'teams' ? '#ffffff' : '#64748b',
-              '&:hover': {
-                backgroundColor: tab === 'teams' ? '#253451' : 'rgba(0,0,0,0.04)'
-              }
-            }}
-          >
-            Teams
-          </Button>
-        </Box>
-      </Box>
+        {/* Stats Tab Content */}
+        {mobileTab === 0 && (
+        <Box>
+          <Card sx={{ mb: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', borderRadius: 2, border: '1px solid #93c5fd' }}>
+          <CardContent sx={{ p: 3 }}>
+            {/* AI-Generated Bio */}
+            {analysis?.playerDescription && (
+              <>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '0.9rem', mb: 2, color: '#1e293b' }}>
+                  AI Player Analysis
+                </Typography>
+                <Box sx={{ p: 2, backgroundColor: '#f0f9ff', borderRadius: 1, border: '1px solid #bae6fd', mb: 3 }}>
+                  <Typography variant="body2" sx={{ color: '#0369a1', lineHeight: 1.6, fontSize: '0.875rem' }}>
+                    {analysis.playerDescription}
+                  </Typography>
+                </Box>
+              </>
+            )}
 
-      {/* Tab Content */}
-      {tab === 'summary' && (
-        <>
-          {/* Key Stats */}
-          <Box sx={{ px: 2, mt: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, fontSize: '1rem' }}>
-              📊 Key Statistics
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, fontSize: '1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AssessmentIcon />
+              Career Statistics
             </Typography>
 
             {/* Batting Stats */}
-            {(player.role === 'batsman' || player.role === 'all-rounder' || player.role === 'wicket-keeper') && (
+            {player.careerStats?.batting && (
               <>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: '#1976d2', fontSize: '0.875rem' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '0.9rem', mb: 2, color: '#1e293b' }}>
                   🏏 Batting Statistics
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
-                  <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                    <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.1rem' }}>
-                        {player.matchesPlayed || 0}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                        Matches
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                    <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#2e7d32', fontSize: '1.1rem' }}>
-                        {player.totalRuns || 0}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                        Runs
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.batting.matchesPlayed || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Matches
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#2e7d32', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.batting.runs || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Runs
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#9c27b0', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.batting.average || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Average
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#ed6c02', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.batting.strikeRate || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Strike Rate
+                    </Typography>
+                  </Box>
                 </Box>
               </>
             )}
 
             {/* Bowling Stats */}
-            {(player.role === 'bowler' || player.role === 'all-rounder') && (
+            {player.careerStats?.bowling && (
               <>
-                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1.5, color: '#ed6c02', fontSize: '0.875rem' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '0.9rem', mb: 2, color: '#1e293b' }}>
                   🎯 Bowling Statistics
                 </Typography>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
-                  <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                    <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#ed6c02', fontSize: '1.1rem' }}>
-                        {player.totalWickets || 0}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                        Wickets
-                      </Typography>
-                    </CardContent>
-                  </Card>
-                  <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-                    <CardContent sx={{ textAlign: 'center', py: 1.5, px: 1 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 700, color: '#9c27b0', fontSize: '1.1rem' }}>
-                        {player.careerStats?.bowling?.bestBowling || 'N/A'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
-                        Best Figures
-                      </Typography>
-                    </CardContent>
-                  </Card>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 3 }}>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#ed6c02', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.bowling.wickets || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Wickets
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#9c27b0', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.bowling.bestBowling || 'N/A'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Best Figures
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#1976d2', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.bowling.economyRate?.toFixed(1) || '0.0'}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Economy
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#2e7d32', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.bowling.average || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Average
+                    </Typography>
+                  </Box>
                 </Box>
               </>
             )}
-          </Box>
-        </>
-      )}
 
-      {tab === 'matches' && (
-        <Box sx={{ px: 2, mt: 2 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <TimelineIcon />
-                Recent Matches
-              </Typography>
+            {/* Fielding Stats */}
+            {player.careerStats?.fielding && (
+              <>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '0.9rem', mb: 2, color: '#1e293b' }}>
+                  🧤 Fielding Statistics
+                </Typography>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2 }}>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#9c27b0', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.fielding.catches || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Catches
+                    </Typography>
+                  </Box>
+                  <Box sx={{ p: 2, backgroundColor: '#f8fafc', borderRadius: 1, textAlign: 'center' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 700, color: '#ed6c02', fontSize: '1.1rem', mb: 0.5 }}>
+                      {player.careerStats?.fielding.runOuts || 0}
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontSize: '0.8rem', color: '#64748b' }}>
+                      Run Outs
+                    </Typography>
+                  </Box>
+                </Box>
+              </>
+            )}
+            </CardContent>
+          </Card>
+        </Box>
+        )}
+
+        {/* Matches Card */}
+        {mobileTab === 1 && (
+        <Box>
+          <Card sx={{ mb: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', borderRadius: 2, border: '1px solid #93c5fd' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: '1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TimelineIcon />
+              Recent Matches
+            </Typography>
               {player.recentMatches && player.recentMatches.length > 0 ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                   {(player.recentMatches as PlayerMatchData[]).slice(0, 3).map((match: PlayerMatchData, index: number) => {
@@ -691,8 +859,8 @@ const PlayerDetails: React.FC = () => {
                         
                         {/* Match Result and Date */}
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="caption" sx={{ color: match.result === 'Won' ? '#10b981' : match.result === 'Lost' ? '#ef4444' : '#64748b', fontWeight: 500 }}>
-                            {match.result}
+                          <Typography variant="caption" sx={{ color: (typeof match.result === 'string' && match.result === 'Won') ? '#10b981' : (typeof match.result === 'string' && match.result === 'Lost') ? '#ef4444' : '#64748b', fontWeight: 500 }}>
+                            {typeof match.result === 'string' ? match.result : (match.result?.winner ? `${match.result.winner} won` : 'Unknown')}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
                             {formattedDate}
@@ -702,17 +870,17 @@ const PlayerDetails: React.FC = () => {
                         {/* Match Stats */}
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
                           <Box sx={{ display: 'flex', gap: 2 }}>
-                            {match.batting.runs > 0 && (
+                            {match.batting && match.batting.runs > 0 && (
                               <Typography variant="caption" sx={{ color: '#059669', fontWeight: 500 }}>
                                 {match.batting.runs} runs
                               </Typography>
                             )}
-                            {match.bowling.wickets > 0 && (
+                            {match.bowling && match.bowling.wickets > 0 && (
                               <Typography variant="caption" sx={{ color: '#dc2626', fontWeight: 500 }}>
                                 {match.bowling.wickets} wickets
                               </Typography>
                             )}
-                            {match.fielding.catches > 0 && (
+                            {match.fielding && match.fielding.catches > 0 && (
                               <Typography variant="caption" sx={{ color: '#7c3aed', fontWeight: 500 }}>
                                 {match.fielding.catches} catches
                               </Typography>
@@ -720,7 +888,7 @@ const PlayerDetails: React.FC = () => {
                           </Box>
                           
                           <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 500 }}>
-                            Impact: {match.impact > 0 ? '+' : ''}{match.impact}
+                            Impact: {match.impact.total > 0 ? '+' : ''}{match.impact.total.toFixed(1)}
                           </Typography>
                         </Box>
                       </Box>
@@ -735,16 +903,17 @@ const PlayerDetails: React.FC = () => {
             </CardContent>
           </Card>
         </Box>
-      )}
+        )}
 
-      {tab === 'teams' && (
-        <Box sx={{ px: 2, mt: 2 }}>
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-            <CardContent sx={{ p: 2 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <GroupIcon />
-                Teams Played For
-              </Typography>
+        {/* Teams Card */}
+        {mobileTab === 2 && player.recentTeams && player.recentTeams.length > 0 && (
+        <Box>
+          <Card sx={{ mb: 2, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', borderRadius: 2, border: '1px solid #93c5fd' }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 700, fontSize: '1rem', color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <GroupIcon />
+              Teams Played For
+            </Typography>
               {player.recentTeams && player.recentTeams.length > 0 ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                   {(player.recentTeams as PlayerTeamData[]).slice(0, 3).map((team: PlayerTeamData, index: number) => (
@@ -771,8 +940,9 @@ const PlayerDetails: React.FC = () => {
             </CardContent>
           </Card>
         </Box>
-      )}
+        )}
 
+      </Box>
     </Box>
   );
 
@@ -781,14 +951,12 @@ const PlayerDetails: React.FC = () => {
       {/* Mobile View */}
       <Box sx={{ display: { xs: 'block', md: 'none' } }}>
         {renderMobileView()}
-
-        {/* Summary Tab Content - already in renderMobileView */}
       </Box>
 
       {/* Desktop View */}
       <Box sx={{ display: { xs: 'none', md: 'block' }, bgcolor: '#F5F7FA', minHeight: '100vh', pb: { xs: 8, sm: 10, md: 12 } }}>
         <Container maxWidth="lg" sx={{ pt: { xs: 2, sm: 2.5, md: 3 }, px: { xs: 2, sm: 3 } }}>
-        {/* Summary Card */}
+        {/* Player Summary Card */}
         <Card sx={{ 
           mb: 3, 
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
@@ -827,94 +995,36 @@ const PlayerDetails: React.FC = () => {
                 Follow
               </Button>
             </Stack>
-            {analysis && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  mt: 1,
-                  fontStyle: 'italic',
-                  fontSize: '0.75rem',
-                  lineHeight: 1.3
-                }}
-              >
-                {analysis.playerDescription}
-              </Typography>
-            )}
-
-            {/* Tab Buttons */}
-            <Box sx={{ display: 'flex', gap: 0, backgroundColor: '#f1f5f9', borderRadius: 1, p: 0.5, mt: 2 }}>
-              <Button
-                variant="text"
-                onClick={() => setTab('summary')}
-                sx={{
-                  flex: 1,
-                  textTransform: 'none',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  py: 0.8,
-                  borderRadius: 0.8,
-                  backgroundColor: tab === 'summary' ? '#2c3e5f' : 'transparent',
-                  color: tab === 'summary' ? '#ffffff' : '#64748b',
-                  '&:hover': {
-                    backgroundColor: tab === 'summary' ? '#253451' : 'rgba(0,0,0,0.04)'
-                  }
-                }}
-              >
-                Summary
-              </Button>
-              <Button
-                variant="text"
-                onClick={() => setTab('matches')}
-                sx={{
-                  flex: 1,
-                  textTransform: 'none',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  py: 0.8,
-                  borderRadius: 0.8,
-                  backgroundColor: tab === 'matches' ? '#2c3e5f' : 'transparent',
-                  color: tab === 'matches' ? '#ffffff' : '#64748b',
-                  '&:hover': {
-                    backgroundColor: tab === 'matches' ? '#253451' : 'rgba(0,0,0,0.04)'
-                  }
-                }}
-              >
-                Matches
-              </Button>
-              <Button
-                variant="text"
-                onClick={() => setTab('teams')}
-                sx={{
-                  flex: 1,
-                  textTransform: 'none',
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  py: 0.8,
-                  borderRadius: 0.8,
-                  backgroundColor: tab === 'teams' ? '#2c3e5f' : 'transparent',
-                  color: tab === 'teams' ? '#ffffff' : '#64748b',
-                  '&:hover': {
-                    backgroundColor: tab === 'teams' ? '#253451' : 'rgba(0,0,0,0.04)'
-                  }
-                }}
-              >
-                Teams
-              </Button>
-            </Box>
           </CardContent>
         </Card>
 
-        {/* Summary Tab Content */}
-        {tab === 'summary' && (
-          <>
-            {/* Key Stats */}
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: { xs: 1.5, sm: 2 }, fontSize: { xs: '1rem', sm: '1.125rem' } }}>
-              📊 Key Statistics
-            </Typography>
+        {/* Career Statistics Card */}
+        <Card sx={{ 
+          mb: 3, 
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          borderRadius: 2,
+          border: '1px solid #93c5fd'
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            {/* AI-Generated Bio */}
+            {analysis?.playerDescription && (
+              <>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700, fontSize: '0.95rem', mb: 2, color: '#1e293b' }}>
+                  AI Player Analysis
+                </Typography>
+                <Box sx={{ p: 2.5, backgroundColor: '#f0f9ff', borderRadius: 1, border: '1px solid #bae6fd', mb: 3 }}>
+                  <Typography variant="body2" sx={{ color: '#0369a1', lineHeight: 1.6 }}>
+                    {analysis.playerDescription}
+                  </Typography>
+                </Box>
+              </>
+            )}
 
-        {/* Batting Stats */}
-        {(player.role === 'batsman' || player.role === 'all-rounder' || player.role === 'wicket-keeper') && (
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 3, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AssessmentIcon />
+              Career Statistics
+            </Typography>
+        {player.careerStats?.batting && (
           <>
             <Typography variant="body2" sx={{ fontWeight: 600, mb: { xs: 1, sm: 1.5 }, color: '#1976d2', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
               🏏 Batting Statistics
@@ -953,7 +1063,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.matchesPlayed || 0}
+                    {player.careerStats?.batting.matchesPlayed || 0}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -987,7 +1097,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.totalRuns || 0}
+                    {player.careerStats?.batting.runs || 0}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1014,7 +1124,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.battingAverage?.toFixed(1) || '0.0'}
+                    {player.careerStats?.batting.average?.toFixed(1) || '0.0'}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1041,7 +1151,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.battingStrikeRate?.toFixed(1) || '0.0'}
+                    {player.careerStats?.batting.strikeRate?.toFixed(1) || '0.0'}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1057,10 +1167,10 @@ const PlayerDetails: React.FC = () => {
         )}
 
         {/* Bowling Stats */}
-        {(player.role === 'bowler' || player.role === 'all-rounder') && (
+        {player.careerStats?.bowling && (
           <>
-            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: '#d32f2f' }}>
-              Bowling Statistics
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: { xs: 1, sm: 1.5 }, color: '#d32f2f', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+              🎯 Bowling Statistics
             </Typography>
             <Box
               sx={{
@@ -1089,7 +1199,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.totalWickets || 0}
+                    {player.careerStats?.bowling.wickets || 0}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1116,7 +1226,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.bowlingAverage?.toFixed(1) || '0.0'}
+                    {player.careerStats?.bowling.average?.toFixed(1) || '0.0'}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1154,7 +1264,7 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.bowlingEconomy?.toFixed(1) || '0.0'}
+                    {player.careerStats?.bowling.economyRate?.toFixed(1) || '0.0'}
                   </Typography>
                   <Typography
                     variant="caption"
@@ -1181,20 +1291,247 @@ const PlayerDetails: React.FC = () => {
                       fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
                     }}
                   >
-                    {player.totalOvers?.toFixed(1) || '0.0'}
+                    {player.careerStats?.bowling.matchesPlayed || 0}
                   </Typography>
                   <Typography
                     variant="caption"
                     color="text.secondary"
                     sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
                   >
-                    Total Overs
+                    Matches Bowled
                   </Typography>
                 </CardContent>
               </Card>
             </Box>
           </>
         )}
+
+        {/* Fielding Stats */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: { xs: 1, sm: 1.5 }, color: '#9c27b0', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+            🧤 Fielding Statistics
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)', // 2 columns on mobile
+                sm: 'repeat(3, 1fr)', // 3 columns on small screens and up
+              },
+              gap: { xs: 1.5, sm: 2 },
+              mb: { xs: 2, sm: 2.5 },
+            }}
+          >
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#9c27b0',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.fielding.catches || 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Catches
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#ed6c02',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.fielding.runOuts || 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Run Outs
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#2e7d32',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.fielding.stumpings || 0}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Stumpings
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
+
+        {/* Impact Stats */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600, mb: { xs: 1, sm: 1.5 }, color: '#9c27b0', fontSize: { xs: '0.875rem', sm: '1rem' } }}>
+            📊 Impact Statistics
+          </Typography>
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'repeat(2, 1fr)', // 2 columns on mobile
+                sm: 'repeat(4, 1fr)', // 4 columns on small screens and up
+              },
+              gap: { xs: 1.5, sm: 2 },
+              mb: { xs: 2, sm: 2.5 },
+            }}
+          >
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#1976d2',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.impact.batting?.toFixed(1) || '0.0'}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Batting Impact
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#d32f2f',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.impact.bowling?.toFixed(1) || '0.0'}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Bowling Impact
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#2e7d32',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.impact.fielding?.toFixed(1) || '0.0'}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Fielding Impact
+                </Typography>
+              </CardContent>
+            </Card>
+            <Card sx={{
+              boxShadow: 1,
+              minHeight: { xs: 80, sm: 100 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CardContent sx={{ textAlign: 'center', py: { xs: 1.5, sm: 2 }, px: { xs: 1, sm: 2 } }}>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: '#9c27b0',
+                    fontSize: { xs: '1.1rem', sm: '1.25rem', md: '1.5rem' }
+                  }}
+                >
+                  {player.careerStats?.impact.total?.toFixed(1) || '0.0'}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: { xs: '0.7rem', sm: '0.75rem' } }}
+                >
+                  Total Impact
+                </Typography>
+              </CardContent>
+            </Card>
+          </Box>
+        </Box>
 
         {/* Charts and Additional Stats */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
@@ -1246,7 +1583,7 @@ const PlayerDetails: React.FC = () => {
                   {calculateWinPercentage(player)}%
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  Based on {player.careerStats?.overall?.matchesPlayed || player.recentMatches?.length || 0} matches played
+                  Based on {player.careerStats?.overall?.matchesPlayed || 0} matches played
                 </Typography>
               </CardContent>
             </Card>
@@ -1274,6 +1611,9 @@ const PlayerDetails: React.FC = () => {
             </Card>
           </Box>
         </Box>
+
+          </CardContent>
+        </Card>
 
         {/* AI Analysis Section */}
         <Accordion sx={{ mb: 2, boxShadow: 1 }}>
@@ -1657,263 +1997,88 @@ const PlayerDetails: React.FC = () => {
           </AccordionDetails>
         </Accordion>
 
-        {/* Recent Matches */}
-        <Accordion sx={{ mb: 2, boxShadow: 1 }}>
-          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, display: 'flex', alignItems: 'center', gap: 1 }}>
+        {/* Matches Card */}
+        <Card sx={{ mt: 3, boxShadow: 2, borderRadius: 2 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
               <TimelineIcon />
               Recent Matches
             </Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(_, newViewMode) => {
-                  if (newViewMode !== null) {
-                    setViewMode(newViewMode);
-                  }
-                }}
-                size="small"
-              >
-                <ToggleButton value="list">
-                  <ViewListIcon />
-                </ToggleButton>
-                <ToggleButton value="grid">
-                  <ViewModuleIcon />
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
             {player.recentMatches && player.recentMatches.length > 0 ? (
-              viewMode === 'list' ? (
-                <TableContainer component={Paper} sx={{ mt: 2 }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: '#F9FAFB' }}>
-                        <TableCell sx={{ fontWeight: 700 }}>Match</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Performance</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Result</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }}>Impact</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {(player.recentMatches || []).slice(0, 10).map((match, index) => {
-                        // Format date
-                        const matchDate = new Date(match.date || Date.now()).toLocaleDateString('en-US', {
-                          day: 'numeric',
-                          month: 'short'
-                        });
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 2, mt: 2 }}>
+                {(player.recentMatches as PlayerMatchData[]).slice(0, 10).map((match: PlayerMatchData, index: number) => {
+                  let formattedDate = 'Date not available';
+                  if (match.date && match.date._seconds) {
+                    formattedDate = new Date(match.date._seconds * 1000).toLocaleDateString();
+                  }
 
-                        return (
-                          <TableRow key={match.matchId || index} hover>
-                            <TableCell>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Avatar sx={{ width: 32, height: 32 }}>
-                                  {(match.opponent || 'U').charAt(0)}
-                                </Avatar>
-                                <Box>
-                                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                    vs {match.opponent || 'Unknown'}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                            </TableCell>
-                            <TableCell>
-                              {(match.batting || match.bowling || match.fielding) ? (
-                                <Box>
-                                  {match.batting && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                      🏏 {match.batting.runs || 0}{match.batting.notOuts ? '*' : ''} ({match.batting.balls || 0}) - {match.batting.fours || 0}x4, {match.batting.sixes || 0}x6
-                                    </Typography>
-                                  )}
-                                  {match.bowling && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                      🎯 {match.bowling.wickets || 0}/{match.bowling.runs || 0} ({match.bowling.overs || 0}) - {match.bowling.economy || 0} econ
-                                    </Typography>
-                                  )}
-                                  {match.fielding && (
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                      🏃 {match.fielding.catches || 0} catches, {match.fielding.runOuts || 0} run-outs, {match.fielding.stumpings || 0} stumpings
-                                    </Typography>
-                                  )}
-                                </Box>
-                              ) : (
-                                <Typography variant="caption" color="text.secondary">
-                                  Did not play
-                                </Typography>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Typography variant="body2">{matchDate}</Typography>
-                            </TableCell>
-                            <TableCell>
-                              <Chip
-                                size="small"
-                                label={match.result}
-                                color={match.result.includes('Won') ? 'success' : match.result.includes('Lost') ? 'error' : 'default'}
-                                variant="outlined"
-                                sx={{ fontSize: '0.7rem', height: '20px' }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              {/* Calculate impact score from batting/bowling/fielding data */}
-                              {(() => {
-                                let impact = 0;
-                                if (match.batting) {
-                                  impact += (match.batting.runs || 0) * 0.5 + (match.batting.fours || 0) * 2 + (match.batting.sixes || 0) * 3;
-                                }
-                                if (match.bowling) {
-                                  impact += (match.bowling.wickets || 0) * 15 + (match.bowling.overs ? Math.max(0, 6 - parseFloat(match.bowling.overs)) * 2 : 0);
-                                }
-                                if (match.fielding) {
-                                  impact += (match.fielding.catches || 0) * 8 + (match.fielding.runOuts || 0) * 6 + (match.fielding.stumpings || 0) * 10;
-                                }
-                                return impact > 0 ? (
-                                  <Chip
-                                    size="small"
-                                    label={`${impact.toFixed(1)}`}
-                                    color="primary"
-                                    variant="filled"
-                                    sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
-                                  />
-                                ) : null;
-                              })()}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              ) : (
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: {
-                      xs: 'repeat(1, 1fr)',
-                      sm: 'repeat(2, 1fr)',
-                      md: 'repeat(3, 1fr)'
-                    },
-                    gap: 2,
-                  }}
-                >
-                  {(player.recentMatches || []).slice(0, 10).map((match, index) => {
-                    // Format date
-                    const matchDate = new Date(match.date || Date.now()).toLocaleDateString('en-US', {
-                      day: 'numeric',
-                      month: 'short'
-                    });
-
-                    return (
-                      <Card key={match.matchId || index} sx={{ boxShadow: 1 }}>
-                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar sx={{ width: 36, height: 36 }}>
-                            {(match.opponent || 'U').charAt(0)}
-                          </Avatar>
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                              vs {match.opponent || 'Unknown'}
+                  return (
+                    <Box
+                      key={`match-${index}-${match.matchId}`}
+                      sx={{
+                        p: 2,
+                        backgroundColor: '#f8fafc',
+                        borderRadius: 1,
+                        borderLeft: `4px solid #10b981`,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        '&:hover': {
+                          backgroundColor: '#f1f5f9',
+                          transform: 'translateX(2px)'
+                        }
+                      }}
+                      onClick={() => navigate(`/matches/${match.matchId}`)}
+                    >
+                      <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b', mb: 1 }}>
+                        vs {match.opponent}
+                      </Typography>
+                      
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500 }}>
+                          {typeof match.result === 'string' ? match.result : (match.result?.winner ? `${match.result.winner} won` : 'Unknown')}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {formattedDate}
+                        </Typography>
+                      </Box>
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 1 }}>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                          {match.batting && match.batting.runs > 0 && (
+                            <Typography variant="caption" sx={{ color: '#059669', fontWeight: 500 }}>
+                              {match.batting.runs} runs
                             </Typography>
-
-                            {/* Performance Details */}
-                            {(match.batting || match.bowling || match.fielding) ? (
-                              <Box sx={{ mt: 0.5 }}>
-                                {match.batting && (
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.25 }}>
-                                    🏏 Bat: {match.batting.runs || 0}{match.batting.notOuts ? '*' : ''} ({match.batting.balls || 0}) - {match.batting.fours || 0}x4, {match.batting.sixes || 0}x6
-                                  </Typography>
-                                )}
-                                {match.bowling && (
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: match.fielding ? 0.25 : 0 }}>
-                                    🎯 Bowl: {match.bowling.wickets || 0}/{match.bowling.runs || 0} ({match.bowling.overs || 0}) - {match.bowling.economy || 0} econ
-                                  </Typography>
-                                )}
-                                {match.fielding && (
-                                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                    🏃 Field: {match.fielding.catches || 0} catches, {match.fielding.runOuts || 0} run-outs, {match.fielding.stumpings || 0} stumpings
-                                  </Typography>
-                                )}
-                              </Box>
-                            ) : (
-                              <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                Did not play
-                              </Typography>
-                            )}
-
-                            <Box sx={{ mt: 0.5 }}>
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                                {matchDate}
-                              </Typography>
-                              <Box sx={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: 0.5,
-                                mt: 0.5,
-                                alignItems: 'center'
-                              }}>
-                                <Chip
-                                  size="small"
-                                  label={match.result}
-                                  color={match.result.includes('Won') ? 'success' : match.result.includes('Lost') ? 'error' : 'default'}
-                                  variant="outlined"
-                                  sx={{ fontSize: '0.7rem', height: '20px' }}
-                                />
-
-                                {/* Impact Score */}
-                                {(() => {
-                                  let impact = 0;
-                                  if (match.batting) {
-                                    impact += (match.batting.runs || 0) * 0.5 + (match.batting.fours || 0) * 2 + (match.batting.sixes || 0) * 3;
-                                  }
-                                  if (match.bowling) {
-                                    impact += (match.bowling.wickets || 0) * 15 + (match.bowling.overs ? Math.max(0, 6 - parseFloat(match.bowling.overs)) * 2 : 0);
-                                  }
-                                  if (match.fielding) {
-                                    impact += (match.fielding.catches || 0) * 8 + (match.fielding.runOuts || 0) * 6 + (match.fielding.stumpings || 0) * 10;
-                                  }
-                                  return impact > 0 ? (
-                                    <Chip
-                                      size="small"
-                                      label={`Impact: ${impact.toFixed(1)}`}
-                                      color="primary"
-                                      variant="filled"
-                                      sx={{ fontSize: '0.7rem', height: '20px', fontWeight: 600 }}
-                                    />
-                                  ) : null;
-                                })()}
-                              </Box>
-                            </Box>
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </Box>
-              )
+                          )}
+                          {match.bowling && match.bowling.wickets > 0 && (
+                            <Typography variant="caption" sx={{ color: '#dc2626', fontWeight: 500 }}>
+                              {match.bowling.wickets} wickets
+                            </Typography>
+                          )}
+                        </Box>
+                        
+                        <Typography variant="caption" sx={{ color: '#6b7280', fontWeight: 500 }}>
+                          Impact: {match.impact.total.toFixed(1)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
             ) : (
-              <Card sx={{ boxShadow: 1 }}>
-                <CardContent>
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
-                    No recent matches available
-                  </Typography>
-                </CardContent>
-              </Card>
-            )}
-          </AccordionDetails>
-        </Accordion>
-          </>
-        )}
-
-        {/* Matches Tab Content */}
-        {tab === 'matches' && (
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
-            <CardContent sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
-                <TimelineIcon />
-                Recent Matches
+              <Typography variant="body2" sx={{ color: '#64748b', textAlign: 'center', py: 4 }}>
+                No recent matches available
               </Typography>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Matches Card - Card View */}
+        <Card sx={{ mt: 3, boxShadow: 2, borderRadius: 2 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
+              <TimelineIcon />
+              Recent Matches (Card View)
+            </Typography>
               {player.recentMatches && player.recentMatches.length > 0 ? (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {(player.recentMatches as PlayerMatchData[]).map((match: PlayerMatchData, index: number) => {
@@ -2014,9 +2179,14 @@ const PlayerDetails: React.FC = () => {
                                 {match.venue}
                               </Typography>
                             )}
-                            {match.result?.winner && (
+                            {typeof match.result === 'object' && match.result?.winner && (
                               <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600, mt: 0.5 }}>
                                 {match.result.winner} won{match.result.margin ? ` by ${match.result.margin}` : ''}
+                              </Typography>
+                            )}
+                            {typeof match.result === 'string' && match.result && match.result !== 'N/A' && (
+                              <Typography variant="body2" sx={{ color: '#16a34a', fontWeight: 600, mt: 0.5 }}>
+                                {match.result}
                               </Typography>
                             )}
                           </Box>
@@ -2053,11 +2223,10 @@ const PlayerDetails: React.FC = () => {
               )}
             </CardContent>
           </Card>
-        )}
 
-        {/* Teams Tab Content */}
-        {tab === 'teams' && (
-          <Card sx={{ boxShadow: 2, borderRadius: 2 }}>
+        {/* Teams Card */}
+        {player.recentTeams && player.recentTeams.length > 0 && (
+          <Card sx={{ mt: 3, boxShadow: 2, borderRadius: 2 }}>
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 1 }}>
                 <GroupIcon />
@@ -2095,11 +2264,6 @@ const PlayerDetails: React.FC = () => {
           </Card>
         )}
 
-      {/* Floating Action */}
-      <Paper sx={{ position: 'fixed', left: '50%', transform: 'translateX(-50%)', bottom: 72, px: 2, py: 1, borderRadius: 999, boxShadow: 4, display: 'flex', alignItems: 'center', gap: 1 }}>
-        <Avatar sx={{ bgcolor: '#4A90E2', width: 44, height: 44 }}>+</Avatar>
-        <Typography sx={{ fontWeight: 700 }}>Add to Favorites</Typography>
-      </Paper>
       </Container>
       </Box>
     </>

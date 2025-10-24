@@ -57,6 +57,7 @@ interface ProcessedPlayer extends ApiPlayer {
   battingStrikeRate: number;
   bowlingEconomy: number;
   matchesPlayed: number;
+  impactScore?: number;
 }
 
 const Leaderboard: React.FC = () => {
@@ -139,12 +140,12 @@ const Leaderboard: React.FC = () => {
             .slice(0, 3)
             .map((player: ProcessedPlayer, index: number) => ({
               rank: index + 1,
-              name: player.player?.name || player.name || 'Unknown',
+              name: player.name || 'Unknown',
               runs: player.totalRuns?.toLocaleString() || '0',
               average: player.battingAverage ? player.battingAverage.toFixed(2) : '0.00',
               matches: player.matchesPlayed || 0,
-              impactScore: player.impactScore,
-              avatar: (player.player?.name || player.name || 'U').charAt(0),
+              impactScore: player.impactScore || 0,
+              avatar: (player.name || 'U').charAt(0),
             }));
 
           // Calculate top bowlers (players with most wickets)
@@ -158,12 +159,12 @@ const Leaderboard: React.FC = () => {
             .slice(0, 3)
             .map((player: ProcessedPlayer, index: number) => ({
               rank: index + 1,
-              name: player.player?.name || player.name || 'Unknown',
+              name: player.name || 'Unknown',
               wickets: player.totalWickets?.toLocaleString() || '0',
               economy: player.bowlingEconomy ? player.bowlingEconomy.toFixed(2) : '0.00',
               matches: player.matchesPlayed || 0,
-              impactScore: player.impactScore,
-              avatar: (player.player?.name || player.name || 'U').charAt(0),
+              impactScore: player.impactScore || 0,
+              avatar: (player.name || 'U').charAt(0),
             }));
 
           // Calculate top fielders (players with most fielding impact)
@@ -172,19 +173,19 @@ const Leaderboard: React.FC = () => {
               ...player,
               impactScore: calculateFieldingImpactScore(player)
             }))
-            .filter((player: ProcessedPlayer) => player.impactScore > 0)
-            .sort((a: ProcessedPlayer, b: ProcessedPlayer) => b.impactScore - a.impactScore)
+            .filter((player: ProcessedPlayer) => (player.impactScore || 0) > 0)
+            .sort((a: ProcessedPlayer, b: ProcessedPlayer) => (b.impactScore || 0) - (a.impactScore || 0))
             .slice(0, 3)
             .map((player: ProcessedPlayer, index: number) => ({
               rank: index + 1,
-              name: player.player?.name || player.name || 'Unknown',
+              name: player.name || 'Unknown',
               catches: player.totalCatches || 0,
               runOuts: player.totalRunOuts || 0,
               stumpings: player.totalStumpings || 0,
               totalDismissals: (player.totalCatches || 0) + (player.totalRunOuts || 0) + (player.totalStumpings || 0),
-              impactScore: player.impactScore,
+              impactScore: player.impactScore || 0,
               matches: player.matchesPlayed || 0,
-              avatar: (player.player?.name || player.name || 'U').charAt(0),
+              avatar: (player.name || 'U').charAt(0),
             }));
           // Calculate rising stars (highest impact score)
           const risingStars = players
@@ -192,15 +193,15 @@ const Leaderboard: React.FC = () => {
               ...player,
               impactScore: calculateOverallImpactScore(player)
             }))
-            .filter((player: ProcessedPlayer) => player.impactScore > 0)
-            .sort((a: ProcessedPlayer, b: ProcessedPlayer) => b.impactScore - a.impactScore)
+            .filter((player: ProcessedPlayer) => (player.impactScore || 0) > 0)
+            .sort((a: ProcessedPlayer, b: ProcessedPlayer) => (b.impactScore || 0) - (a.impactScore || 0))
             .slice(0, 3)
             .map((player: ProcessedPlayer, index: number) => ({
               rank: index + 1,
-              name: player.player?.name || player.name || 'Unknown',
-              impactScore: player.impactScore,
+              name: player.name || 'Unknown',
+              impactScore: player.impactScore || 0,
               matches: player.matchesPlayed || 0,
-              avatar: (player.player?.name || player.name || 'U').charAt(0),
+              avatar: (player.name || 'U').charAt(0),
             }));
 
           setLeaderboardData({

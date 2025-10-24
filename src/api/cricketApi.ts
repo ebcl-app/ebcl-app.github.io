@@ -195,36 +195,6 @@ export interface ApiTournament {
   season: string;
   status: string;
 }
-export interface ApiPlayer {
-  player: {
-    id: string | number;
-    name: string;
-  };
-  impactScore: number;
-  batting: {
-    runs: number;
-    balls: number;
-    fours: number;
-    sixes: number;
-    notOuts: number;
-    strikeRate: string;
-  };
-  bowling: {
-    wickets: number;
-    runs: number;
-    overs: string;
-    maidens: number;
-    dots: number;
-    fours: number;
-    sixes: number;
-    economy: string;
-  };
-  fielding: {
-    catches: number;
-    runOuts: number;
-    stumpings: number;
-  };
-}
 export interface ApiMatch {
   id: string;
   numericId: number;
@@ -633,6 +603,12 @@ export interface ApiPlayer {
       wins: number;
       losses: number;
       winPercentage: number;
+    };
+    impact: {
+      batting: number;
+      bowling: number;
+      fielding: number;
+      total: number;
     };
   };
   // Recent matches and teams
